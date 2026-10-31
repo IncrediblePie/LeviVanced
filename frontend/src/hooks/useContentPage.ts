@@ -1,0 +1,852 @@
+import { EMPTY_CONTENT_ROOTS, isContentTransferTarget } from "@/utils/content";
+import { useOverlayState } from "@heroui/react";
+import React from "react";
+
+import { Events } from "@wailsio/runtime";
+import { useLocation, useNavigate } from "react-router-dom";
+import {
+  GetVersionMeta,
+  ListVersionMetas,
+  GetVersionLogoDataUrl,
+} from "bindings/github.com/liteldev/LeviLauncher/internal/app/versionservice";
+import { GetLocalUserGamertag } from "bindings/github.com/liteldev/LeviLauncher/internal/app/userservice";
+import { GetContentRoots } from "bindings/github.com/liteldev/LeviLauncher/internal/app/contentservice";
+import * as types from "bindings/github.com/liteldev/LeviLauncher/internal/types/models";
+import { readCurrentVersionName } from "@/utils/currentVersion";
+import { compareVersions } from "@/utils/version";
+import {
+  countDirectories,
+  getPathBaseName,
+  normalizeDroppedFiles,
+} from "@/utils/fs";
+import { getPlayerGamertagMap, listPlayers } from "@/utils/content";
+import * as minecraft from "bindings/github.com/liteldev/LeviLauncher/internal/app/minecraft";
+import * as contentService from "bindings/github.com/liteldev/LeviLauncher/internal/app/contentservice";
+
+type TFunc = (key: string, opts?: Record<string, unknown>) => string;
+type TransferTargetVersion = {
+  name: string;
+  gameVersion: string;
+  type: string;
+  icon?: string;
+};
+
+export const useContentPage = (t: TFunc) => {
+  const navigate = useNavigate();
+  const location = useLocation() as any;
+  const hasBackend = minecraft !== undefined && contentService !== undefined;
+
+  // --- State ---
+  const [loading, setLoading] = React.useState<boolean>(true);
+  const [error, setError] = React.useState<string>("");
+  const [currentVersionName, setCurrentVersionName] =
+    React.useState<string>("");
+  const [roots, setRoots] = React.useState<types.ContentRoots>(EMPTY_CONTENT_ROOTS);
+  const [players, setPlayers] = React.useState<string[]>([]);
+  const [selectedPlayer, setSelectedPlayer] = React.useState<string>("");
+  const [isSharedMode, setIsSharedMode] = React.useState<boolean>(false);
+  const [playerGamertagMap, setPlayerGamertagMap] = React.useState<
+    Record<string, string>
+  >({});
+  const [worldsCount, setWorldsCount] = React.useState<number>(0);
+  const [resCount, setResCount] = React.useState<number>(0);
+  const [bpCount, setBpCount] = React.useState<number>(0);
+  const [skinCount, setSkinCount] = React.useState<number>(0);
+  const [serversCount, setServersCount] = React.useState<number>(0);
+  const [screenshotsCount, setScreenshotsCount] = React.useState<number>(0);
+  const [importing, setImporting] = React.useState(false);
+  const [errorMsg, setErrorMsg] = React.useState("");
+  const [currentFile, setCurrentFile] = React.useState("");
+  const [resultSuccess, setResultSuccess] = React.useState<string[]>([]);
+  const [resultFailed, setResultFailed] = React.useState<
+    Array<{ name: string; err: string }>
+  >([]);
+  const [transferring, setTransferring] = React.useState(false);
+  const [transferTargets, setTransferTargets] = React.useState<
+    TransferTargetVersion[]
+  >([]);
+  const [selectedTransferTargets, setSelectedTransferTargets] = React.useState<
+    string[]
+  >([]);
+
+  // --- Refs ---
+  const dupResolveRef = React.useRef<((overwrite: boolean) => void) | null>(
+    null,
+  );
+  const dupNameRef = React.useRef<string>("");
+  const playerSelectResolveRef = React.useRef<
+    ((player: string) => void) | null
+  >(null);
+  const importInProgressRef = React.useRef(false);
+
+  // --- Disclosures ---
+  const {
+    isOpen: errOpen,
+    open: errOnOpen,
+    close: errOnClose,
+    setOpen: errOnOpenChange,
+  } = useOverlayState();
+  const {
+    isOpen: dupOpen,
+    open: dupOnOpen,
+    close: dupOnClose,
+    setOpen: dupOnOpenChange,
+  } = useOverlayState();
+  const {
+    isOpen: playerSelectOpen,
+    open: playerSelectOnOpen,
+    close: playerSelectOnClose,
+    setOpen: playerSelectOnOpenChange,
+  } = useOverlayState();
+  const {
+    isOpen: transferTargetOpen,
+    open: transferTargetOnOpen,
+    close: transferTargetOnClose,
+    setOpen: transferTargetOnOpenChange,
+  } = useOverlayState();
+
+  // --- Handlers ---
+  const refreshAll = async (playerToRefresh?: string) => {
+    setLoading(true);
+    setError("");
+    const name = readCurrentVersionName();
+    setCurrentVersionName(name);
+    try {
+      if (!hasBackend || !name) {
+        setRoots(EMPTY_CONTENT_ROOTS);
+        setPlayers([]);
+        setSelectedPlayer("");
+        setPlayerGamertagMap({});
+        setWorldsCount(0);
+        setResCount(0);
+        setBpCount(0);
+        setScreenshotsCount(0);
+      } else {
+        const r = await GetContentRoots(name);
+        const safe = r || EMPTY_CONTENT_ROOTS;
+        setRoots(safe);
+
+        let isShared = false;
+        try {
+          const meta: any = await GetVersionMeta(name);
+          isShared =
+            meta.gameVersion && compareVersions(meta.gameVersion, "1.26.0") > 0;
+        } catch {}
+        isShared = isShared || safe.packageType === "uwp";
+        setIsSharedMode(isShared);
+
+        if (safe.packageType === "uwp") {
+          setPlayers([]);
+          setSelectedPlayer("");
+          setPlayerGamertagMap({});
+          const [worlds, skins, servers, screenshots] = await Promise.all([
+            countDirectories(safe.worlds || ""),
+            countDirectories(safe.skinPacks || ""),
+            minecraft.ListServers(name, ""),
+            contentService.ListScreenshots(name, ""),
+          ]);
+          setWorldsCount(worlds);
+          setSkinCount(skins);
+          setServersCount(servers?.length || 0);
+          setScreenshotsCount(screenshots?.length || 0);
+        } else if (safe.usersRoot) {
+          const names = await listPlayers(safe.usersRoot);
+          setPlayers(names);
+
+          let nextPlayer = names[0] || "";
+          const currentPlayer =
+            playerToRefresh !== undefined ? playerToRefresh : selectedPlayer;
+
+          if (names.includes(currentPlayer)) {
+            nextPlayer = currentPlayer;
+          }
+
+          if (playerToRefresh !== undefined) {
+            setSelectedPlayer(playerToRefresh);
+          } else if (!names.includes(currentPlayer)) {
+            setSelectedPlayer(nextPlayer);
+          }
+
+          const loadCounts = async (player: string) => {
+            if (player) {
+              const wp = `${safe.usersRoot}\\${player}\\games\\com.mojang\\minecraftWorlds`;
+              setWorldsCount(await countDirectories(wp));
+              if (isShared) {
+                if (safe.resourcePacks) {
+                  const dir = safe.resourcePacks.replace(
+                    /[\\/]resource_packs[\\/]?$/,
+                    "",
+                  );
+                  const sep = safe.resourcePacks.includes("/") ? "/" : "\\";
+                  const sp = `${dir}${sep}skin_packs`;
+                  setSkinCount(await countDirectories(sp));
+                } else {
+                  setSkinCount(0);
+                }
+              } else {
+                const sp = `${safe.usersRoot}\\${player}\\games\\com.mojang\\skin_packs`;
+                setSkinCount(await countDirectories(sp));
+              }
+              const srvs = await (minecraft as any)?.ListServers?.(
+                name,
+                player,
+              );
+              setServersCount(srvs?.length || 0);
+              try {
+                const shots = await (contentService as any)?.ListScreenshots?.(
+                  name,
+                  player,
+                );
+                setScreenshotsCount(Array.isArray(shots) ? shots.length : 0);
+              } catch {
+                setScreenshotsCount(0);
+              }
+            } else {
+              setWorldsCount(0);
+              setSkinCount(0);
+              setServersCount(0);
+              setScreenshotsCount(0);
+            }
+          };
+
+          await loadCounts(
+            names.includes(currentPlayer) ? currentPlayer : nextPlayer,
+          );
+
+          (async () => {
+            try {
+              const map = await getPlayerGamertagMap(safe.usersRoot);
+              setPlayerGamertagMap(map);
+
+              if (
+                playerToRefresh === undefined &&
+                !names.includes(currentPlayer)
+              ) {
+                const tag = await GetLocalUserGamertag();
+                if (tag) {
+                  let matched = "";
+                  for (const p of names) {
+                    if (map[p] === tag) {
+                      matched = p;
+                      break;
+                    }
+                  }
+                  if (matched && matched !== nextPlayer) {
+                    setSelectedPlayer(matched);
+                    await loadCounts(matched);
+                  }
+                }
+              }
+            } catch {}
+          })();
+        } else {
+          setPlayers([]);
+          setSelectedPlayer("");
+          setPlayerGamertagMap({});
+          setWorldsCount(0);
+          setSkinCount(0);
+          setServersCount(0);
+          setScreenshotsCount(0);
+        }
+        setResCount(await countDirectories(safe.resourcePacks));
+        setBpCount(await countDirectories(safe.behaviorPacks));
+      }
+    } catch (e) {
+      setError(t("contentpage.error_resolve_paths") as string);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const onChangePlayer = async (player: string) => {
+    setLoading(true);
+    setSelectedPlayer(player);
+    try {
+      if (!hasBackend || !roots.usersRoot || !player) {
+        setWorldsCount(0);
+        setSkinCount(0);
+        setServersCount(0);
+        setScreenshotsCount(0);
+        return;
+      }
+      const wp = `${roots.usersRoot}\\${player}\\games\\com.mojang\\minecraftWorlds`;
+      setWorldsCount(await countDirectories(wp));
+      if (isSharedMode) {
+        if (roots.resourcePacks) {
+          const dir = roots.resourcePacks.replace(
+            /[\\/]resource_packs[\\/]?$/,
+            "",
+          );
+          const sep = roots.resourcePacks.includes("/") ? "/" : "\\";
+          const sp = `${dir}${sep}skin_packs`;
+          setSkinCount(await countDirectories(sp));
+        } else {
+          setSkinCount(0);
+        }
+      } else {
+        const sp = `${roots.usersRoot}\\${player}\\games\\com.mojang\\skin_packs`;
+        setSkinCount(await countDirectories(sp));
+      }
+      const srvs = await (minecraft as any)?.ListServers?.(
+        currentVersionName || readCurrentVersionName(),
+        player,
+      );
+      setServersCount(srvs?.length || 0);
+      try {
+        const shots = await (contentService as any)?.ListScreenshots?.(
+          currentVersionName || readCurrentVersionName(),
+          player,
+        );
+        setScreenshotsCount(Array.isArray(shots) ? shots.length : 0);
+      } catch {
+        setScreenshotsCount(0);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const doImportFromPaths = async (paths: string[]) => {
+    // File-drop events can arrive again while a player/overwrite prompt is open.
+    // Keep the active batch and its pending prompt resolver intact.
+    if (importInProgressRef.current || importing) return;
+    importInProgressRef.current = true;
+    try {
+      const normalizedPaths = normalizeDroppedFiles(paths);
+      if (!normalizedPaths.length) return;
+      const name = currentVersionName || readCurrentVersionName();
+      if (!name) {
+        setErrorMsg(t("launcherpage.currentVersion_none") as string);
+        return;
+      }
+      const hasWorld = normalizedPaths.some((p) =>
+        p.toLowerCase().endsWith(".mcworld"),
+      );
+      let hasSkin = false;
+      if (normalizedPaths.length > 0) {
+        setImporting(true);
+        setCurrentFile(getPathBaseName(normalizedPaths[0]));
+      }
+      for (const p of normalizedPaths) {
+        if (p.toLowerCase().endsWith(".mcpack")) {
+          const isSkin = await (contentService as any)?.IsMcpackSkinPackPath?.(
+            p,
+          );
+          if (isSkin) {
+            hasSkin = true;
+            break;
+          }
+        }
+      }
+      let chosenPlayer = "";
+
+      const needsPlayer = roots.packageType !== "uwp" && (hasWorld || (hasSkin && !isSharedMode));
+
+      if (needsPlayer) {
+        playerSelectOnOpen();
+        chosenPlayer = await new Promise<string>((resolve) => {
+          playerSelectResolveRef.current = resolve;
+        });
+        if (!chosenPlayer) {
+          return;
+        }
+        setSelectedPlayer(chosenPlayer);
+      }
+      let started = false;
+      const succFiles: string[] = [];
+      const errPairs: Array<{ name: string; err: string }> = [];
+      const playerToUse = chosenPlayer || selectedPlayer || "";
+      for (const p of normalizedPaths) {
+        const lower = p.toLowerCase();
+        if (lower.endsWith(".mcpack")) {
+          if (!started) {
+            setImporting(true);
+            started = true;
+          }
+          const base = getPathBaseName(p);
+          setCurrentFile(base);
+
+          let err = "";
+          const isSkin = await (contentService as any)?.IsMcpackSkinPackPath?.(
+            p,
+          );
+          const effectivePlayer = isSkin && isSharedMode ? "" : playerToUse;
+
+          if (
+            effectivePlayer &&
+            typeof (contentService as any)?.ImportMcpackPathWithPlayer ===
+              "function"
+          ) {
+            err = await (contentService as any)?.ImportMcpackPathWithPlayer?.(
+              name,
+              effectivePlayer,
+              p,
+              false,
+            );
+          } else {
+            err = await (contentService as any)?.ImportMcpackPath?.(
+              name,
+              p,
+              false,
+            );
+          }
+          if (err) {
+            if (
+              String(err) === "ERR_DUPLICATE_FOLDER" ||
+              String(err) === "ERR_DUPLICATE_UUID"
+            ) {
+              dupNameRef.current = base;
+              await new Promise<void>((r) => setTimeout(r, 0));
+              dupOnOpen();
+              const ok = await new Promise<boolean>((resolve) => {
+                dupResolveRef.current = resolve;
+              });
+              if (ok) {
+                if (
+                  effectivePlayer &&
+                  typeof (contentService as any)?.ImportMcpackPathWithPlayer ===
+                    "function"
+                ) {
+                  err = await (
+                    contentService as any
+                  )?.ImportMcpackPathWithPlayer?.(
+                    name,
+                    effectivePlayer,
+                    p,
+                    true,
+                  );
+                } else {
+                  err = await (contentService as any)?.ImportMcpackPath?.(
+                    name,
+                    p,
+                    true,
+                  );
+                }
+                if (!err) {
+                  succFiles.push(base);
+                  continue;
+                }
+              } else {
+                continue;
+              }
+            }
+            errPairs.push({ name: base, err });
+            continue;
+          }
+          succFiles.push(base);
+        } else if (lower.endsWith(".mcaddon")) {
+          if (!started) {
+            setImporting(true);
+            started = true;
+          }
+          const base = getPathBaseName(p);
+          setCurrentFile(base);
+          let err = "";
+          if (
+            playerToUse &&
+            typeof (contentService as any)?.ImportMcaddonPathWithPlayer ===
+              "function"
+          ) {
+            err = await (contentService as any)?.ImportMcaddonPathWithPlayer?.(
+              name,
+              playerToUse,
+              p,
+              false,
+            );
+          } else {
+            err = await (contentService as any)?.ImportMcaddonPath?.(
+              name,
+              p,
+              false,
+            );
+          }
+          if (err) {
+            if (
+              String(err) === "ERR_DUPLICATE_FOLDER" ||
+              String(err) === "ERR_DUPLICATE_UUID"
+            ) {
+              dupNameRef.current = base;
+              await new Promise<void>((r) => setTimeout(r, 0));
+              dupOnOpen();
+              const ok = await new Promise<boolean>((resolve) => {
+                dupResolveRef.current = resolve;
+              });
+              if (ok) {
+                if (
+                  playerToUse &&
+                  typeof (contentService as any)
+                    ?.ImportMcaddonPathWithPlayer === "function"
+                ) {
+                  err = await (
+                    contentService as any
+                  )?.ImportMcaddonPathWithPlayer?.(name, playerToUse, p, true);
+                } else {
+                  err = await (contentService as any)?.ImportMcaddonPath?.(
+                    name,
+                    p,
+                    true,
+                  );
+                }
+                if (!err) {
+                  succFiles.push(base);
+                  continue;
+                }
+              } else {
+                continue;
+              }
+            }
+            errPairs.push({ name: base, err });
+            continue;
+          }
+          succFiles.push(base);
+        } else if (lower.endsWith(".mcworld")) {
+          const base = getPathBaseName(p);
+          if (!playerToUse && roots.packageType !== "uwp") {
+            errPairs.push({ name: base, err: "ERR_NO_PLAYER" });
+            continue;
+          }
+          if (!started) {
+            setImporting(true);
+            started = true;
+          }
+          setCurrentFile(base);
+          let err = await (contentService as any)?.ImportMcworldPath?.(
+            name,
+            playerToUse,
+            p,
+            false,
+          );
+          if (err) {
+            if (
+              String(err) === "ERR_DUPLICATE_FOLDER" ||
+              String(err) === "ERR_DUPLICATE_UUID"
+            ) {
+              dupNameRef.current = base;
+              await new Promise<void>((r) => setTimeout(r, 0));
+              dupOnOpen();
+              const ok = await new Promise<boolean>((resolve) => {
+                dupResolveRef.current = resolve;
+              });
+              if (ok) {
+                err = await (contentService as any)?.ImportMcworldPath?.(
+                  name,
+                  playerToUse,
+                  p,
+                  true,
+                );
+                if (!err) {
+                  succFiles.push(base);
+                  continue;
+                }
+              } else {
+                continue;
+              }
+            }
+            errPairs.push({ name: base, err });
+            continue;
+          }
+          succFiles.push(base);
+        }
+      }
+      // Refresh once after importing, including a player change where every
+      // duplicate was skipped, so the displayed counts match the selected player.
+      if (succFiles.length > 0 || errPairs.length > 0 || chosenPlayer) {
+        await refreshAll(playerToUse);
+      }
+      if (succFiles.length > 0 || errPairs.length > 0) {
+        setResultSuccess(succFiles);
+        setResultFailed(errPairs);
+        errOnOpen();
+      }
+    } catch (e: any) {
+      setErrorMsg(String(e?.message || e || "IMPORT_ERROR"));
+    } finally {
+      importInProgressRef.current = false;
+      playerSelectResolveRef.current = null;
+      dupResolveRef.current = null;
+      setImporting(false);
+      setCurrentFile("");
+    }
+  };
+
+  const openResourceTransferModal = async () => {
+    if (importing) return;
+    const name = currentVersionName || readCurrentVersionName();
+    if (!name) {
+      setErrorMsg(t("launcherpage.currentVersion_none") as string);
+      return;
+    }
+    try {
+      const list = await (ListVersionMetas as any)?.();
+      const metas = Array.isArray(list) ? list : [];
+      const targets: TransferTargetVersion[] = metas
+        .filter(
+          (m: any) =>
+            m &&
+            typeof m.name === "string" &&
+            m.name &&
+            isContentTransferTarget(roots, m) &&
+            m.name !== name,
+        )
+        .sort((a: any, b: any) => {
+          const byVersion = compareVersions(
+            String(b.gameVersion || "0"),
+            String(a.gameVersion || "0"),
+          );
+          if (byVersion !== 0) return byVersion;
+          return String(a.name || "").localeCompare(String(b.name || ""));
+        })
+        .map((m: any) => ({
+          name: String(m.name || ""),
+          gameVersion: String(m.gameVersion || ""),
+          type: String(m.type || ""),
+        }));
+
+      // Fetch icons for targets
+      await Promise.all(
+        targets.map(async (t) => {
+          try {
+            const getter = GetVersionLogoDataUrl as any;
+            if (typeof getter === "function") {
+              const url = await getter(t.name);
+              if (url) {
+                t.icon = url;
+              }
+            }
+          } catch (e) {
+            console.warn("Failed to fetch logo for", t.name, e);
+          }
+        }),
+      );
+
+      setTransferTargets(targets);
+      setSelectedTransferTargets(targets.length > 0 ? [targets[0].name] : []);
+      transferTargetOnOpen();
+    } catch (e: any) {
+      setErrorMsg(String(e?.message || e || "LOAD_TARGETS_FAILED"));
+    }
+  };
+
+  const transferResourcesToTargets = async () => {
+    const sourceVersionName = currentVersionName || readCurrentVersionName();
+    if (!sourceVersionName) {
+      setErrorMsg(t("launcherpage.currentVersion_none") as string);
+      return;
+    }
+    const targetNames = selectedTransferTargets.filter(Boolean);
+    if (targetNames.length === 0) return;
+
+    transferTargetOnClose();
+
+    const transferFn = (contentService as any)?.TransferPackToVersion;
+    if (typeof transferFn !== "function") {
+      setResultSuccess([]);
+      setResultFailed([
+        {
+          name: t("contentpage.resource_packs"),
+          err: t("common.feature_unavailable"),
+        },
+      ]);
+      errOnOpen();
+      return;
+    }
+
+    try {
+      setTransferring(true);
+      setImporting(true);
+      setCurrentFile("");
+
+      const allPacks = await (contentService as any)?.ListPacksForVersion?.(
+        sourceVersionName,
+        "",
+      );
+      const packs = (Array.isArray(allPacks) ? allPacks : []).filter(
+        (p: any) => {
+          const packType = Number(p?.manifest?.pack_type || 0);
+          const path = String(p?.path || "").trim();
+          return path && (packType === 6 || packType === 4);
+        },
+      );
+
+      if (packs.length === 0) {
+        setResultSuccess([]);
+        setResultFailed([
+          {
+            name: sourceVersionName,
+            err: t("contentpage.no_resource_packs"),
+          },
+        ]);
+        errOnOpen();
+        return;
+      }
+
+      const succFiles: string[] = [];
+      const errPairs: Array<{ name: string; err: string }> = [];
+
+      for (const targetName of targetNames) {
+        for (const pack of packs) {
+          const packPath = String(pack?.path || "").trim();
+          if (!packPath) continue;
+          const fallbackName = getPathBaseName(packPath);
+          const packName = String(pack?.manifest?.name || fallbackName);
+          const itemLabel = `${packName} -> ${targetName}`;
+          setCurrentFile(itemLabel);
+
+          let err = await transferFn(
+            sourceVersionName,
+            packPath,
+            targetName,
+            false,
+          );
+          if (err) {
+            if (
+              String(err) === "ERR_DUPLICATE_FOLDER" ||
+              String(err) === "ERR_DUPLICATE_UUID"
+            ) {
+              dupNameRef.current = itemLabel;
+              await new Promise<void>((r) => setTimeout(r, 0));
+              dupOnOpen();
+              const ok = await new Promise<boolean>((resolve) => {
+                dupResolveRef.current = resolve;
+              });
+              if (ok) {
+                err = await transferFn(
+                  sourceVersionName,
+                  packPath,
+                  targetName,
+                  true,
+                );
+                if (!err) {
+                  succFiles.push(itemLabel);
+                  continue;
+                }
+              } else {
+                continue;
+              }
+            }
+            errPairs.push({ name: itemLabel, err: String(err) });
+            continue;
+          }
+          succFiles.push(itemLabel);
+        }
+      }
+
+      if (succFiles.length > 0 || errPairs.length > 0) {
+        setResultSuccess(succFiles);
+        setResultFailed(errPairs);
+        errOnOpen();
+      }
+    } catch (e: any) {
+      setErrorMsg(String(e?.message || e || "TRANSFER_ERROR"));
+    } finally {
+      setTransferring(false);
+      setImporting(false);
+      setCurrentFile("");
+    }
+  };
+
+  // --- Effects ---
+  const doImportRef = React.useRef(doImportFromPaths);
+  doImportRef.current = doImportFromPaths;
+
+  React.useEffect(() => {
+    let passedPlayer = location?.state?.player;
+    if (!passedPlayer) {
+      passedPlayer = localStorage.getItem("content.selectedPlayer") || "";
+    }
+
+    if (passedPlayer) {
+      refreshAll(passedPlayer);
+      if (location?.state?.player) {
+        navigate(location.pathname, {
+          replace: true,
+          state: { ...(location.state || {}), player: undefined },
+        });
+      }
+    } else {
+      refreshAll();
+    }
+  }, []);
+
+  React.useEffect(() => {
+    if (selectedPlayer) {
+      localStorage.setItem("content.selectedPlayer", selectedPlayer);
+    }
+  }, [selectedPlayer]);
+
+  React.useEffect(() => {
+    return Events.On("files-dropped", (event) => {
+      const data = (event.data as { files: string[] }) || {};
+      const files = normalizeDroppedFiles(data.files);
+      if (files.length > 0) {
+        void doImportRef.current(files);
+      }
+    });
+  }, []);
+
+  return {
+    // state
+    loading,
+    error,
+    currentVersionName,
+    roots,
+    players,
+    selectedPlayer,
+    isSharedMode,
+    playerGamertagMap,
+    worldsCount,
+    resCount,
+    bpCount,
+    skinCount,
+    serversCount,
+    screenshotsCount,
+    importing,
+    transferring,
+    errorMsg,
+    currentFile,
+    resultSuccess,
+    resultFailed,
+    transferTargets,
+    selectedTransferTargets,
+    hasBackend,
+
+    // setters needed by JSX callbacks
+    setErrorMsg,
+    setResultSuccess,
+    setResultFailed,
+    setSelectedTransferTargets,
+
+    // refs (for modal JSX)
+    dupResolveRef,
+    dupNameRef,
+    playerSelectResolveRef,
+
+    // disclosures
+    errOpen,
+    errOnOpen,
+    errOnClose,
+    errOnOpenChange,
+    dupOpen,
+    dupOnOpen,
+    dupOnClose,
+    dupOnOpenChange,
+    playerSelectOpen,
+    playerSelectOnOpen,
+    playerSelectOnClose,
+    playerSelectOnOpenChange,
+    transferTargetOpen,
+    transferTargetOnOpen,
+    transferTargetOnClose,
+    transferTargetOnOpenChange,
+
+    // handlers
+    refreshAll,
+    onChangePlayer,
+    doImportFromPaths,
+    openResourceTransferModal,
+    transferResourcesToTargets,
+
+    // navigation
+    navigate,
+  };
+};

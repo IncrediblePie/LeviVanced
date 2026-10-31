@@ -1,0 +1,1147 @@
+import { ModalAction, ModalDescription } from "@/components/ModalPrimitives";
+import { PagePagination } from "@/components/PagePagination";
+import {
+  Button,
+  Card,
+  Chip,
+  InputGroup,
+  Label,
+  ListBox,
+  Select,
+  Skeleton,
+  TextField,
+} from "@heroui/react";
+
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+
+import { PageHeader } from "@/components/PageHeader";
+import { UnifiedModal } from "@/components/UnifiedModal";
+import { Link, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { PageContainer } from "@/components/PageContainer";
+import { LAYOUT } from "@/constants/layout";
+import { COMPONENT_STYLES } from "@/constants/componentStyles";
+import { cn } from "@/utils/cn";
+import { Browser } from "@wailsio/runtime";
+import {
+  fetchLIPPackagesIndex,
+  isLeviLaminaRangesCompatibleWithAnyVersion,
+  isLeviLaminaVersionCompatible,
+  type LIPPackageBasicInfo,
+} from "@/utils/content";
+import {
+  LuSearch,
+  LuDownload,
+  LuClock,
+  LuFlame,
+  LuBookOpen,
+  LuExternalLink,
+} from "react-icons/lu";
+import { motion } from "framer-motion";
+import { readCurrentVersionName } from "@/utils/currentVersion";
+import { useCurrentVersion } from "@/utils/CurrentVersionContext";
+import { useLeviLamina } from "@/utils/LeviLaminaContext";
+import { useModIntelligence } from "@/utils/ModIntelligenceContext";
+import { compareVersions } from "@/utils/version";
+import {
+  GetVersionMeta,
+  ListVersionMetas,
+} from "bindings/github.com/liteldev/LeviLauncher/internal/app/versionservice";
+import { GetLipStatus } from "bindings/github.com/liteldev/LeviLauncher/internal/app/minecraft";
+import { ROUTES, routeTo } from "@/constants/routes";
+
+const PAGE_SIZE = 20;
+const ALL_GAME_VERSION = "__all_game__";
+const ALL_LL_VERSION = "__all_ll__";
+const LIP_DEVELOPER_GUIDE_URL =
+  "https://github.com/LiteLDev/levilamina-mod-template/blob/d0a888ec116c9a00fe4dc8f28ccead4dfc6b6760/tooth.json#L51";
+const HIDDEN_LIP_PACKAGES = new Set([
+  "levilamina",
+  "levilamina-loc",
+  "crashlogger",
+]);
+
+type LIPSortKey = "hotness" | "updated" | "name";
+type LIPOrderKey = "asc" | "desc";
+type LipRuntimeStatus = {
+  installed?: boolean;
+};
+
+type ParsedSemver = {
+  major: number;
+  minor: number;
+  patch: number;
+  pre: string[];
+};
+
+const normalizeSemverInput = (value: string): string =>
+  String(value || "")
+    .trim()
+    .replace(/^v/i, "");
+
+const parseSemver = (input: string): ParsedSemver | null => {
+  const normalized = normalizeSemverInput(input);
+  if (!normalized) return null;
+  const match = normalized.match(
+    /^(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$/,
+  );
+  if (!match) return null;
+  return {
+    major: Number(match[1]),
+    minor: Number(match[2]),
+    patch: Number(match[3]),
+    pre: match[4] ? match[4].split(".") : [],
+  };
+};
+
+const compareSemver = (a: ParsedSemver, b: ParsedSemver): number => {
+  if (a.major !== b.major) return a.major > b.major ? 1 : -1;
+  if (a.minor !== b.minor) return a.minor > b.minor ? 1 : -1;
+  if (a.patch !== b.patch) return a.patch > b.patch ? 1 : -1;
+
+  const aRelease = a.pre.length === 0;
+  const bRelease = b.pre.length === 0;
+  if (aRelease && bRelease) return 0;
+  if (aRelease) return 1;
+  if (bRelease) return -1;
+
+  const length = Math.max(a.pre.length, b.pre.length);
+  for (let i = 0; i < length; i += 1) {
+    const aPart = a.pre[i];
+    const bPart = b.pre[i];
+    if (aPart === undefined) return -1;
+    if (bPart === undefined) return 1;
+
+    const aNumeric = /^[0-9]+$/.test(aPart);
+    const bNumeric = /^[0-9]+$/.test(bPart);
+    if (aNumeric && bNumeric) {
+      const aNum = Number(aPart);
+      const bNum = Number(bPart);
+      if (aNum !== bNum) return aNum > bNum ? 1 : -1;
+      continue;
+    }
+    if (aNumeric && !bNumeric) return -1;
+    if (!aNumeric && bNumeric) return 1;
+    if (aPart !== bPart) return aPart > bPart ? 1 : -1;
+  }
+  return 0;
+};
+
+const compareSemverLike = (a: string, b: string): number => {
+  const parsedA = parseSemver(a);
+  const parsedB = parseSemver(b);
+  if (parsedA && parsedB) return compareSemver(parsedA, parsedB);
+  if (parsedA) return 1;
+  if (parsedB) return -1;
+  return normalizeSemverInput(a).localeCompare(normalizeSemverInput(b));
+};
+
+const sortLLVersionValuesDesc = (values: string[]): string[] => {
+  const unique = Array.from(
+    new Set(values.map((value) => String(value || "").trim()).filter(Boolean)),
+  );
+  unique.sort((a, b) => compareSemverLike(b, a));
+  return unique;
+};
+
+const sortGameVersionValuesDesc = (values: string[]): string[] => {
+  const unique = Array.from(
+    new Set(values.map((value) => String(value || "").trim()).filter(Boolean)),
+  );
+  unique.sort((a, b) => compareVersions(b, a));
+  return unique;
+};
+
+const normalizeLLVersionForFilter = (value: string): string =>
+  (() => {
+    const normalized = normalizeSemverInput(String(value || "").trim());
+    if (!normalized) return "";
+    const match = normalized.match(
+      /(\d+\.\d+\.\d+(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?)/,
+    );
+    return match ? match[1] : normalized;
+  })();
+
+const resolveCurrentInstanceName = async (
+  preferredName?: string,
+): Promise<string> => {
+  const preferred = String(preferredName || "").trim();
+  const saved = preferred || readCurrentVersionName().trim();
+  try {
+    const metas = await ListVersionMetas();
+    const names = Array.isArray(metas)
+      ? metas
+          .map((meta: any) => String(meta?.name || "").trim())
+          .filter(Boolean)
+      : [];
+    if (saved && names.includes(saved)) {
+      return saved;
+    }
+    return names[0] || saved || preferred;
+  } catch {
+    return saved || preferred;
+  }
+};
+
+const parseUpdatedTime = (value: string): number => {
+  const timestamp = Date.parse(value);
+  return Number.isFinite(timestamp) ? timestamp : 0;
+};
+
+const sortPackages = (
+  list: LIPPackageBasicInfo[],
+  sort: LIPSortKey,
+  order: LIPOrderKey,
+) => {
+  const sorted = [...list].sort((a, b) => {
+    if (sort === "hotness") return a.hotness - b.hotness;
+    if (sort === "updated")
+      return parseUpdatedTime(a.updated) - parseUpdatedTime(b.updated);
+    return a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
+  });
+
+  if (order === "desc") {
+    sorted.reverse();
+  }
+
+  return sorted;
+};
+
+const shouldHidePackage = (pkg: LIPPackageBasicInfo): boolean => {
+  const name = String(pkg.name || "")
+    .trim()
+    .toLowerCase();
+  const identifier = String(pkg.identifier || "")
+    .trim()
+    .toLowerCase();
+  const identifierLastSegment =
+    identifier.split("/").filter(Boolean).pop() || "";
+  return (
+    HIDDEN_LIP_PACKAGES.has(name) ||
+    HIDDEN_LIP_PACKAGES.has(identifier) ||
+    HIDDEN_LIP_PACKAGES.has(identifierLastSegment)
+  );
+};
+
+const LIPPage: React.FC = () => {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const { currentVersionName } = useCurrentVersion();
+  const {
+    gameToLLVersions,
+    mappingAvailable,
+    mappingInitialized,
+    normalizeGameVersion,
+  } = useLeviLamina();
+  const { ensureInstanceHydrated, getInstanceSnapshot, snapshotRevision } =
+    useModIntelligence();
+  const [queryInput, setQueryInput] = useState("");
+  const [query, setQuery] = useState("");
+  const [page, setPage] = useState(1);
+  const [allPackages, setAllPackages] = useState<LIPPackageBasicInfo[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [sort, setSort] = useState<LIPSortKey>("hotness");
+  const [order, setOrder] = useState<LIPOrderKey>("desc");
+  const [selectedGameVersion, setSelectedGameVersion] =
+    useState<string>(ALL_GAME_VERSION);
+  const [selectedLLVersion, setSelectedLLVersion] =
+    useState<string>(ALL_LL_VERSION);
+  const [gameVersionOptions, setGameVersionOptions] = useState<string[]>([]);
+  const [llVersionOptions, setLLVersionOptions] = useState<string[]>([]);
+  const [currentInstalledLLVersion, setCurrentInstalledLLVersion] =
+    useState("");
+  const [error, setError] = useState("");
+  const [filterContextReady, setFilterContextReady] = useState(false);
+  const [developerGuideOpen, setDeveloperGuideOpen] = useState(false);
+  const [lipGuardReady, setLipGuardReady] = useState(false);
+  const [lipAvailable, setLipAvailable] = useState(true);
+  const [lipMissingModalOpen, setLipMissingModalOpen] = useState(false);
+
+  const pageRootRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const gameFilterInitializedRef = useRef(false);
+  const llFilterInitializedRef = useRef(false);
+  const versionFiltersEnabled = mappingAvailable;
+  const showMappingUnavailableHint =
+    lipGuardReady && lipAvailable && mappingInitialized && !mappingAvailable;
+
+  const collectScrollTargets = () => {
+    const seen = new Set<unknown>();
+    const targets: Array<Window | HTMLElement> = [];
+
+    const add = (target: Window | HTMLElement | null | undefined) => {
+      if (!target) return;
+      if (seen.has(target)) return;
+      seen.add(target);
+      targets.push(target);
+    };
+
+    add(window);
+    add((document.scrollingElement as HTMLElement) || document.documentElement);
+    add(document.body);
+
+    const walk = (seed: HTMLElement | null) => {
+      let el: HTMLElement | null = seed;
+      while (el) {
+        add(el);
+        el = el.parentElement;
+      }
+    };
+
+    walk(scrollContainerRef.current);
+    walk(pageRootRef.current);
+
+    return targets;
+  };
+
+  const resetScrollTop = () => {
+    for (const target of collectScrollTargets()) {
+      if (target === window) {
+        window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+        continue;
+      }
+      if (target instanceof HTMLElement) {
+        target.scrollTop = 0;
+        target.scrollLeft = 0;
+      }
+    }
+  };
+
+  const scheduleScrollReset = () => {
+    resetScrollTop();
+    const raf = requestAnimationFrame(resetScrollTop);
+    const t0 = window.setTimeout(resetScrollTop, 0);
+    const t1 = window.setTimeout(resetScrollTop, 120);
+    return () => {
+      cancelAnimationFrame(raf);
+      clearTimeout(t0);
+      clearTimeout(t1);
+    };
+  };
+
+  const loadPackages = async (forceRefresh = false) => {
+    setLoading(true);
+    setError("");
+    scheduleScrollReset();
+    try {
+      const list = await fetchLIPPackagesIndex({ forceRefresh });
+      setAllPackages(list.filter((pkg) => !shouldHidePackage(pkg)));
+    } catch (err) {
+      console.error(err);
+      setError(t("common.load_failed"));
+    } finally {
+      setLoading(false);
+      scheduleScrollReset();
+    }
+  };
+
+  useEffect(() => {
+    void loadPackages();
+  }, []);
+
+  const openLipSettings = useCallback(() => {
+    setLipMissingModalOpen(false);
+    navigate(ROUTES.settings, { state: { tab: "components" } });
+  }, [navigate]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const checkLipRuntime = async () => {
+      try {
+        const status = (await GetLipStatus()) as LipRuntimeStatus;
+        if (cancelled) return;
+
+        const installed = Boolean(status?.installed);
+        setLipAvailable(installed);
+        setLipMissingModalOpen(!installed);
+      } catch (guardError) {
+        console.warn("Failed to check lip runtime status", guardError);
+        if (cancelled) return;
+        setLipAvailable(true);
+      } finally {
+        if (!cancelled) {
+          setLipGuardReady(true);
+        }
+      }
+    };
+
+    void checkLipRuntime();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const loadFilterContext = useCallback(async () => {
+    const instanceName = await resolveCurrentInstanceName(currentVersionName);
+
+    let currentGameVersion = "";
+    let installedLLVersion = "";
+    const mappingGameToLLVersions = mappingAvailable ? gameToLLVersions : {};
+
+    if (instanceName) {
+      try {
+        const meta: any = await GetVersionMeta(instanceName);
+        currentGameVersion = normalizeGameVersion(
+          String(meta?.gameVersion || "").trim(),
+        );
+      } catch {}
+
+      try {
+        await ensureInstanceHydrated(instanceName, {
+          background: true,
+          reason: "lip-page-filter-context",
+        });
+        const snapshot = getInstanceSnapshot(instanceName);
+        installedLLVersion = normalizeLLVersionForFilter(
+          String(snapshot?.llState?.installedVersion || "").trim(),
+        );
+      } catch {}
+    }
+
+    const normalizedGameToLL = Object.fromEntries(
+      Object.entries(mappingGameToLLVersions).map(
+        ([gameVersion, llVersions]) => [
+          normalizeGameVersion(String(gameVersion || "").trim()),
+          sortLLVersionValuesDesc(
+            Array.isArray(llVersions)
+              ? llVersions.map((version) =>
+                  normalizeLLVersionForFilter(String(version || "").trim()),
+                )
+              : [],
+          ),
+        ],
+      ),
+    ) as Record<string, string[]>;
+
+    const gameOptions = sortGameVersionValuesDesc(
+      Object.keys(normalizedGameToLL).filter(Boolean),
+    );
+    if (
+      mappingAvailable &&
+      currentGameVersion &&
+      !gameOptions.includes(currentGameVersion)
+    ) {
+      gameOptions.unshift(currentGameVersion);
+      if (!Array.isArray(normalizedGameToLL[currentGameVersion])) {
+        normalizedGameToLL[currentGameVersion] = [];
+      }
+    }
+    const currentGameHasMappedLLVersions =
+      Boolean(currentGameVersion) &&
+      Array.isArray(normalizedGameToLL[currentGameVersion]) &&
+      normalizedGameToLL[currentGameVersion].length > 0;
+
+    setGameVersionOptions(gameOptions);
+    setCurrentInstalledLLVersion(installedLLVersion);
+    setSelectedGameVersion((prev) => {
+      if (!gameFilterInitializedRef.current) {
+        gameFilterInitializedRef.current = true;
+        if (
+          currentGameVersion &&
+          gameOptions.includes(currentGameVersion) &&
+          currentGameHasMappedLLVersions
+        ) {
+          return currentGameVersion;
+        }
+        return ALL_GAME_VERSION;
+      }
+      if (
+        prev === ALL_GAME_VERSION &&
+        currentGameVersion &&
+        gameOptions.includes(currentGameVersion) &&
+        currentGameHasMappedLLVersions
+      ) {
+        return currentGameVersion;
+      }
+      if (prev === currentGameVersion && !currentGameHasMappedLLVersions) {
+        return ALL_GAME_VERSION;
+      }
+      if (gameOptions.includes(prev)) {
+        return prev;
+      }
+      return ALL_GAME_VERSION;
+    });
+    setFilterContextReady(true);
+  }, [
+    currentVersionName,
+    ensureInstanceHydrated,
+    gameToLLVersions,
+    getInstanceSnapshot,
+    mappingAvailable,
+    normalizeGameVersion,
+    snapshotRevision,
+  ]);
+
+  useEffect(() => {
+    if (!lipGuardReady || !lipAvailable) return;
+    void loadFilterContext();
+  }, [lipAvailable, lipGuardReady, loadFilterContext]);
+
+  useEffect(() => {
+    if (!filterContextReady) return;
+
+    const allMappedLLVersions = sortLLVersionValuesDesc(
+      Object.values(gameToLLVersions).flatMap((versions) => versions),
+    );
+    let nextOptions =
+      selectedGameVersion === ALL_GAME_VERSION
+        ? sortLLVersionValuesDesc(allMappedLLVersions)
+        : sortLLVersionValuesDesc(gameToLLVersions[selectedGameVersion] || []);
+
+    if (!mappingAvailable) {
+      nextOptions = [];
+    }
+
+    if (
+      mappingAvailable &&
+      currentInstalledLLVersion &&
+      !nextOptions.includes(currentInstalledLLVersion) &&
+      selectedGameVersion === ALL_GAME_VERSION
+    ) {
+      nextOptions = [currentInstalledLLVersion, ...nextOptions];
+    }
+
+    setLLVersionOptions(nextOptions);
+    setSelectedLLVersion((prev) => {
+      if (!llFilterInitializedRef.current) {
+        llFilterInitializedRef.current = true;
+        if (
+          currentInstalledLLVersion &&
+          nextOptions.includes(currentInstalledLLVersion)
+        ) {
+          return currentInstalledLLVersion;
+        }
+        return ALL_LL_VERSION;
+      }
+      if (
+        prev === ALL_LL_VERSION &&
+        currentInstalledLLVersion &&
+        nextOptions.includes(currentInstalledLLVersion)
+      ) {
+        return currentInstalledLLVersion;
+      }
+      if (nextOptions.includes(prev)) {
+        return prev;
+      }
+      return ALL_LL_VERSION;
+    });
+  }, [
+    filterContextReady,
+    selectedGameVersion,
+    gameToLLVersions,
+    currentInstalledLLVersion,
+    mappingAvailable,
+  ]);
+
+  const llCandidatesByGame = useMemo(() => {
+    if (!mappingAvailable || selectedGameVersion === ALL_GAME_VERSION)
+      return [];
+    return gameToLLVersions[selectedGameVersion] || [];
+  }, [gameToLLVersions, mappingAvailable, selectedGameVersion]);
+
+  const filteredPackages = useMemo(() => {
+    const keyword = query.trim().toLowerCase();
+
+    return allPackages.filter((pkg) => {
+      const gameFilterActive =
+        mappingAvailable && selectedGameVersion !== ALL_GAME_VERSION;
+      const llFilterActive =
+        mappingAvailable && selectedLLVersion !== ALL_LL_VERSION;
+
+      if (gameFilterActive && !pkg.llDependencyRanges?.length) {
+        return false;
+      }
+
+      if (gameFilterActive && !llFilterActive) {
+        if (
+          !isLeviLaminaRangesCompatibleWithAnyVersion(
+            pkg.llDependencyRanges,
+            llCandidatesByGame,
+          )
+        ) {
+          return false;
+        }
+      } else if (gameFilterActive && llFilterActive) {
+        if (
+          llCandidatesByGame.length > 0 &&
+          !llCandidatesByGame.includes(selectedLLVersion)
+        ) {
+          return false;
+        }
+        if (
+          !isLeviLaminaVersionCompatible(
+            selectedLLVersion,
+            pkg.llDependencyRanges,
+          )
+        ) {
+          return false;
+        }
+      } else if (llFilterActive) {
+        if (
+          !pkg.llDependencyRanges?.length ||
+          !isLeviLaminaVersionCompatible(
+            selectedLLVersion,
+            pkg.llDependencyRanges,
+          )
+        ) {
+          return false;
+        }
+      }
+
+      if (!keyword) {
+        return true;
+      }
+
+      const haystacks = [
+        pkg.identifier,
+        pkg.name,
+        pkg.description,
+        pkg.author,
+        ...pkg.tags,
+      ].map((part) => String(part || "").toLowerCase());
+      return haystacks.some((part) => part.includes(keyword));
+    });
+  }, [
+    allPackages,
+    mappingAvailable,
+    query,
+    selectedGameVersion,
+    selectedLLVersion,
+    llCandidatesByGame,
+  ]);
+
+  const sortedPackages = useMemo(
+    () => sortPackages(filteredPackages, sort, order),
+    [filteredPackages, sort, order],
+  );
+
+  const totalPages = Math.max(1, Math.ceil(sortedPackages.length / PAGE_SIZE));
+
+  useEffect(() => {
+    if (page > totalPages) {
+      setPage(totalPages);
+    }
+  }, [page, totalPages]);
+
+  const currentPageItems = useMemo(() => {
+    const start = (page - 1) * PAGE_SIZE;
+    return sortedPackages.slice(start, start + PAGE_SIZE);
+  }, [sortedPackages, page]);
+
+  const handleSearch = () => {
+    setQuery(queryInput.trim());
+    setPage(1);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleSearch();
+    }
+  };
+
+  const handleSortChange = (value: LIPSortKey) => {
+    setSort(value);
+    setPage(1);
+    if (value === "name") {
+      setOrder("asc");
+    } else {
+      setOrder("desc");
+    }
+  };
+
+  const renderSkeletons = () => {
+    return Array(5)
+      .fill(0)
+      .map((_, index) => (
+        <div key={index} className="w-full flex items-center gap-3 p-3">
+          <div>
+            <Skeleton className="flex rounded-lg w-20 h-20 sm:w-24 sm:h-24" />
+          </div>
+          <div className="w-full flex flex-col gap-2">
+            <Skeleton className="h-3 w-3/5 rounded-lg" />
+            <Skeleton className="h-3 w-4/5 rounded-lg" />
+            <div className="flex gap-2 pt-2">
+              <Skeleton className="h-2 w-1/4 rounded-lg" />
+              <Skeleton className="h-2 w-1/4 rounded-lg" />
+            </div>
+          </div>
+        </div>
+      ));
+  };
+
+  const formatDate = (dateStr: string) => {
+    if (!dateStr) return "-";
+    return new Date(dateStr).toLocaleDateString();
+  };
+
+  return (
+    <PageContainer
+      ref={pageRootRef}
+      className={LAYOUT.CATALOG.PAGE}
+      animate={false}
+    >
+      <motion.div
+        data-material-motion
+        className="shrink-0"
+        data-testid="catalog-toolbar"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+      >
+        <Card className={cn("shrink-0", LAYOUT.GLASS_CARD.BASE)}>
+          <Card.Content className={LAYOUT.CATALOG.HEADER_BODY}>
+            <div className={LAYOUT.CATALOG.HEADER_ROW}>
+              <PageHeader className="shrink-0" title={t("lip.title")} />
+              <div className={LAYOUT.CATALOG.SEARCH_ROW}>
+                <TextField
+                  aria-label={t("lip.search_placeholder")}
+                  className={cn(
+                    "group",
+                    COMPONENT_STYLES.input.mainWrapper,
+                    "min-w-0 flex-[1_1_11rem]",
+                  )}
+                  value={queryInput}
+                  onChange={setQueryInput}
+                >
+                  <InputGroup
+                    className={cn(
+                      COMPONENT_STYLES.input.inputWrapper,
+                      COMPONENT_STYLES.input.innerWrapper,
+                      "min-h-8 text-sm",
+                    )}
+                  >
+                    <InputGroup.Prefix>{<LuSearch />}</InputGroup.Prefix>
+                    <InputGroup.Input
+                      placeholder={t("lip.search_placeholder")}
+                      onKeyDown={handleKeyDown}
+                      className={COMPONENT_STYLES.input.input}
+                    />
+                  </InputGroup>
+                </TextField>
+                <Button
+                  onPress={handleSearch}
+                  size="sm"
+                  variant={"primary"}
+                  className={
+                    "bg-brand-500 hover:bg-brand-500 brand-primary-foreground font-bold shadow-lg shadow-brand-900/20"
+                  }
+                >
+                  {<LuSearch />}
+                  {t("common.search")}
+                </Button>
+                <Button
+                  size="sm"
+                  onPress={() => {
+                    setPage(1);
+                    void loadPackages(true);
+                  }}
+                  isDisabled={loading}
+                  variant={"secondary"}
+                >
+                  {t("common.refresh")}
+                </Button>
+                <Button
+                  size="sm"
+                  onPress={() => setDeveloperGuideOpen(true)}
+                  variant={"secondary"}
+                >
+                  {<LuBookOpen />}
+                  {t("lip.guide.open_button")}
+                </Button>
+              </div>
+            </div>
+            <div data-testid="catalog-filters" className={LAYOUT.CATALOG.FILTERS}>
+              <Select
+                placeholder={t("lip.game_version_placeholder")}
+                isDisabled={!versionFiltersEnabled}
+                value={Array.from([selectedGameVersion])[0] ?? null}
+                onChange={(keys) => {
+                  const value = keys as string;
+                  setSelectedGameVersion(value || ALL_GAME_VERSION);
+                  setPage(1);
+                }}
+              >
+                <Label>{t("lip.game_version_label")}</Label>
+                <Select.Trigger
+                  className={cn(
+                    COMPONENT_STYLES.select.trigger,
+                    "min-h-8 text-sm",
+                  )}
+                >
+                  <Select.Value />
+                  <Select.Indicator />
+                </Select.Trigger>
+                <Select.Popover
+                  className={COMPONENT_STYLES.select.popoverContent}
+                >
+                  <ListBox
+                    items={[
+                      {
+                        key: ALL_GAME_VERSION,
+                        label: t("lip.game_all_versions"),
+                      },
+                      ...gameVersionOptions.map((version) => ({
+                        key: version,
+                        label: version,
+                      })),
+                    ]}
+                    className={COMPONENT_STYLES.select.listbox}
+                  >
+                    {(item) => (
+                      <ListBox.Item
+                        key={item.key}
+                        id={item.key}
+                        textValue={item.label}
+                      >
+                        <Label>{item.label}</Label>
+                        <ListBox.ItemIndicator />
+                      </ListBox.Item>
+                    )}
+                  </ListBox>
+                </Select.Popover>
+              </Select>
+
+              <Select
+                placeholder={t("lip.ll_version_placeholder")}
+                isDisabled={!versionFiltersEnabled}
+                value={Array.from([selectedLLVersion])[0] ?? null}
+                onChange={(keys) => {
+                  const value = keys as string;
+                  setSelectedLLVersion(value || ALL_LL_VERSION);
+                  setPage(1);
+                }}
+              >
+                <Label>{t("lip.ll_version_label")}</Label>
+                <Select.Trigger
+                  className={cn(
+                    COMPONENT_STYLES.select.trigger,
+                    "min-h-8 text-sm",
+                  )}
+                >
+                  <Select.Value />
+                  <Select.Indicator />
+                </Select.Trigger>
+                <Select.Popover
+                  className={COMPONENT_STYLES.select.popoverContent}
+                >
+                  <ListBox
+                    items={[
+                      { key: ALL_LL_VERSION, label: t("lip.ll_all_versions") },
+                      ...llVersionOptions.map((version) => ({
+                        key: version,
+                        label: version,
+                      })),
+                    ]}
+                    className={COMPONENT_STYLES.select.listbox}
+                  >
+                    {(item) => (
+                      <ListBox.Item
+                        key={item.key}
+                        id={item.key}
+                        textValue={item.label}
+                      >
+                        <Label>{item.label}</Label>
+                        <ListBox.ItemIndicator />
+                      </ListBox.Item>
+                    )}
+                  </ListBox>
+                </Select.Popover>
+              </Select>
+
+              <Select
+                placeholder={t("lip.select_sort")}
+                value={Array.from([sort])[0] ?? null}
+                onChange={(e) => handleSortChange(e as LIPSortKey)}
+              >
+                <Label>{t("lip.sort_by")}</Label>
+                <Select.Trigger
+                  className={cn(
+                    COMPONENT_STYLES.select.trigger,
+                    "min-h-8 text-sm",
+                  )}
+                >
+                  <Select.Value />
+                  <Select.Indicator />
+                </Select.Trigger>
+                <Select.Popover
+                  className={COMPONENT_STYLES.select.popoverContent}
+                >
+                  <ListBox className={COMPONENT_STYLES.select.listbox}>
+                    <ListBox.Item
+                      key="hotness"
+                      id={"hotness"}
+                      textValue={t("lip.sort_options.hotness")}
+                    >
+                      <Label>{t("lip.sort_options.hotness")}</Label>
+                      <ListBox.ItemIndicator />
+                    </ListBox.Item>
+                    <ListBox.Item
+                      key="updated"
+                      id={"updated"}
+                      textValue={t("lip.sort_options.updated")}
+                    >
+                      <Label>{t("lip.sort_options.updated")}</Label>
+                      <ListBox.ItemIndicator />
+                    </ListBox.Item>
+                    <ListBox.Item
+                      key="name"
+                      id={"name"}
+                      textValue={t("lip.sort_options.name")}
+                    >
+                      <Label>{t("lip.sort_options.name")}</Label>
+                      <ListBox.ItemIndicator />
+                    </ListBox.Item>
+                  </ListBox>
+                </Select.Popover>
+              </Select>
+
+              <Select
+                placeholder={t("lip.select_order")}
+                value={Array.from([order])[0] ?? null}
+                onChange={(e) => {
+                  setOrder(e as LIPOrderKey);
+                  setPage(1);
+                }}
+              >
+                <Label>{t("lip.order_by")}</Label>
+                <Select.Trigger
+                  className={cn(
+                    COMPONENT_STYLES.select.trigger,
+                    "min-h-8 text-sm",
+                  )}
+                >
+                  <Select.Value />
+                  <Select.Indicator />
+                </Select.Trigger>
+                <Select.Popover
+                  className={COMPONENT_STYLES.select.popoverContent}
+                >
+                  <ListBox className={COMPONENT_STYLES.select.listbox}>
+                    <ListBox.Item
+                      key="desc"
+                      id={"desc"}
+                      textValue={t("lip.order_options.desc")}
+                    >
+                      <Label>{t("lip.order_options.desc")}</Label>
+                      <ListBox.ItemIndicator />
+                    </ListBox.Item>
+                    <ListBox.Item
+                      key="asc"
+                      id={"asc"}
+                      textValue={t("lip.order_options.asc")}
+                    >
+                      <Label>{t("lip.order_options.asc")}</Label>
+                      <ListBox.ItemIndicator />
+                    </ListBox.Item>
+                  </ListBox>
+                </Select.Popover>
+              </Select>
+            </div>
+            {showMappingUnavailableHint ? (
+              <div className="text-sm text-amber-600" role="status">
+                {t("lip.mapping_unavailable_hint")}
+              </div>
+            ) : null}
+            {error ? (
+              <div className="text-sm text-rose-500" role="alert">
+                {error}
+              </div>
+            ) : null}
+          </Card.Content>
+        </Card>
+      </motion.div>
+
+      <motion.div
+        data-material-motion
+        className="flex-1 min-h-0 flex flex-col"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.1 }}
+      >
+        <Card className={cn("flex-1 min-h-0 overflow-hidden", LAYOUT.GLASS_CARD.BASE)}>
+          <Card.Content className={LAYOUT.CATALOG.RESULTS_BODY}>
+            <div
+              ref={scrollContainerRef}
+              data-testid="catalog-results"
+              className={LAYOUT.CATALOG.RESULTS_SCROLL}
+            >
+              {loading ? (
+                <div className="flex flex-col gap-3">{renderSkeletons()}</div>
+              ) : error && currentPageItems.length === 0 ? (
+                <div className="flex flex-col gap-3 items-center justify-center h-full text-muted">
+                  <p>{t("audit.mods.catalog_load_failed")}</p>
+                  <Button
+                    variant="secondary"
+                    onPress={() => void loadPackages(true)}
+                  >
+                    {t("common.retry")}
+                  </Button>
+                </div>
+              ) : currentPageItems.length === 0 ? (
+                <div className="flex items-center justify-center h-full text-muted dark:text-zinc-400">
+                  <p>{t("common.no_results")}</p>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-3">
+                  {currentPageItems.map((pkg) => (
+                    <motion.div
+                      key={pkg.identifier}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <Link
+                        className="w-full p-4 bg-surface/50 dark:bg-surface/5 hover:bg-surface-secondary/50 dark:hover:bg-surface/10 transition-all cursor-pointer rounded-2xl flex gap-4 group shadow-sm hover:shadow-md border border-border dark:border-white/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+                        to={routeTo.lipPackage(pkg.identifier)}
+                        aria-label={t("audit.mods.view_details", { name: pkg.name })}
+                      >
+                        <div className="shrink-0">
+                          {pkg.avatarUrl ? (
+                            <img
+                              src={pkg.avatarUrl}
+                              alt={pkg.name}
+                              className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-cover bg-surface-tertiary shadow-sm"
+                              loading="lazy"
+                            />
+                          ) : (
+                            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-surface-tertiary shadow-sm flex items-center justify-center text-muted">
+                              <LuDownload size={24} />
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="flex flex-col flex-1 min-w-0 gap-1">
+                          <div className="flex items-baseline gap-2 truncate">
+                            <h3 className="text-base sm:text-lg font-bold text-foreground truncate">
+                              {pkg.name}
+                            </h3>
+                            <span className="text-xs sm:text-sm text-muted dark:text-zinc-400 truncate">
+                              <span aria-hidden="true">|</span>{" "}
+                              {t("lip.by_author_inline", {
+                                author: pkg.author || t("common.unknown"),
+                              })}
+                            </span>
+                          </div>
+
+                          <p className="text-xs sm:text-sm text-muted dark:text-zinc-400 line-clamp-2 w-full">
+                            {pkg.description || t("lip.no_description")}
+                          </p>
+
+                          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted mt-1">
+                            <div
+                              className="flex items-center gap-1"
+                              title={t("lip.sort_options.hotness")}
+                            >
+                              <LuFlame className="text-orange-500" />
+                              <span>{pkg.hotness}</span>
+                            </div>
+                            <div
+                              className="flex items-center gap-1"
+                              title={t("lip.sort_options.updated")}
+                            >
+                              <LuClock />
+                              <span>{formatDate(pkg.updated)}</span>
+                            </div>
+                          </div>
+
+                          <div className="flex flex-wrap gap-1 mt-2">
+                            {pkg.tags.slice(0, 5).map((tag) => (
+                              <Chip
+                                key={tag}
+                                size="sm"
+                                variant="soft"
+                                className={cn(
+                                  "rounded-sm",
+                                  "h-5 text-[10px] bg-surface-secondary text-muted dark:text-zinc-400 group-hover:bg-surface-tertiary dark:group-hover:bg-surface-tertiary transition-colors",
+                                )}
+                              >
+                                <Chip.Label>{tag}</Chip.Label>
+                              </Chip>
+                            ))}
+                          </div>
+                        </div>
+                      </Link>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+            </div>
+            {totalPages > 1 && (
+              <div data-testid="catalog-pagination" className={LAYOUT.CATALOG.FOOTER}>
+                <PagePagination
+                  className="gap-2"
+                  pageCount={totalPages}
+                  currentPage={page}
+                  onPageChange={(p) => {
+                    scheduleScrollReset();
+                    setPage(p);
+                  }}
+                  pageClassName="rounded-full"
+                />
+              </div>
+            )}
+          </Card.Content>
+        </Card>
+      </motion.div>
+
+      <UnifiedModal
+        size="wide"
+        isOpen={developerGuideOpen}
+        onOpenChange={setDeveloperGuideOpen}
+        type="primary"
+        icon={<LuBookOpen size={24} />}
+        title={t("lip.guide.title")}
+        isDismissable
+        footer={
+          <>
+            <ModalAction
+              onPress={() => setDeveloperGuideOpen(false)}
+              variant="secondary"
+            >
+              {t("lip.guide.close_button")}
+            </ModalAction>
+            <ModalAction
+              onPress={() => void Browser.OpenURL(LIP_DEVELOPER_GUIDE_URL)}
+              variant={"primary"}
+            >
+              {<LuExternalLink />}
+              {t("lip.guide.docs_button")}
+            </ModalAction>
+          </>
+        }
+      >
+        <div className="flex flex-col gap-4 text-sm leading-6 text-foreground dark:text-zinc-300">
+          <p>{t("lip.guide.description")}</p>
+          <p>{t("lip.guide.manifest_hint")}</p>
+          <ModalDescription>
+            {t("lip.guide.variant_hint")}
+          </ModalDescription>
+        </div>
+      </UnifiedModal>
+
+      <UnifiedModal
+        size="standard"
+        isOpen={lipMissingModalOpen}
+        onOpenChange={setLipMissingModalOpen}
+        type="warning"
+        title={t("lip.guard.title")}
+        isDismissable={false}
+        confirmText={t("settings.lip.startup_prompt.open_settings_button")}
+        onConfirm={openLipSettings}
+      >
+        <div className="flex flex-col gap-3 text-sm leading-6 text-foreground dark:text-zinc-300">
+          <p>{t("lip.guard.description")}</p>
+        </div>
+      </UnifiedModal>
+    </PageContainer>
+  );
+};
+
+export default LIPPage;

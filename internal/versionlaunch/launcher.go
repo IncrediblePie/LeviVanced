@@ -1,0 +1,300 @@
+package versionlaunch
+
+import (
+	"context"
+	"fmt"
+	"log"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"strings"
+	"syscall"
+	"unsafe"
+
+	"github.com/liteldev/LeviLauncher/internal/apppath"
+	"github.com/liteldev/LeviLauncher/internal/launch"
+	"github.com/liteldev/LeviLauncher/internal/leviloader"
+	"github.com/liteldev/LeviLauncher/internal/mods"
+	"github.com/liteldev/LeviLauncher/internal/peeditor"
+	"github.com/liteldev/LeviLauncher/internal/utils"
+	"github.com/liteldev/LeviLauncher/internal/uwp"
+	"github.com/liteldev/LeviLauncher/internal/versions"
+	"github.com/wailsapp/wails/v3/pkg/application"
+	"golang.org/x/sys/windows"
+)
+
+type Launcher struct {
+}
+
+func New(enablePreloader bool) *Launcher {
+	return &Launcher{}
+}
+
+func isPathInside(root string, target string) bool {
+	absRoot, err1 := filepath.Abs(strings.TrimSpace(root))
+	absTarget, err2 := filepath.Abs(strings.TrimSpace(target))
+	if err1 != nil || err2 != nil {
+		return false
+	}
+	lowRoot := strings.ToLower(filepath.Clean(absRoot))
+	lowTarget := strings.ToLower(filepath.Clean(absTarget))
+	if lowTarget == lowRoot {
+		return true
+	}
+	return strings.HasPrefix(lowTarget, lowRoot+string(os.PathSeparator))
+}
+
+func resolveVersionDir(name string) (string, string) {
+	vdir, err := apppath.VersionsDir()
+	if err != nil || strings.TrimSpace(vdir) == "" {
+		return "", "ERR_ACCESS_VERSIONS_DIR"
+	}
+	n := strings.TrimSpace(name)
+	if n == "" {
+		return "", "ERR_INVALID_NAME"
+	}
+	if filepath.IsAbs(n) {
+		return "", "ERR_PATH_ESCAPE"
+	}
+	if strings.ContainsAny(n, `/\`) {
+		return "", "ERR_PATH_ESCAPE"
+	}
+	cleaned := filepath.Clean(n)
+	if cleaned == "." || cleaned == ".." {
+		return "", "ERR_PATH_ESCAPE"
+	}
+	if verr := versions.ValidateFolderName(n); verr != "" {
+		return "", "ERR_INVALID_NAME"
+	}
+	dir := filepath.Join(vdir, n)
+	if !isPathInside(vdir, dir) {
+		return "", "ERR_PATH_ESCAPE"
+	}
+	return dir, ""
+}
+
+func ValidateLaunchName(name string) string {
+	_, errCode := resolveVersionDir(name)
+	return errCode
+}
+
+func (l *Launcher) Launch(ctx context.Context, name string, checkRunning bool) string {
+	dir, errCode := resolveVersionDir(name)
+	if errCode != "" {
+		return errCode
+	}
+	meta, _ := versions.ReadMeta(dir)
+	if versions.DetectPackageType(dir, meta) == versions.PackageTypeUWP {
+		manifest, err := uwp.ReadManifest(dir)
+		if err != nil {
+			return uwp.ErrorCode(err)
+		}
+		exe := filepath.Join(dir, manifest.Applications[0].Executable)
+		if !utils.FileExists(exe) {
+			return "ERR_NOT_FOUND_EXE"
+		}
+		// UWP re-registration and import editing require the process to exit,
+		// including when the caller asks to bypass the normal running check.
+		if isProcessRunningAtPath(exe) {
+			return "ERR_GAME_ALREADY_RUNNING"
+		}
+		application.Get().Event.Emit(launch.EventMcLaunchStart, struct{}{})
+		prepare, err := uwpNativePreparation(dir, name, exe, meta.EnableConsole)
+		if err != nil {
+			return "ERR_UWP_PREPARE: " + err.Error()
+		}
+		var prepareLaunch func() error
+		if prepare {
+			prepareLaunch = func() error {
+				_, err := leviloader.PatchAndActivate(ctx, dir)
+				return err
+			}
+		}
+		var monitor *launch.GameLaunchMonitor
+		pid, err := uwp.LaunchWithPreparation(ctx, dir, meta.EnableEditorMode, prepareLaunch, func() {
+			monitor = launch.BeginGameLaunch(ctx, dir)
+		})
+		monitor.Finish(pid, err)
+		if err != nil {
+			log.Printf("UWP launch failed for %s: %v", name, err)
+			return uwp.ErrorMessage(err)
+		}
+		meta.Registered = true
+		meta.PackageType = versions.PackageTypeUWP
+		if meta.Name != "" {
+			_ = versions.WriteMeta(dir, meta)
+		}
+		return ""
+	}
+	exe := filepath.Join(dir, "Minecraft.Windows.exe")
+	if !utils.FileExists(exe) {
+		return "ERR_NOT_FOUND_EXE"
+	}
+	application.Get().Event.Emit(launch.EventMcLaunchStart, struct{}{})
+	if _, err := leviloader.PatchAndActivate(ctx, dir); err != nil {
+		log.Printf("Failed to activate loader for %s: %v", exe, err)
+		return "ERR_LAUNCH_GAME"
+	}
+
+	var args []string
+	var envs []string
+	toRun := exe
+	var enableConsole bool
+	if m, err := versions.ReadMeta(dir); err == nil {
+		if m.EnvVars != "" {
+			for _, line := range strings.Split(m.EnvVars, "\n") {
+				if trimmed := strings.TrimSpace(line); trimmed != "" {
+					envs = append(envs, trimmed)
+				}
+			}
+		}
+		if m.LaunchArgs != "" {
+			args = append(args, parseCommandLineArgs(m.LaunchArgs)...)
+		}
+		enableConsole = m.EnableConsole
+		preparedExe, err := peeditor.PrepareExecutableForLaunch(ctx, dir, m.EnableConsole)
+		if err != nil {
+			log.Printf("Failed to prepare executable: %v", err)
+		} else if strings.TrimSpace(preparedExe) != "" {
+			toRun = preparedExe
+		}
+		if m.Registered {
+			isPreview := strings.EqualFold(strings.TrimSpace(m.Type), "preview")
+			protocol := "minecraft://"
+			if isPreview {
+				protocol = "minecraft-preview://"
+			}
+			url := protocol
+			if m.EnableEditorMode {
+				url = versions.EditorLaunchURI(versions.PackageTypeGDK, m.Type)
+			}
+
+			cmd := exec.Command("cmd", "/c", "start", "", url)
+			if len(envs) > 0 {
+				cmd.Env = append(os.Environ(), envs...)
+			}
+			if err := cmd.Start(); err != nil {
+				log.Printf("Launch protocol failed for %s: %v", name, err)
+				return "ERR_LAUNCH_GAME"
+			}
+			go launch.MonitorGameProcess(ctx, dir, 0)
+			return ""
+		}
+		if m.EnableEditorMode {
+			args = append(args, "-Editor", "true")
+		}
+	}
+
+	if checkRunning {
+		if isProcessRunningAtPath(toRun) {
+			return "ERR_GAME_ALREADY_RUNNING"
+		}
+	}
+	cmd := exec.Command(toRun, args...)
+	if len(envs) > 0 {
+		cmd.Env = append(os.Environ(), envs...)
+	}
+	cmd.Dir = filepath.Dir(toRun)
+	if enableConsole {
+		cmd.SysProcAttr = &syscall.SysProcAttr{
+			HideWindow:       false,
+			NoInheritHandles: true,
+		}
+	}
+	if err := cmd.Start(); err != nil {
+		log.Printf("Launch executable failed for %s: %v", name, err)
+		return "ERR_LAUNCH_GAME"
+	}
+	launchPID := 0
+	if cmd.Process != nil {
+		launchPID = cmd.Process.Pid
+	}
+	go launch.MonitorGameProcess(ctx, dir, launchPID)
+	return ""
+}
+
+func uwpNativePreparation(dir, name, exe string, console bool) (bool, error) {
+	supported, err := leviloader.SupportsExecutable(exe)
+	if err != nil || supported {
+		return supported, err
+	}
+	// Keep vanilla x86/ARM64 UWP launches working. Desktop DLL features must
+	// report an architecture error instead of injecting an incompatible DLL.
+	needsLoader := console
+	for _, mod := range mods.GetMods(name) {
+		if mod.Type == "preload-native" && utils.FileExists(filepath.Join(dir, "mods", mod.Folder, "manifest.json")) {
+			needsLoader = true
+			break
+		}
+	}
+	if needsLoader {
+		return false, fmt.Errorf("console and native DLL mods require an x64 UWP game package")
+	}
+	return false, nil
+}
+
+func parseCommandLineArgs(input string) []string {
+	var args []string
+	var current strings.Builder
+	inQuote := false
+
+	for _, r := range input {
+		switch r {
+		case '"':
+			inQuote = !inQuote
+		case ' ', '\t', '\n', '\r':
+			if inQuote {
+				current.WriteRune(r)
+			} else if current.Len() > 0 {
+				args = append(args, current.String())
+				current.Reset()
+			}
+		default:
+			current.WriteRune(r)
+		}
+	}
+	if current.Len() > 0 {
+		args = append(args, current.String())
+	}
+	return args
+}
+
+func isProcessRunningAtPath(exePath string) bool {
+	normalizedTarget := utils.CanonicalWindowsPath(exePath)
+	if normalizedTarget == "" {
+		return false
+	}
+	snap, err := windows.CreateToolhelp32Snapshot(windows.TH32CS_SNAPPROCESS, 0)
+	if err != nil {
+		return false
+	}
+	defer windows.CloseHandle(snap)
+
+	var pe windows.ProcessEntry32
+	pe.Size = uint32(unsafe.Sizeof(pe))
+	if err := windows.Process32First(snap, &pe); err != nil {
+		return false
+	}
+	for {
+		pid := pe.ProcessID
+		h, err := windows.OpenProcess(windows.PROCESS_QUERY_LIMITED_INFORMATION, false, pid)
+		if err == nil {
+			buf := make([]uint16, 1024)
+			size := uint32(len(buf))
+			if e := windows.QueryFullProcessImageName(h, 0, &buf[0], &size); e == nil && size > 0 {
+				processPath := windows.UTF16ToString(buf[:size])
+				_ = windows.CloseHandle(h)
+				normalizedProcessPath := utils.NormalizeWindowsPath(processPath)
+				if normalizedProcessPath == normalizedTarget {
+					return true
+				}
+			} else {
+				_ = windows.CloseHandle(h)
+			}
+		}
+		if err := windows.Process32Next(snap, &pe); err != nil {
+			break
+		}
+	}
+	return false
+}

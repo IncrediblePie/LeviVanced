@@ -1,0 +1,49 @@
+# If you prefer the allow list template instead of the deny list, see community template:
+# https://github.com/github/gitignore/blob/main/community/Golang/Go.AllowList.gitignore
+#
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# Dependency directories (remove the comment below to include it)
+# vendor/
+
+# Go workspace file
+go.work
+
+build/bin
+build/versions
+# `wails3 update build-assets` regenerates these on every build; the launcher targets Windows.
+build/darwin/
+build/ios/
+build/linux/
+logs
+bin
+/native/*
+!/native/levilauncher/
+nda
+
+.idea
+.task
+.vscode
+
+.claude
+.cursor
+.windsurf
+.agent
+.trae
+.kiro
+
+.env
+
+__pycache__/
+node_modules/
+/.vs

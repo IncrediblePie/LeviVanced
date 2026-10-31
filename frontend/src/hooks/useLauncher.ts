@@ -1,0 +1,1399 @@
+import { openDirectory, showDirectoryOpenError } from "@/utils/explorer";
+import { useOverlayState } from "@heroui/react";
+import React, { useEffect, useRef } from "react";
+
+import { Events } from "@wailsio/runtime";
+import { useNavigate } from "react-router-dom";
+import { compareVersions } from "@/utils/version";
+import {
+  readCurrentVersionName,
+  saveCurrentVersionName,
+} from "@/utils/currentVersion";
+import * as minecraft from "bindings/github.com/liteldev/LeviLauncher/internal/app/minecraft";
+import {
+  EnsureGameInputInteractive,
+  EnsureVcRuntimeInteractive,
+  ListDir,
+} from "bindings/github.com/liteldev/LeviLauncher/internal/app/minecraft";
+import * as contentService from "bindings/github.com/liteldev/LeviLauncher/internal/app/contentservice";
+import * as modsService from "bindings/github.com/liteldev/LeviLauncher/internal/app/modsservice";
+import * as versionService from "bindings/github.com/liteldev/LeviLauncher/internal/app/versionservice";
+import * as userService from "bindings/github.com/liteldev/LeviLauncher/internal/app/userservice";
+import { getPlayerGamertagMap, listPlayers } from "@/utils/content";
+import { ROUTES } from "@/constants/routes";
+import { normalizePackageType } from "@/utils/packageType";
+
+const IGNORE_GS_KEY = "ll.ignore.gs";
+const DEPENDENCY_CHECK_SESSION_KEYS = {
+  gameInput: "ll.session.dependency-check.gameinput",
+  gamingServices: "ll.session.dependency-check.gamingservices",
+  vcRuntime: "ll.session.dependency-check.vcruntime",
+} as const;
+const VC_RUNTIME_CHECK_RETRY_DELAY_MS = 800;
+
+const hasSessionDependencyCheckRun = (
+  key: (typeof DEPENDENCY_CHECK_SESSION_KEYS)[keyof typeof DEPENDENCY_CHECK_SESSION_KEYS],
+): boolean => {
+  try {
+    return window.sessionStorage.getItem(key) === "1";
+  } catch {
+    return false;
+  }
+};
+
+const markSessionDependencyCheckRun = (
+  key: (typeof DEPENDENCY_CHECK_SESSION_KEYS)[keyof typeof DEPENDENCY_CHECK_SESSION_KEYS],
+) => {
+  try {
+    window.sessionStorage.setItem(key, "1");
+  } catch {}
+};
+
+const getNextRandomTipIndex = (currentIndex: number, totalTips: number) => {
+  const normalizedTotal = Math.max(1, totalTips);
+
+  if (normalizedTotal <= 1) {
+    return 0;
+  }
+
+  let nextIndex = Math.floor(Math.random() * normalizedTotal);
+
+  if (nextIndex === currentIndex) {
+    nextIndex = (nextIndex + 1) % normalizedTotal;
+  }
+
+  return nextIndex;
+};
+
+export const useLauncher = (args: any) => {
+  const [isAnimating, setIsAnimating] = React.useState(true);
+  let [currentVersion, setCurrentVersion] = React.useState<string>("");
+  const [displayVersion, setDisplayVersion] = React.useState<string>("");
+  const [displayName, setDisplayName] = React.useState<string>("");
+  const [localVersionMap, setLocalVersionMap] = React.useState<
+    Map<string, any>
+  >(new Map());
+
+  const currentPackageType = localVersionMap.has(currentVersion)
+    ? normalizePackageType(localVersionMap.get(currentVersion)?.packageType)
+    : undefined;
+
+  const launchFailedDisclosure = useOverlayState();
+  const gameInputInstallingDisclosure = useOverlayState();
+  const gameInputMissingDisclosure = useOverlayState();
+  const vcRuntimeInstallingDisclosure = useOverlayState();
+  const vcRuntimeMissingDisclosure = useOverlayState();
+  const gamingServicesMissingDisclosure = useOverlayState();
+  const installConfirmDisclosure = useOverlayState();
+  const vcRuntimeCompletingDisclosure = useOverlayState();
+  const mcLaunchLoadingDisclosure = useOverlayState();
+  const shortcutSuccessDisclosure = useOverlayState();
+  const registerInstallingDisclosure = useOverlayState();
+  const registerSuccessDisclosure = useOverlayState();
+  const registerFailedDisclosure = useOverlayState();
+  const loaderMigrationDisclosure = useOverlayState();
+
+  const hasBackend = minecraft !== undefined;
+  const navigate = useNavigate();
+  const [launchErrorCode, setLaunchErrorCode] = React.useState<string>("");
+  const [contentCounts, setContentCounts] = React.useState<{
+    worlds: number;
+    resourcePacks: number;
+    behaviorPacks: number;
+  }>({ worlds: 0, resourcePacks: 0, behaviorPacks: 0 });
+  const [giTotal, setGiTotal] = React.useState<number>(0);
+  const [giDownloaded, setGiDownloaded] = React.useState<number>(0);
+  const [vcTotal, setVcTotal] = React.useState<number>(0);
+  const [vcDownloaded, setVcDownloaded] = React.useState<number>(0);
+  const [migrateTotal, setMigrateTotal] = React.useState<number>(0);
+  const [migrateDone, setMigrateDone] = React.useState<number>(0);
+  const [migrateError, setMigrateError] = React.useState("");
+  const [pendingInstallCheck, setPendingInstallCheck] = React.useState<
+    "gi" | "gs" | "vc" | null
+  >(null);
+  const [logoDataUrl, setLogoDataUrl] = React.useState<string>("");
+  const [versionQuery, setVersionQuery] = React.useState<string>("");
+  const [logoByName, setLogoByName] = React.useState<Map<string, string>>(
+    new Map(),
+  );
+  const [isLoadingVersions, setIsLoadingVersions] =
+    React.useState<boolean>(false);
+  const [registerAction, setRegisterAction] = React.useState<
+    "register" | "unregister"
+  >("register");
+  const [tipIndex, setTipIndex] = React.useState<number>(0);
+  const tipTimerRef = React.useRef<number | null>(null);
+  const launchRequestActiveRef = React.useRef<boolean>(false);
+  const [launchPending, setLaunchPending] = React.useState(false);
+  const [registrationPendingAction, setRegistrationPendingAction] = React.useState<"register" | "unregister" | null>(null);
+  const registrationRequestActiveRef = React.useRef(false);
+  const registrationRevisionRef = React.useRef(0);
+
+  useEffect(() => {
+    const registrationRevision = registrationRevisionRef.current;
+    try {
+      const saved = readCurrentVersionName();
+      if (!saved) return;
+      setCurrentVersion(saved);
+      setDisplayName(saved);
+      const fn = (versionService as any)?.GetVersionMeta;
+      if (typeof fn === "function") {
+        fn(saved)
+          .then((m: any) => {
+            const ver = String(m?.gameVersion || "");
+            setDisplayVersion(ver || "");
+            setLocalVersionMap((prev) => {
+              const map = new Map(prev);
+              const prevInfo = map.get(saved);
+              const knownLeviLaminaStatus =
+                typeof prevInfo?.isLeviLaminaInstalled === "boolean"
+                  ? prevInfo.isLeviLaminaInstalled
+                  : undefined;
+              map.set(saved, {
+                name: saved,
+                version: ver,
+                packageType: normalizePackageType(m?.packageType),
+                type: String(m?.type || "release").toLowerCase(),
+                isPreview: String(m?.type || "").toLowerCase() === "preview",
+                isRegistered: registrationRevision === registrationRevisionRef.current
+                  ? Boolean(m?.registered)
+                  : Boolean(prevInfo?.isRegistered),
+                isLaunched: false,
+                isPreLoader: false,
+                isLeviLaminaInstalled: knownLeviLaminaStatus,
+              });
+              return map;
+            });
+            const getter = (versionService as any)?.GetVersionLogoDataUrl;
+            if (typeof getter === "function") {
+              getter(saved).then((u: string) => {
+                if (readCurrentVersionName() === saved) {
+                  setLogoDataUrl(String(u || ""));
+                }
+              });
+            }
+          })
+          .catch(() => {});
+      }
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    try {
+      versionService.ReconcileRegisteredFlags();
+    } catch {}
+  }, []);
+
+  const startTipTimer = React.useCallback((tipsLength: number) => {
+    try {
+      if (tipTimerRef.current !== null) {
+        clearInterval(tipTimerRef.current);
+        tipTimerRef.current = null;
+      }
+
+      const normalizedTipsLength = Math.max(0, tipsLength);
+
+      setTipIndex((prev) =>
+        normalizedTipsLength <= 0 ? 0 : prev % normalizedTipsLength,
+      );
+
+      if (normalizedTipsLength <= 1) {
+        return;
+      }
+
+      tipTimerRef.current = window.setInterval(() => {
+        setTipIndex((prev) =>
+          getNextRandomTipIndex(prev, normalizedTipsLength),
+        );
+      }, 10000);
+    } catch {}
+  }, []);
+
+  const stopTipTimer = React.useCallback(() => {
+    try {
+      if (tipTimerRef.current !== null) {
+        clearInterval(tipTimerRef.current);
+        tipTimerRef.current = null;
+      }
+    } catch {}
+  }, []);
+
+  const sortedVersionNames = React.useMemo(() => {
+    const entries = Array.from(localVersionMap.entries()).map(
+      ([name, info]) => ({
+        name,
+        version: String(info?.version || ""),
+        isPreview: !!info?.isPreview,
+      }),
+    );
+    entries.sort((a, b) => {
+      const byVer = compareVersions(b.version, a.version);
+      if (byVer !== 0) return byVer;
+      const byPreview = b.isPreview === a.isPreview ? 0 : b.isPreview ? 1 : -1;
+      if (byPreview !== 0) return byPreview;
+      return a.name.localeCompare(b.name);
+    });
+    return entries.map((e) => e.name);
+  }, [localVersionMap, compareVersions]);
+
+  const filteredVersionNames = React.useMemo(() => {
+    const q = versionQuery.trim().toLowerCase();
+    if (!q) return sortedVersionNames;
+    return sortedVersionNames.filter((name) => {
+      const ver = String(localVersionMap.get(name)?.version || "");
+      return name.toLowerCase().includes(q) || ver.toLowerCase().includes(q);
+    });
+  }, [versionQuery, sortedVersionNames, localVersionMap]);
+
+  const buildVersionMenuItems = React.useCallback(
+    (emptyLabel: string) => {
+      if (filteredVersionNames.length === 0) {
+        return [
+          {
+            key: "__empty",
+            name: emptyLabel,
+            version: "",
+            isRegistered: false,
+            isDisabled: true,
+          },
+        ];
+      }
+      return filteredVersionNames.map((name) => ({
+        key: name,
+        name,
+        version: String(localVersionMap.get(name)?.version || ""),
+        packageType: normalizePackageType(localVersionMap.get(name)?.packageType),
+        type: String(localVersionMap.get(name)?.type || "release"),
+        isRegistered: Boolean(localVersionMap.get(name)?.isRegistered),
+        isLeviLaminaInstalled: Boolean(
+          localVersionMap.get(name)?.isLeviLaminaInstalled,
+        ),
+        isDisabled: false,
+        logo: logoByName.get(name),
+      }));
+    },
+    [filteredVersionNames, localVersionMap, logoByName],
+  );
+
+  const doLaunch = React.useCallback(() => {
+    if (launchRequestActiveRef.current || registrationRequestActiveRef.current) return;
+    const name = currentVersion;
+    if (name) {
+      saveCurrentVersionName(name);
+      launchRequestActiveRef.current = true;
+      setLaunchPending(true);
+      const launch = versionService?.LaunchVersionByName;
+      if (typeof launch === "function") {
+        launch(name)
+          .then((err: string) => {
+            const s = String(err || "");
+            if (s) {
+              if (s.startsWith("ERR_UWP_NOT_REGISTERED")) {
+                registrationRevisionRef.current += 1;
+                setLocalVersionMap((previous) => {
+                  const next = new Map(previous);
+                  const current = next.get(name);
+                  if (current) next.set(name, { ...current, isRegistered: false });
+                  return next;
+                });
+              }
+              launchRequestActiveRef.current = false;
+              mcLaunchLoadingDisclosure.close();
+              setLaunchErrorCode(s);
+              launchFailedDisclosure.open();
+            }
+          })
+          .catch(() => {
+            launchRequestActiveRef.current = false;
+            mcLaunchLoadingDisclosure.close();
+            setLaunchErrorCode("ERR_LAUNCH_GAME");
+            launchFailedDisclosure.open();
+          }).finally(() => {
+            setLaunchPending(false);
+          });
+      } else {
+        launchRequestActiveRef.current = false;
+        setLaunchPending(false);
+      }
+    } else {
+      launchRequestActiveRef.current = false;
+      navigate(ROUTES.download);
+    }
+  }, [
+    currentVersion,
+    navigate,
+    launchFailedDisclosure,
+    mcLaunchLoadingDisclosure,
+  ]);
+
+  const doForceLaunch = React.useCallback(() => {
+    const name = currentVersion;
+    if (name) {
+      saveCurrentVersionName(name);
+      launchRequestActiveRef.current = true;
+      const launchForce = versionService?.LaunchVersionByNameForce;
+      if (typeof launchForce === "function") {
+        launchForce(name)
+          .then((err: string) => {
+            const s = String(err || "");
+            if (s) {
+              launchRequestActiveRef.current = false;
+              mcLaunchLoadingDisclosure.close();
+              setLaunchErrorCode(s);
+              launchFailedDisclosure.open();
+            }
+          })
+          .catch(() => {
+            launchRequestActiveRef.current = false;
+            mcLaunchLoadingDisclosure.close();
+            setLaunchErrorCode("ERR_LAUNCH_GAME");
+            launchFailedDisclosure.open();
+          });
+      } else {
+        launchRequestActiveRef.current = false;
+      }
+    }
+  }, [currentVersion, launchFailedDisclosure, mcLaunchLoadingDisclosure]);
+
+  const doCreateShortcut = React.useCallback(() => {
+    const name = currentVersion;
+    if (name) {
+      versionService
+        ?.CreateDesktopShortcut(name)
+        .then((err: string) => {
+          const s = String(err || "");
+          if (s) {
+            setLaunchErrorCode(s);
+            launchFailedDisclosure.open();
+          } else {
+            shortcutSuccessDisclosure.open();
+          }
+        })
+        .catch(() => {
+          setLaunchErrorCode("ERR_SHORTCUT_CREATE_FAILED");
+          launchFailedDisclosure.open();
+        });
+    }
+  }, [currentVersion, launchFailedDisclosure, shortcutSuccessDisclosure]);
+
+  const doOpenFolder = React.useCallback(async () => {
+    if (!currentVersion) return;
+    try {
+      const vdir = await versionService.GetVersionsDir();
+      if (!vdir) return;
+      const path = vdir + "\\" + currentVersion;
+      await openDirectory(path);
+    } catch (e) {
+      showDirectoryOpenError(e);
+    }
+  }, [currentVersion]);
+
+  const syncRegisteredFlags = React.useCallback(async () => {
+    const registrationRevision = registrationRevisionRef.current;
+    const listFn = versionService.ListVersionMetasWithRegistered;
+    if (typeof listFn !== "function") return null;
+    try {
+      const metas = (await listFn()) || [];
+      if (!Array.isArray(metas) || registrationRevision !== registrationRevisionRef.current) return null;
+      setLocalVersionMap((prev) => {
+        const next = new Map(prev);
+        let changed = false;
+        metas.forEach((m: any) => {
+          const name = String(m?.name || "");
+          if (!name) return;
+          const version = String(m?.gameVersion || "");
+          const isPreview =
+            String(m?.type || "release").toLowerCase() === "preview";
+          const isRegistered = Boolean(m?.registered);
+          const existing = next.get(name);
+          if (!existing) {
+            next.set(name, {
+              name,
+              version,
+              packageType: normalizePackageType(m?.packageType),
+              type: String(m?.type || "release").toLowerCase(),
+              isPreview,
+              isRegistered,
+              isLaunched: false,
+              isPreLoader: false,
+              isLeviLaminaInstalled: undefined,
+            });
+            changed = true;
+            return;
+          }
+          if (
+            String(existing?.version || "") !== version ||
+            Boolean(existing?.isPreview) !== isPreview ||
+            Boolean(existing?.isRegistered) !== isRegistered
+          ) {
+            next.set(name, {
+              ...existing,
+              version,
+              packageType: normalizePackageType(m?.packageType),
+              type: String(m?.type || "release").toLowerCase(),
+              isPreview,
+              isRegistered,
+            });
+            changed = true;
+          }
+        });
+        return changed ? next : prev;
+      });
+      return metas;
+    } catch {
+      return null;
+    }
+  }, []);
+
+  const applyOptimisticRegisterState = React.useCallback((name: string) => {
+    if (!name) return;
+    setLocalVersionMap((prev) => {
+      const target = prev.get(name);
+      if (!target) return prev;
+      const targetIsPreview = Boolean(target?.isPreview);
+      const next = new Map(prev);
+      let changed = false;
+      next.forEach((info, key) => {
+        // GDK and UWP share the Windows package identity; Beta uses Release.
+        if (Boolean(info?.isPreview) !== targetIsPreview) return;
+        const shouldRegistered = key === name;
+        if (Boolean(info?.isRegistered) !== shouldRegistered) {
+          next.set(key, { ...info, isRegistered: shouldRegistered });
+          changed = true;
+        }
+      });
+      return changed ? next : prev;
+    });
+  }, []);
+
+  const applyOptimisticUnregisterState = React.useCallback((name: string) => {
+    if (!name) return;
+    setLocalVersionMap((prev) => {
+      const target = prev.get(name);
+      if (!target || !target.isRegistered) return prev;
+      const next = new Map(prev);
+      next.set(name, { ...target, isRegistered: false });
+      return next;
+    });
+  }, []);
+
+  const doRegister = React.useCallback(async (registerOnly = false) => {
+    if (!currentVersion || registrationRequestActiveRef.current || launchRequestActiveRef.current) return;
+    const isCurrentlyRegistered = Boolean(
+      localVersionMap.get(currentVersion)?.isRegistered,
+    );
+    if (currentPackageType === "uwp") {
+      const action = isCurrentlyRegistered && !registerOnly ? "unregister" : "register";
+      registrationRequestActiveRef.current = true;
+      registrationRevisionRef.current += 1;
+      setRegistrationPendingAction(action);
+      setRegisterAction(action);
+      registerInstallingDisclosure.open();
+      try {
+        const result = action === "register"
+          ? await versionService.RegisterVersionWithWdapp(currentVersion, Boolean(localVersionMap.get(currentVersion)?.isPreview))
+          : await versionService.UnregisterVersionByName(currentVersion);
+        if (result !== "success" && result !== "") throw new Error(result);
+        const metas = await syncRegisteredFlags();
+        if (!metas) throw new Error("ERR_UWP_QUERY");
+        const registered = Boolean(metas.find((meta) => meta.name === currentVersion)?.registered);
+        if (action === "register" && !registered) throw new Error("ERR_UWP_NOT_REGISTERED");
+        if (action === "unregister" && registered) throw new Error("ERR_UWP_UNREGISTER");
+        if (action === "register") registerSuccessDisclosure.open();
+      } catch (error) {
+        // A failed registration must never enable the launch action optimistically.
+        if (action === "register") applyOptimisticUnregisterState(currentVersion);
+        setLaunchErrorCode(String(error instanceof Error ? error.message : error));
+        registerFailedDisclosure.open();
+      } finally {
+        registerInstallingDisclosure.close();
+        registrationRequestActiveRef.current = false;
+        setRegistrationPendingAction(null);
+      }
+      return;
+    }
+    if (isCurrentlyRegistered) {
+      setRegisterAction("unregister");
+      registerInstallingDisclosure.open();
+      try {
+        const fn = (versionService as any)?.UnregisterVersionByName;
+        if (typeof fn !== "function") {
+          registerInstallingDisclosure.close();
+          setLaunchErrorCode("ERR_UNREGISTER_FAILED");
+          registerFailedDisclosure.open();
+          return;
+        }
+        const result = await fn(currentVersion);
+        registerInstallingDisclosure.close();
+        if (result === "") {
+          applyOptimisticUnregisterState(currentVersion);
+          const synced = await syncRegisteredFlags();
+          if (!synced) {
+            applyOptimisticUnregisterState(currentVersion);
+          }
+          window.setTimeout(() => {
+            void syncRegisteredFlags();
+          }, 1200);
+          args.refresh();
+          return;
+        }
+        setLaunchErrorCode(result);
+        registerFailedDisclosure.open();
+      } catch {
+        registerInstallingDisclosure.close();
+        setLaunchErrorCode("ERR_UNREGISTER_FAILED");
+        registerFailedDisclosure.open();
+      }
+      return;
+    }
+    setRegisterAction("register");
+    registerInstallingDisclosure.open();
+    try {
+      const isPreview = localVersionMap.get(currentVersion)?.isPreview || false;
+      const result = await versionService.RegisterVersionWithWdapp(
+        currentVersion,
+        isPreview,
+      );
+      if (result === "success" || result === "") {
+        registerInstallingDisclosure.close();
+        registerSuccessDisclosure.open();
+        applyOptimisticRegisterState(currentVersion);
+        const synced = await syncRegisteredFlags();
+        if (!synced) {
+          const fn = (versionService as any)?.GetVersionMeta;
+          if (typeof fn === "function") {
+            fn(currentVersion).then((m: any) => {
+              setLocalVersionMap((prev) => {
+                const map = new Map(prev);
+                const existing = map.get(currentVersion);
+                if (existing) {
+                  map.set(currentVersion, {
+                    ...existing,
+                    isRegistered: Boolean(m?.registered),
+                  });
+                }
+                return map;
+              });
+            });
+          }
+        }
+        window.setTimeout(() => {
+          void syncRegisteredFlags();
+        }, 1200);
+      } else {
+        registerInstallingDisclosure.close();
+        setLaunchErrorCode(result);
+        registerFailedDisclosure.open();
+      }
+    } catch (e) {
+      registerInstallingDisclosure.close();
+      setLaunchErrorCode(String(e));
+      registerFailedDisclosure.open();
+    }
+  }, [
+    args,
+    currentVersion,
+    currentPackageType,
+    localVersionMap,
+    navigate,
+    applyOptimisticRegisterState,
+    applyOptimisticUnregisterState,
+    registerInstallingDisclosure,
+    registerSuccessDisclosure,
+    registerFailedDisclosure,
+    syncRegisteredFlags,
+  ]);
+
+  const requiresUWPRegistration = currentPackageType === "uwp" && !Boolean(localVersionMap.get(currentVersion)?.isRegistered);
+  const doPrimaryAction = React.useCallback(() => {
+    if (requiresUWPRegistration) void doRegister(true);
+    else doLaunch();
+  }, [requiresUWPRegistration, doRegister, doLaunch]);
+
+  useEffect(() => {
+    if (!hasBackend) return;
+    let disposed = false;
+    let vcRuntimeRetryTimer: number | null = null;
+
+    const runVcRuntimeDependencyCheck = (attempt: number) => {
+      const checkVcRuntime = (minecraft as any)?.IsVcRuntimeInstalled;
+      if (typeof checkVcRuntime !== "function") {
+        return;
+      }
+
+      Promise.resolve(checkVcRuntime())
+        .then((ok: boolean) => {
+          if (disposed) return;
+          markSessionDependencyCheckRun(
+            DEPENDENCY_CHECK_SESSION_KEYS.vcRuntime,
+          );
+          if (!ok) {
+            vcRuntimeMissingDisclosure.open();
+          }
+        })
+        .catch((error: unknown) => {
+          if (disposed) return;
+          console.warn("Failed to check VC runtime status", error);
+          if (attempt > 0 || vcRuntimeRetryTimer !== null) {
+            return;
+          }
+          vcRuntimeRetryTimer = window.setTimeout(() => {
+            vcRuntimeRetryTimer = null;
+            if (disposed) return;
+            runVcRuntimeDependencyCheck(attempt + 1);
+          }, VC_RUNTIME_CHECK_RETRY_DELAY_MS);
+        });
+    };
+
+    const timer = setTimeout(() => {
+      if (
+        !hasSessionDependencyCheckRun(DEPENDENCY_CHECK_SESSION_KEYS.vcRuntime)
+      ) {
+        try {
+          runVcRuntimeDependencyCheck(0);
+        } catch {}
+      }
+      // The native DLL loader needs the desktop VC runtime on UWP too.
+      // GameInput and Gaming Services remain GDK-specific dependencies.
+      if (currentPackageType !== "gdk") return;
+      if (
+        !hasSessionDependencyCheckRun(DEPENDENCY_CHECK_SESSION_KEYS.gameInput)
+      ) {
+        markSessionDependencyCheckRun(DEPENDENCY_CHECK_SESSION_KEYS.gameInput);
+        try {
+          minecraft?.IsGameInputInstalled?.().then((ok: boolean) => {
+            if (disposed) return;
+            if (!ok) {
+              gameInputMissingDisclosure.open();
+            }
+          });
+        } catch {}
+      }
+      if (
+        !hasSessionDependencyCheckRun(
+          DEPENDENCY_CHECK_SESSION_KEYS.gamingServices,
+        )
+      ) {
+        markSessionDependencyCheckRun(
+          DEPENDENCY_CHECK_SESSION_KEYS.gamingServices,
+        );
+        try {
+          const ig = String(localStorage.getItem(IGNORE_GS_KEY) || "") === "1";
+          if (!ig) {
+            minecraft?.IsGamingServicesInstalled?.().then((ok: boolean) => {
+              if (disposed) return;
+              if (!ok) {
+                gamingServicesMissingDisclosure.open();
+              }
+            });
+          }
+        } catch {}
+      }
+    }, 0);
+
+    return () => {
+      disposed = true;
+      clearTimeout(timer);
+      if (vcRuntimeRetryTimer !== null) {
+        clearTimeout(vcRuntimeRetryTimer);
+      }
+    };
+  }, [
+    hasBackend,
+    currentPackageType,
+    gameInputMissingDisclosure,
+    gamingServicesMissingDisclosure,
+    vcRuntimeMissingDisclosure,
+  ]);
+
+  useEffect(() => {
+    if (!hasBackend) return;
+    let cancelled = false;
+
+    const unlistenMigrateStart = Events.On("leviloader.migrate.start", () => {
+      setMigrateDone(0);
+      setMigrateError("");
+      loaderMigrationDisclosure.open();
+    });
+    const unlistenMigrateProgress = Events.On(
+      "leviloader.migrate.progress",
+      (event) => {
+        const progress = event.data as { done: number; total: number };
+        setMigrateTotal(progress.total);
+        setMigrateDone(progress.done);
+      },
+    );
+    (async () => {
+      try {
+        const need = await minecraft.NeedsLoaderMigration();
+        if (cancelled || !need) return;
+        loaderMigrationDisclosure.open();
+        const error = await minecraft.RunLoaderMigration();
+        if (cancelled) return;
+        if (error) {
+          setMigrateError(error);
+        } else {
+          loaderMigrationDisclosure.close();
+        }
+      } catch (error) {
+        if (cancelled) return;
+        setMigrateError(String(error));
+        loaderMigrationDisclosure.open();
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      unlistenMigrateStart();
+      unlistenMigrateProgress();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasBackend]);
+
+  useEffect(() => {
+    const unlistenGiStart = Events.On("gameinput.ensure.start", () => {
+      if (pendingInstallCheck === "gi") return;
+      gameInputInstallingDisclosure.open();
+    });
+    const unlistenGiDlStart = Events.On("gameinput.download.start", (event) => {
+      if (pendingInstallCheck === "gi") return;
+      setGiTotal(Number(event?.data || 0));
+      setGiDownloaded(0);
+      gameInputInstallingDisclosure.open();
+    });
+    const unlistenGiDlProgress = Events.On(
+      "gameinput.download.progress",
+      (event) => {
+        if (pendingInstallCheck === "gi") return;
+        const d = event?.data || {};
+        if (typeof d?.Total === "number") setGiTotal(d.Total);
+        if (typeof d?.Downloaded === "number") setGiDownloaded(d.Downloaded);
+      },
+    );
+    const unlistenGiDlDone = Events.On("gameinput.download.done", () => {
+      setGiDownloaded(giTotal);
+      setPendingInstallCheck((prev) => prev ?? "gi");
+      gameInputInstallingDisclosure.close();
+      installConfirmDisclosure.open();
+    });
+    const unlistenGiDlError = Events.On(
+      "gameinput.download.error",
+      (data) => {},
+    );
+    const unlistenGiDone = Events.On("gameinput.ensure.done", (event) => {
+      const success = Boolean(event?.data);
+      gameInputInstallingDisclosure.close();
+      if (success) {
+        setPendingInstallCheck(null);
+        installConfirmDisclosure.close();
+      } else {
+        setPendingInstallCheck((prev) => prev ?? "gi");
+        installConfirmDisclosure.open();
+      }
+    });
+
+    const unlistenVcStart = Events.On("vcruntime.ensure.start", () => {
+      if (pendingInstallCheck === "vc") return;
+      vcRuntimeInstallingDisclosure.open();
+    });
+    const unlistenVcDlStart = Events.On("vcruntime.download.start", (event) => {
+      if (pendingInstallCheck === "vc") return;
+      setVcTotal(Number(event?.data || 0));
+      setVcDownloaded(0);
+      vcRuntimeInstallingDisclosure.open();
+    });
+    const unlistenVcDlProgress = Events.On(
+      "vcruntime.download.progress",
+      (event) => {
+        if (pendingInstallCheck === "vc") return;
+        const d = event?.data || {};
+        if (typeof d?.Total === "number") setVcTotal(d.Total);
+        if (typeof d?.Downloaded === "number") setVcDownloaded(d.Downloaded);
+      },
+    );
+    const unlistenVcDlDone = Events.On("vcruntime.download.done", () => {
+      setVcDownloaded(vcTotal);
+      setPendingInstallCheck((prev) => prev ?? "vc");
+      vcRuntimeInstallingDisclosure.close();
+      installConfirmDisclosure.open();
+    });
+    const unlistenVcDlError = Events.On(
+      "vcruntime.download.error",
+      (data) => {},
+    );
+    const unlistenVcDone = Events.On("vcruntime.ensure.done", (event) => {
+      const success = Boolean(event?.data);
+      vcRuntimeInstallingDisclosure.close();
+      if (success) {
+        setPendingInstallCheck(null);
+        installConfirmDisclosure.close();
+      } else {
+        setPendingInstallCheck((prev) => prev ?? "vc");
+        installConfirmDisclosure.open();
+      }
+    });
+
+    const unlistenGsMissing = Events.On("gamingservices.missing", () => {
+      const ig = String(localStorage.getItem(IGNORE_GS_KEY) || "") === "1";
+      if (ig) return;
+      gamingServicesMissingDisclosure.open();
+    });
+
+    return () => {
+      try {
+        unlistenGiStart && (unlistenGiStart as any)();
+      } catch {}
+      try {
+        unlistenGiDlStart && (unlistenGiDlStart as any)();
+      } catch {}
+      try {
+        unlistenGiDlProgress && (unlistenGiDlProgress as any)();
+      } catch {}
+      try {
+        unlistenGiDlDone && (unlistenGiDlDone as any)();
+      } catch {}
+      try {
+        unlistenGiDlError && (unlistenGiDlError as any)();
+      } catch {}
+      try {
+        unlistenGiDone && (unlistenGiDone as any)();
+      } catch {}
+      try {
+        unlistenVcStart && (unlistenVcStart as any)();
+      } catch {}
+      try {
+        unlistenVcDlStart && (unlistenVcDlStart as any)();
+      } catch {}
+      try {
+        unlistenVcDlProgress && (unlistenVcDlProgress as any)();
+      } catch {}
+      try {
+        unlistenVcDlDone && (unlistenVcDlDone as any)();
+      } catch {}
+      try {
+        unlistenVcDlError && (unlistenVcDlError as any)();
+      } catch {}
+      try {
+        unlistenVcDone && (unlistenVcDone as any)();
+      } catch {}
+      try {
+        unlistenGsMissing && (unlistenGsMissing as any)();
+      } catch {}
+    };
+  }, []);
+
+  const refreshContentCounts = React.useCallback(async () => {
+    if (!hasBackend) {
+      setContentCounts({ worlds: 0, resourcePacks: 0, behaviorPacks: 0 });
+      return;
+    }
+    const countDir = async (path: string): Promise<number> => {
+      try {
+        const entries = await ListDir(path);
+        return (entries || []).filter((e: any) => e.isDir).length;
+      } catch {
+        return 0;
+      }
+    };
+    try {
+      const name = readCurrentVersionName();
+      if (!name) {
+        setContentCounts({ worlds: 0, resourcePacks: 0, behaviorPacks: 0 });
+        return;
+      }
+      const roots = await contentService.GetContentRoots(name);
+      const safe = roots || {
+        base: "",
+        usersRoot: "",
+        resourcePacks: "",
+        behaviorPacks: "",
+        isIsolation: false,
+        isPreview: false,
+      };
+      let worlds = 0;
+
+      let res = 0;
+      let bp = 0;
+      try {
+        const resEntries = await ListDir(safe.resourcePacks);
+        const resDirs = (resEntries || []).filter((e: any) => e.isDir);
+        res = resDirs.length;
+
+        bp = await countDir(safe.behaviorPacks);
+      } catch {}
+
+      if (roots?.packageType === "uwp") {
+        worlds = roots.worlds ? await countDir(roots.worlds) : 0;
+        setContentCounts({ worlds, resourcePacks: res, behaviorPacks: bp });
+        return;
+      }
+      if (safe.usersRoot) {
+        try {
+          const players = await listPlayers(safe.usersRoot);
+          let nextPlayer = players[0] || "";
+
+          if (nextPlayer) {
+            const wp = `${safe.usersRoot}\\${nextPlayer}\\games\\com.mojang\\minecraftWorlds`;
+            const defaultWorlds = await countDir(wp);
+            setContentCounts({
+              worlds: defaultWorlds,
+              resourcePacks: res,
+              behaviorPacks: bp,
+            });
+          } else {
+            setContentCounts({
+              worlds: 0,
+              resourcePacks: res,
+              behaviorPacks: bp,
+            });
+          }
+
+          (async () => {
+            try {
+              const tag = await (userService as any)?.GetLocalUserGamertag?.();
+              if (tag) {
+                const map = await getPlayerGamertagMap(safe.usersRoot);
+
+                let matchedPlayer = "";
+                for (const p of players) {
+                  if (map[p] === tag) {
+                    matchedPlayer = p;
+                    break;
+                  }
+                }
+
+                if (matchedPlayer && matchedPlayer !== nextPlayer) {
+                  const wp = `${safe.usersRoot}\\${matchedPlayer}\\games\\com.mojang\\minecraftWorlds`;
+                  const newWorlds = await countDir(wp);
+                  setContentCounts((prev) => ({ ...prev, worlds: newWorlds }));
+                }
+              }
+            } catch {}
+          })();
+          return;
+        } catch {}
+      }
+      setContentCounts({ worlds: 0, resourcePacks: res, behaviorPacks: bp });
+    } catch {
+      setContentCounts({ worlds: 0, resourcePacks: 0, behaviorPacks: 0 });
+    }
+  }, [hasBackend]);
+
+  useEffect(() => {
+    refreshContentCounts();
+  }, [refreshContentCounts, hasBackend, currentVersion]);
+
+  useEffect(() => {
+    const unlistenMcStart = Events.On("mc.launch.start", () => {
+      if (!launchRequestActiveRef.current) return;
+      mcLaunchLoadingDisclosure.open();
+    });
+
+    const unlistenMcDone = Events.On("mc.launch.done", () => {
+      launchRequestActiveRef.current = false;
+      mcLaunchLoadingDisclosure.close();
+    });
+    const unlistenMcFailed = Events.On("mc.launch.failed", (data) => {
+      launchRequestActiveRef.current = false;
+      mcLaunchLoadingDisclosure.close();
+      const payload: any = (data as any)?.data ?? data;
+      const first = Array.isArray(payload) ? payload[0] : payload;
+      const code = String(first || "");
+      setLaunchErrorCode(code || "ERR_LAUNCH_GAME");
+      launchFailedDisclosure.open();
+    });
+
+    return () => {
+      try {
+        unlistenMcStart && (unlistenMcStart as any)();
+      } catch {}
+      try {
+        unlistenMcDone && (unlistenMcDone as any)();
+      } catch {}
+      try {
+        unlistenMcFailed && (unlistenMcFailed as any)();
+      } catch {}
+    };
+  }, []);
+
+  useEffect(() => {
+    if (hasBackend) {
+      const registrationRevision = registrationRevisionRef.current;
+      setIsLoadingVersions(true);
+
+      const processMetas = (metas: any[]) => {
+        const newLocalVersionMap = new Map();
+        const newLocalVersionsMap = new Map();
+        metas?.forEach((m: any) => {
+          const name = String(m?.name || "");
+          const gameVersion = String(m?.gameVersion || "");
+          const type = String(m?.type || "release");
+          const isPreview = type.toLowerCase() === "preview";
+          const lv: any = {
+            name,
+            version: gameVersion,
+            packageType: normalizePackageType(m?.packageType),
+            type: type.toLowerCase(),
+            isPreview,
+            isRegistered: Boolean(m?.registered),
+            isLaunched: false,
+            isPreLoader: false,
+            isLeviLaminaInstalled: undefined,
+          };
+          if (name) newLocalVersionMap.set(name, lv);
+          if (gameVersion) {
+            if (!newLocalVersionsMap.has(gameVersion))
+              newLocalVersionsMap.set(gameVersion, []);
+            if (!newLocalVersionsMap.get(gameVersion)?.includes(name))
+              newLocalVersionsMap.get(gameVersion)?.push(name);
+          }
+        });
+        setLocalVersionMap((prev) => {
+          const merged = new Map();
+          newLocalVersionMap.forEach((info: any, name: string) => {
+            const known = prev.get(name)?.isLeviLaminaInstalled;
+            merged.set(name, {
+              ...info,
+              isRegistered: registrationRevision === registrationRevisionRef.current
+                ? info.isRegistered
+                : Boolean(prev.get(name)?.isRegistered),
+              isLeviLaminaInstalled:
+                typeof known === "boolean" ? known : undefined,
+            });
+          });
+          return merged;
+        });
+
+        const saved = (() => {
+          return readCurrentVersionName();
+        })();
+        const useName =
+          saved && newLocalVersionMap.has(saved)
+            ? saved
+            : Array.from(newLocalVersionMap.keys())[0] || "";
+        setCurrentVersion(useName);
+        try {
+          saveCurrentVersionName(useName, "launcher.refresh-versions");
+        } catch {}
+        const ver = useName
+          ? newLocalVersionMap.get(useName)?.version || ""
+          : "";
+        setDisplayVersion(ver || "None");
+        setDisplayName(useName || "");
+        setLogoDataUrl("");
+      };
+
+      const fastFn = (versionService as any)?.ListVersionMetas;
+      const slowFn = (versionService as any)?.ListVersionMetasWithRegistered;
+      const detailsFn = (versionService as any)?.GetVersionMenuDetails;
+
+      const applyDetails = (details: any[]) => {
+        const detailList = Array.isArray(details) ? details : [];
+        const nextLogos = new Map<string, string>();
+        const detailByName = new Map<string, any>();
+
+        detailList.forEach((detail: any) => {
+          const name = String(detail?.name || "");
+          if (!name) return;
+          detailByName.set(name, detail);
+          const logo = String(detail?.logoDataUrl || "");
+          if (logo) {
+            nextLogos.set(name, logo);
+          }
+        });
+
+        setLogoByName(nextLogos);
+        setLocalVersionMap((prev) => {
+          const next = new Map(prev);
+          detailByName.forEach((detail, name) => {
+            const current = next.get(name);
+            if (!current) return;
+            next.set(name, {
+              ...current,
+              isRegistered: registrationRevision === registrationRevisionRef.current
+                ? Boolean(detail?.registered)
+                : Boolean(current?.isRegistered),
+              isLeviLaminaInstalled: Boolean(detail?.leviLaminaInstalled),
+            });
+          });
+          return next;
+        });
+
+        const selectedName = readCurrentVersionName();
+        setLogoDataUrl(nextLogos.get(selectedName) || "");
+      };
+
+      const loadLegacyDetails = async () => {
+        if (typeof slowFn !== "function") {
+          throw new Error("Version detail fallback is unavailable");
+        }
+
+        const fullMetas = await slowFn();
+        processMetas(fullMetas);
+        setIsLoadingVersions(false);
+        const details = await Promise.all(
+          (Array.isArray(fullMetas) ? fullMetas : []).map(async (meta: any) => {
+            const name = String(meta?.name || "");
+            const [logoDataUrl, installedMods] = await Promise.all([
+              Promise.resolve(
+                (versionService as any)?.GetVersionLogoDataUrl?.(name),
+              ).catch(() => ""),
+              Promise.resolve((modsService as any)?.GetMods?.(name)).catch(
+                () => [],
+              ),
+            ]);
+            return {
+              name,
+              registered: Boolean(meta?.registered),
+              logoDataUrl: String(logoDataUrl || ""),
+              leviLaminaInstalled: (Array.isArray(installedMods)
+                ? installedMods
+                : []
+              ).some(
+                (mod: any) =>
+                  String(mod?.name || "").toLowerCase() === "levilamina",
+              ),
+            };
+          }),
+        );
+        applyDetails(details);
+      };
+
+      if (typeof fastFn === "function") {
+        fastFn()
+          .then((metas: any[]) => {
+            processMetas(metas);
+            setIsLoadingVersions(false);
+
+            if (typeof detailsFn === "function") {
+              detailsFn()
+                .then(applyDetails)
+                .catch(() => void loadLegacyDetails().catch(() => {}));
+            } else if (typeof slowFn === "function") {
+              void loadLegacyDetails().catch(() => {});
+            }
+          })
+          .catch(() => {
+            if (typeof slowFn === "function") {
+              void loadLegacyDetails().catch(() => setIsLoadingVersions(false));
+            } else {
+              setIsLoadingVersions(false);
+            }
+          });
+      } else if (typeof slowFn === "function") {
+        void loadLegacyDetails().catch(() => setIsLoadingVersions(false));
+      } else {
+        setIsLoadingVersions(false);
+      }
+    } else {
+      setCurrentVersion("");
+      setLocalVersionMap(new Map());
+    }
+  }, [args.count]);
+
+  const handleVersionSelect = React.useCallback(
+    (keys: any) => {
+      const selected = Array.from(keys)[0] as string;
+      if (selected) {
+        setCurrentVersion(selected);
+        setDisplayName(selected);
+        const ver = localVersionMap.get(selected)?.version || "";
+        setDisplayVersion(ver || "None");
+        try {
+          saveCurrentVersionName(selected, "launcher.select");
+          setLogoDataUrl(logoByName.get(selected) || "");
+        } catch {}
+      }
+    },
+    [localVersionMap, logoByName],
+  );
+
+  const handleGameInputInstall = React.useCallback(() => {
+    setPendingInstallCheck("gi");
+    EnsureGameInputInteractive();
+    gameInputMissingDisclosure.close();
+    installConfirmDisclosure.open();
+  }, [gameInputMissingDisclosure, installConfirmDisclosure]);
+
+  const handleVcRuntimeInstall = React.useCallback(() => {
+    setPendingInstallCheck("vc");
+    EnsureVcRuntimeInteractive();
+    vcRuntimeMissingDisclosure.close();
+    installConfirmDisclosure.open();
+  }, [vcRuntimeMissingDisclosure, installConfirmDisclosure]);
+
+  const handleGamingServicesInstall = React.useCallback(
+    (openUrl: (url: string) => void) => {
+      setPendingInstallCheck("gs");
+      openUrl("ms-windows-store://pdp/?ProductId=9MWPM2CQNLHN");
+      gamingServicesMissingDisclosure.close();
+      installConfirmDisclosure.open();
+    },
+    [gamingServicesMissingDisclosure, installConfirmDisclosure],
+  );
+
+  const handleIgnoreGamingServices = React.useCallback(() => {
+    localStorage.setItem(IGNORE_GS_KEY, "1");
+    gamingServicesMissingDisclosure.close();
+  }, [gamingServicesMissingDisclosure]);
+
+  const handleInstallConfirmContinue = React.useCallback(() => {
+    if (pendingInstallCheck === "gi") gameInputMissingDisclosure.open();
+    else if (pendingInstallCheck === "gs")
+      gamingServicesMissingDisclosure.open();
+    else if (pendingInstallCheck === "vc") vcRuntimeMissingDisclosure.open();
+    installConfirmDisclosure.close();
+  }, [
+    pendingInstallCheck,
+    gameInputMissingDisclosure,
+    gamingServicesMissingDisclosure,
+    vcRuntimeMissingDisclosure,
+    installConfirmDisclosure,
+  ]);
+
+  const handleInstallConfirmCheck = React.useCallback(() => {
+    try {
+      if (pendingInstallCheck === "gi") {
+        minecraft?.IsGameInputInstalled?.().then((ok: boolean) => {
+          if (ok) {
+            setPendingInstallCheck(null);
+            installConfirmDisclosure.close();
+          } else {
+            installConfirmDisclosure.close();
+            gameInputMissingDisclosure.open();
+          }
+        });
+      } else if (pendingInstallCheck === "gs") {
+        minecraft?.IsGamingServicesInstalled?.().then((ok: boolean) => {
+          if (ok) {
+            setPendingInstallCheck(null);
+            installConfirmDisclosure.close();
+          } else {
+            installConfirmDisclosure.close();
+            gamingServicesMissingDisclosure.open();
+          }
+        });
+      } else if (pendingInstallCheck === "vc") {
+        (minecraft as any)?.IsVcRuntimeInstalled?.().then((ok: boolean) => {
+          if (ok) {
+            setPendingInstallCheck(null);
+            installConfirmDisclosure.close();
+          } else {
+            installConfirmDisclosure.close();
+            vcRuntimeMissingDisclosure.open();
+          }
+        });
+      }
+    } catch {}
+  }, [
+    pendingInstallCheck,
+    installConfirmDisclosure,
+    gameInputMissingDisclosure,
+    gamingServicesMissingDisclosure,
+    vcRuntimeMissingDisclosure,
+  ]);
+
+  const handleInstallConfirmOpenChange = React.useCallback(
+    (open: boolean) => {
+      if (open) {
+        installConfirmDisclosure.open();
+      } else {
+        installConfirmDisclosure.close();
+        args.refresh();
+      }
+    },
+    [installConfirmDisclosure, args],
+  );
+
+  const handleRegisterSuccessOpenChange = React.useCallback(
+    (open: boolean) => {
+      if (open) registerSuccessDisclosure.open();
+      else registerSuccessDisclosure.close();
+      if (!open) {
+        void syncRegisteredFlags();
+        args.refresh();
+      }
+    },
+    [registerSuccessDisclosure, args, syncRegisteredFlags],
+  );
+
+  const handleLaunchFailedForceRun = React.useCallback(() => {
+    launchFailedDisclosure.close();
+    doForceLaunch();
+  }, [launchFailedDisclosure, doForceLaunch]);
+
+  return {
+    // State
+    isAnimating,
+    setIsAnimating,
+    currentVersion,
+    displayVersion,
+    displayName,
+    localVersionMap,
+    launchErrorCode,
+    contentCounts,
+    giTotal,
+    giDownloaded,
+    vcTotal,
+    vcDownloaded,
+    migrateTotal,
+    migrateDone,
+    migrateError,
+    pendingInstallCheck,
+    logoDataUrl,
+    versionQuery,
+    setVersionQuery,
+    logoByName,
+    isLoadingVersions,
+    registerAction,
+    registrationPendingAction,
+    launchPending,
+    requiresUWPRegistration,
+    tipIndex,
+    hasBackend,
+
+    // Disclosures
+    launchFailedDisclosure,
+    gameInputInstallingDisclosure,
+    gameInputMissingDisclosure,
+    vcRuntimeInstallingDisclosure,
+    vcRuntimeMissingDisclosure,
+    gamingServicesMissingDisclosure,
+    installConfirmDisclosure,
+    vcRuntimeCompletingDisclosure,
+    mcLaunchLoadingDisclosure,
+    shortcutSuccessDisclosure,
+    registerInstallingDisclosure,
+    registerSuccessDisclosure,
+    registerFailedDisclosure,
+    loaderMigrationDisclosure,
+
+    // Navigation
+    navigate,
+
+    // Computed
+    buildVersionMenuItems,
+
+    // Tip timer
+    startTipTimer,
+    stopTipTimer,
+
+    // Handlers
+    doLaunch,
+    doPrimaryAction,
+    doForceLaunch,
+    doCreateShortcut,
+    doOpenFolder,
+    doRegister,
+    handleVersionSelect,
+    handleGameInputInstall,
+    handleVcRuntimeInstall,
+    handleGamingServicesInstall,
+    handleIgnoreGamingServices,
+    handleInstallConfirmContinue,
+    handleInstallConfirmCheck,
+    handleInstallConfirmOpenChange,
+    handleRegisterSuccessOpenChange,
+    handleLaunchFailedForceRun,
+  };
+};

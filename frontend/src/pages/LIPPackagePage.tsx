@@ -1,0 +1,1722 @@
+import { ModalDescription, ModalDetails } from "@/components/ModalPrimitives";
+import {
+  Button,
+  Card,
+  Chip,
+  Label,
+  ListBox,
+  Select,
+  Skeleton,
+  Spinner,
+  Tabs,
+  Tooltip,
+  toast,
+} from "@heroui/react";
+
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { useRouteTitle } from "@/hooks/useRouteTitle";
+import { ProjectShareButton } from "@/components/ProjectShareButton";
+
+import { Browser } from "@wailsio/runtime";
+import { motion } from "framer-motion";
+import ReactMarkdown, { type Components } from "react-markdown";
+import remarkGfm from "remark-gfm";
+import rehypeRaw from "rehype-raw";
+import rehypeSanitize from "rehype-sanitize";
+import rehypeSlug from "rehype-slug";
+import {
+  LIPVersionList,
+  type FileGameVersionState,
+} from "@/components/LIPVersionList";
+import { shouldDisableAnimations } from "@/hooks/useAnimations";
+import {
+  LuClock,
+  LuDownload,
+  LuFlame,
+  LuGamepad2,
+  LuGlobe,
+  LuTag,
+  LuUser,
+} from "react-icons/lu";
+import {
+  GetVersionLogoDataUrl,
+  ListVersionMetas,
+} from "bindings/github.com/liteldev/LeviLauncher/internal/app/versionservice";
+import {
+  GetLipStatus,
+  GetLIPPackageReadme,
+  InstallLIPPackage,
+} from "bindings/github.com/liteldev/LeviLauncher/internal/app/minecraft";
+import { PageContainer } from "@/components/PageContainer";
+import { UnifiedModal } from "@/components/UnifiedModal";
+import { COMPONENT_STYLES } from "@/constants/componentStyles";
+import { LAYOUT } from "@/constants/layout";
+import { cn } from "@/utils/cn";
+import { readCurrentVersionName } from "@/utils/currentVersion";
+import { useCurrentVersion } from "@/utils/CurrentVersionContext";
+import { useLeviLamina } from "@/utils/LeviLaminaContext";
+import { useModIntelligence } from "@/utils/ModIntelligenceContext";
+import { formatDateStr } from "@/utils/formatting";
+import { useLipTaskConsole } from "@/utils/LipTaskConsoleContext";
+import { compareVersions } from "@/utils/version";
+import { ROUTES } from "@/constants/routes";
+import type { LIPPackageInstallState } from "@/utils/modIntelligenceResolver";
+import {
+  fetchLIPPackageDetail,
+  isLeviLaminaVersionCompatible,
+  resolveSupportedGameVersionsByLLRanges,
+  type LIPPackageDetail,
+  type LIPPackageFileInfo,
+  type LIPPackageVariantDetail,
+} from "@/utils/content";
+
+type GithubRepoRef = {
+  owner: string;
+  repo: string;
+};
+
+type LipRuntimeStatus = {
+  installed?: boolean;
+};
+
+type InstanceLLState = {
+  installed: boolean;
+  explicitInstalled: boolean;
+  installedVersion: string;
+  error: string;
+  loading: boolean;
+};
+
+type InstancePackageState = InstanceLLState;
+type InstallDialogActionKind =
+  | "install"
+  | "upgrade"
+  | "downgrade"
+  | "reinstall";
+
+const EMPTY_INSTANCE_LL_STATE: InstanceLLState = {
+  installed: false,
+  explicitInstalled: false,
+  installedVersion: "",
+  error: "",
+  loading: false,
+};
+
+const INSTALL_DIALOG_ACTION_LABEL_KEYS: Record<
+  InstallDialogActionKind,
+  string
+> = {
+  install: "lip.files.install",
+  upgrade: "lip.files.upgrade",
+  downgrade: "lip.files.downgrade",
+  reinstall: "lip.files.reinstall",
+};
+
+const INSTALL_DIALOG_ACTION_SUCCESS_KEYS: Record<
+  InstallDialogActionKind,
+  string
+> = {
+  install: "lip.files.install_success",
+  upgrade: "lip.files.upgrade_success",
+  downgrade: "lip.files.downgrade_success",
+  reinstall: "lip.files.reinstall_success",
+};
+
+const getVariantDisplayLabel = (
+  variant: Pick<LIPPackageVariantDetail, "key" | "label"> | null | undefined,
+  defaultLabel: string,
+): string => {
+  const explicitLabel = String(variant?.label || "").trim();
+  if (explicitLabel) return explicitLabel;
+
+  const variantKey = String(variant?.key || "").trim();
+  return variantKey || defaultLabel;
+};
+
+const hasUrlScheme = (value: string): boolean =>
+  /^[a-zA-Z][a-zA-Z\d+.-]*:/.test(value);
+
+const resolveMarkdownUrl = (
+  rawUrl: string | undefined,
+  repoRef: GithubRepoRef | null,
+  target: "link" | "image",
+): string => {
+  const raw = String(rawUrl || "").trim();
+  if (!raw) return "";
+  if (raw.startsWith("#")) return raw;
+  if (raw.startsWith("//")) return `https:${raw}`;
+  if (hasUrlScheme(raw)) return raw;
+  if (!repoRef) return raw;
+
+  const root = target === "image" ? "raw.githubusercontent.com" : "github.com";
+  const type = target === "image" ? "HEAD" : "blob/HEAD";
+  const base = `https://${root}/${repoRef.owner}/${repoRef.repo}/${type}/`;
+  const normalized = raw.startsWith("/") ? raw.slice(1) : raw;
+
+  try {
+    return new URL(normalized, base).toString();
+  } catch {
+    return raw;
+  }
+};
+
+const isBadgeImage = (src: string): boolean =>
+  /(?:^|\/\/)img\.shields\.io\//i.test(src);
+
+const slugifyHeading = (value: string): string => {
+  const slug = value
+    .trim()
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}\s-]/gu, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+  return slug || "section";
+};
+
+const decodeHash = (href: string): string => {
+  const raw = href.startsWith("#") ? href.slice(1) : href;
+  try {
+    return decodeURIComponent(raw).trim();
+  } catch {
+    return raw.trim();
+  }
+};
+
+const isOpenableExternalUrl = (href: string): boolean => {
+  try {
+    const parsed = new URL(href);
+    return (
+      parsed.protocol === "http:" ||
+      parsed.protocol === "https:" ||
+      parsed.protocol === "mailto:"
+    );
+  } catch {
+    return false;
+  }
+};
+
+const getErrorCode = (value: unknown): string => {
+  const source =
+    typeof value === "string"
+      ? value
+      : value instanceof Error
+        ? value.message
+        : String(value || "");
+  const raw = source.trim();
+  if (!raw) return "";
+  const match = raw.match(/ERR_[A-Z0-9_]+/);
+  return match ? match[0] : raw;
+};
+
+const LIPPackagePage: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { t } = useTranslation();
+  const { runWithLipTask } = useLipTaskConsole();
+  const { currentVersionName } = useCurrentVersion();
+  const {
+    gameToLLVersions,
+    mappingAvailable,
+    mappingInitialized,
+    loading: llMappingLoading,
+    normalizeGameVersion,
+  } = useLeviLamina();
+  const {
+    ensureInstanceHydrated,
+    getInstanceSnapshot,
+    ensurePackageInstallState,
+    refreshInstance,
+    snapshotRevision,
+  } = useModIntelligence();
+
+  const [pkg, setPkg] = useState<LIPPackageDetail | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [selectedTab, setSelectedTab] = useState<string>("description");
+  const [readmeContent, setReadmeContent] = useState<string>("");
+  const [readmeLoading, setReadmeLoading] = useState<boolean>(false);
+  const [instanceOptions, setInstanceOptions] = useState<string[]>([]);
+  const [selectedInstance, setSelectedInstance] = useState<string>("");
+  const [instanceGameVersions, setInstanceGameVersions] = useState<
+    Record<string, string>
+  >({});
+  const [instanceLogos, setInstanceLogos] = useState<Record<string, string>>(
+    {},
+  );
+  const [instanceLLStates, setInstanceLLStates] = useState<
+    Record<string, InstanceLLState>
+  >({});
+  const [instancePackageStates, setInstancePackageStates] = useState<
+    Record<string, InstancePackageState>
+  >({});
+  const [installDialogSelectedInstance, setInstallDialogSelectedInstance] =
+    useState<string>("");
+  const [installDialogOpen, setInstallDialogOpen] = useState<boolean>(false);
+  const [installDialogTriggerVersion, setInstallDialogTriggerVersion] =
+    useState<string>("");
+  const [selectedVariantIdentifier, setSelectedVariantIdentifier] =
+    useState<string>("");
+  const [actionRunning, setActionRunning] = useState<boolean>(false);
+  const [lipGuardReady, setLipGuardReady] = useState(false);
+  const [lipAvailable, setLipAvailable] = useState(true);
+  const [lipMissingModalOpen, setLipMissingModalOpen] = useState(false);
+
+  const tabsRef = useRef<HTMLDivElement>(null);
+  const mappingUnavailable = mappingInitialized && !mappingAvailable;
+  const mappingReady = mappingInitialized && !llMappingLoading;
+
+  const identifier = useMemo(() => {
+    const raw = String(id || "");
+    try {
+      return decodeURIComponent(raw);
+    } catch {
+      return raw;
+    }
+  }, [id]);
+  useRouteTitle(
+    !loading &&
+      !error &&
+      pkg?.identifier.toLowerCase() === identifier.split("#")[0].toLowerCase()
+      ? pkg?.name
+      : undefined,
+  );
+
+  const openLipSettings = useCallback(() => {
+    setLipMissingModalOpen(false);
+    navigate(ROUTES.settings, { state: { tab: "components" } });
+  }, [navigate]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const checkLipRuntime = async () => {
+      try {
+        const status = (await GetLipStatus()) as LipRuntimeStatus;
+        if (cancelled) return;
+
+        const installed = Boolean(status?.installed);
+        setLipAvailable(installed);
+        setLipMissingModalOpen(!installed);
+      } catch (guardError) {
+        console.warn("Failed to check lip runtime status", guardError);
+        if (cancelled) return;
+        setLipAvailable(true);
+      } finally {
+        if (!cancelled) {
+          setLipGuardReady(true);
+        }
+      }
+    };
+
+    void checkLipRuntime();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const githubRepoRef = useMemo<GithubRepoRef | null>(() => {
+    if (!pkg?.projectUrl) return null;
+    try {
+      const url = new URL(pkg.projectUrl);
+      if (url.hostname !== "github.com") return null;
+      const [owner, repo] = url.pathname.split("/").filter(Boolean);
+      if (!owner || !repo) return null;
+      return { owner, repo };
+    } catch {
+      return null;
+    }
+  }, [pkg?.projectUrl]);
+
+  const markdownComponents = useMemo<Components>(() => {
+    return {
+      img: ({ src, alt, className, node: _node, ...props }) => {
+        const resolvedSrc = resolveMarkdownUrl(src, githubRepoRef, "image");
+        const badge = isBadgeImage(resolvedSrc);
+        return (
+          <img
+            {...props}
+            src={resolvedSrc}
+            alt={alt || ""}
+            loading="lazy"
+            className={cn(
+              className,
+              "max-w-full h-auto",
+              badge
+                ? "!inline-block !align-middle !my-0 !mx-0 !rounded-none"
+                : "inline-block align-middle rounded-lg",
+            )}
+          />
+        );
+      },
+      a: ({ href, children, className, node: _node, ...props }) => {
+        const resolvedHref = resolveMarkdownUrl(href, githubRepoRef, "link");
+        const isHashAnchor = resolvedHref.startsWith("#");
+        return (
+          <a
+            {...props}
+            href={resolvedHref || href}
+            target={isHashAnchor ? undefined : "_blank"}
+            rel={isHashAnchor ? undefined : "noreferrer"}
+            className={cn(className, "text-brand-600 dark:text-brand-500")}
+            onClick={(event) => {
+              if (!resolvedHref) return;
+              if (isHashAnchor) {
+                event.preventDefault();
+                const anchor = decodeHash(resolvedHref);
+                if (!anchor) return;
+
+                const candidates = [
+                  anchor,
+                  anchor.toLowerCase(),
+                  slugifyHeading(anchor),
+                ];
+                for (const candidate of candidates) {
+                  const target = tabsRef.current?.querySelector(
+                    `[id="${CSS.escape(candidate)}"], [id="${CSS.escape(`user-content-${candidate}`)}"]`,
+                  );
+                  if (!(target instanceof HTMLElement)) continue;
+                  target.scrollIntoView({
+                    behavior: shouldDisableAnimations() ? "auto" : "smooth",
+                    block: "start",
+                  });
+                  break;
+                }
+                return;
+              }
+
+              if (!isOpenableExternalUrl(resolvedHref)) return;
+              event.preventDefault();
+              Browser.OpenURL(resolvedHref);
+            }}
+          >
+            {children}
+          </a>
+        );
+      },
+    };
+  }, [githubRepoRef]);
+
+  const resolveErrorText = useCallback(
+    (value: unknown) => {
+      const code = getErrorCode(value);
+      if (!code) return t("common.error");
+
+      const translatedByErrorCode = t(`errors.${code}`);
+      if (translatedByErrorCode !== `errors.${code}`) {
+        return translatedByErrorCode;
+      }
+
+      const translatedByKey = t(code);
+      if (translatedByKey !== code) {
+        return translatedByKey;
+      }
+
+      return code;
+    },
+    [t],
+  );
+
+  const toInstanceState = useCallback(
+    (
+      value: LIPPackageInstallState | null | undefined,
+      loading = false,
+    ): InstanceLLState => ({
+      installed: Boolean(value?.installed),
+      explicitInstalled: Boolean(value?.explicitInstalled),
+      installedVersion: String(value?.installedVersion || "").trim(),
+      error: String(value?.error || "").trim(),
+      loading,
+    }),
+    [],
+  );
+
+  const queryInstanceLLState = useCallback(
+    async (instanceName: string): Promise<InstanceLLState> => {
+      const normalizedName = String(instanceName || "").trim();
+      if (!normalizedName) {
+        return {
+          ...EMPTY_INSTANCE_LL_STATE,
+          error: "ERR_TARGET_NOT_FOUND",
+        };
+      }
+
+      try {
+        await ensureInstanceHydrated(normalizedName, {
+          background: true,
+          reason: "lip-package-query-ll",
+        });
+        const snapshot = getInstanceSnapshot(normalizedName);
+        if (snapshot?.llState) {
+          return toInstanceState(snapshot.llState);
+        }
+        return {
+          ...EMPTY_INSTANCE_LL_STATE,
+          error: "ERR_LIP_PACKAGE_QUERY_FAILED",
+        };
+      } catch (queryError) {
+        return {
+          ...EMPTY_INSTANCE_LL_STATE,
+          error: getErrorCode(queryError) || "ERR_LIP_PACKAGE_QUERY_FAILED",
+        };
+      }
+    },
+    [ensureInstanceHydrated, getInstanceSnapshot, toInstanceState],
+  );
+
+  const queryInstancePackageState = useCallback(
+    async (
+      instanceName: string,
+      packageIdentifier: string,
+    ): Promise<InstancePackageState> => {
+      const normalizedName = String(instanceName || "").trim();
+      const normalizedIdentifier = String(packageIdentifier || "").trim();
+      if (!normalizedName) {
+        return {
+          ...EMPTY_INSTANCE_LL_STATE,
+          error: "ERR_TARGET_NOT_FOUND",
+        };
+      }
+      if (!normalizedIdentifier) {
+        return {
+          ...EMPTY_INSTANCE_LL_STATE,
+          error: "ERR_LIP_PACKAGE_INVALID_IDENTIFIER",
+        };
+      }
+
+      try {
+        const state = await ensurePackageInstallState(
+          normalizedName,
+          normalizedIdentifier,
+        );
+        return toInstanceState(state);
+      } catch (queryError) {
+        return {
+          ...EMPTY_INSTANCE_LL_STATE,
+          error: getErrorCode(queryError) || "ERR_LIP_PACKAGE_QUERY_FAILED",
+        };
+      }
+    },
+    [ensurePackageInstallState, toInstanceState],
+  );
+
+  const loadPackage = useCallback(
+    async (targetIdentifier: string, forceRefresh = false) => {
+      setLoading(true);
+      setError("");
+
+      try {
+        const detail = await fetchLIPPackageDetail(targetIdentifier, {
+          forceRefresh,
+        });
+        setPkg(detail);
+      } catch (err) {
+        console.error(err);
+        setPkg(null);
+        setError(t("common.load_failed"));
+      } finally {
+        setLoading(false);
+      }
+    },
+    [t],
+  );
+
+  useEffect(() => {
+    if (!identifier) {
+      setPkg(null);
+      setLoading(false);
+      return;
+    }
+    void loadPackage(identifier);
+  }, [identifier, loadPackage]);
+
+  useEffect(() => {
+    if (!pkg?.projectUrl) {
+      setReadmeContent("");
+      setReadmeLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setReadmeContent("");
+    setReadmeLoading(true);
+
+    const fetchReadme = async () => {
+      try {
+        const text = await GetLIPPackageReadme(pkg.projectUrl);
+        if (cancelled) return;
+        setReadmeContent(String(text || ""));
+        return;
+      } catch (readmeError) {
+        console.warn("Failed to fetch README", readmeError);
+      }
+
+      if (!cancelled) {
+        setReadmeContent("");
+      }
+    };
+
+    void fetchReadme().finally(() => {
+      if (!cancelled) {
+        setReadmeLoading(false);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [pkg?.projectUrl]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadInstances = async () => {
+      if (!lipGuardReady) return;
+      if (!lipAvailable) {
+        if (cancelled) return;
+        setInstanceOptions([]);
+        setInstanceGameVersions({});
+        setInstanceLogos({});
+        setInstanceLLStates({});
+        setSelectedInstance("");
+        return;
+      }
+
+      try {
+        const metas = await ListVersionMetas();
+        const names: string[] = [];
+        const gameVersionMap: Record<string, string> = {};
+        if (Array.isArray(metas)) {
+          for (const meta of metas as any[]) {
+            const name = String(meta?.name || "").trim();
+            if (!name) continue;
+            names.push(name);
+            gameVersionMap[name] = String(meta?.gameVersion || "").trim();
+          }
+        }
+
+        if (cancelled) return;
+        setInstanceOptions(names);
+        setInstanceGameVersions(gameVersionMap);
+        const logoMap: Record<string, string> = {};
+        await Promise.all(
+          names.map(async (name) => {
+            try {
+              const logoUrl = await GetVersionLogoDataUrl(name);
+              if (logoUrl) {
+                logoMap[name] = logoUrl;
+              }
+            } catch (logoError) {
+              console.warn("Failed to fetch logo for", name, logoError);
+            }
+          }),
+        );
+        if (!cancelled) {
+          setInstanceLogos(logoMap);
+        }
+        setSelectedInstance((prev) => {
+          if (prev && names.includes(prev)) {
+            return prev;
+          }
+          const current = (
+            String(currentVersionName || "").trim() ||
+            readCurrentVersionName().trim()
+          ).trim();
+          if (current && names.includes(current)) {
+            return current;
+          }
+          return names[0] || "";
+        });
+
+        if (names.length === 0) {
+          setInstanceLLStates({});
+          return;
+        }
+
+        setInstanceLLStates((prev) => {
+          const next = { ...prev };
+          for (const name of names) {
+            next[name] = {
+              ...(next[name] || EMPTY_INSTANCE_LL_STATE),
+              loading: true,
+              error: "",
+            };
+          }
+          return next;
+        });
+
+        const llEntries = await Promise.all(
+          names.map(
+            async (name) => [name, await queryInstanceLLState(name)] as const,
+          ),
+        );
+        if (cancelled) return;
+        setInstanceLLStates((prev) => {
+          const next = { ...prev };
+          for (const [name, llState] of llEntries) {
+            next[name] = llState;
+          }
+          return next;
+        });
+      } catch {
+        if (cancelled) return;
+        setInstanceOptions([]);
+        setInstanceGameVersions({});
+        setInstanceLogos({});
+        setInstanceLLStates({});
+        setSelectedInstance("");
+      }
+    };
+
+    void loadInstances();
+    return () => {
+      cancelled = true;
+    };
+  }, [currentVersionName, lipAvailable, lipGuardReady, queryInstanceLLState]);
+
+  useEffect(() => {
+    if (instanceOptions.length === 0) return;
+
+    setInstanceLLStates((prev) => {
+      let changed = false;
+      const next = { ...prev };
+      for (const name of instanceOptions) {
+        const snapshot = getInstanceSnapshot(name);
+        if (!snapshot?.llState) continue;
+        const incoming = toInstanceState(snapshot.llState);
+        const existing = next[name];
+        if (
+          existing &&
+          existing.installed === incoming.installed &&
+          existing.explicitInstalled === incoming.explicitInstalled &&
+          existing.installedVersion === incoming.installedVersion &&
+          existing.error === incoming.error &&
+          existing.loading === incoming.loading
+        ) {
+          continue;
+        }
+        next[name] = incoming;
+        changed = true;
+      }
+      return changed ? next : prev;
+    });
+  }, [getInstanceSnapshot, instanceOptions, snapshotRevision, toInstanceState]);
+
+  const routeVariantIdentifier = useMemo<string>(() => {
+    const raw = String(identifier || "").trim();
+    return raw.includes("#") ? raw : "";
+  }, [identifier]);
+
+  const packageVariants = useMemo<LIPPackageVariantDetail[]>(
+    () => pkg?.variantDetails || [],
+    [pkg?.variantDetails],
+  );
+
+  const visiblePackageVariants = useMemo<LIPPackageVariantDetail[]>(
+    () =>
+      packageVariants.filter((variant) =>
+        String(variant.key || "")
+          .trim()
+          .toLowerCase()
+          .includes("client"),
+      ),
+    [packageVariants],
+  );
+
+  const activeVariant = useMemo<LIPPackageVariantDetail | null>(() => {
+    if (visiblePackageVariants.length === 0) return null;
+
+    const candidates = [selectedVariantIdentifier, routeVariantIdentifier]
+      .map((value) =>
+        String(value || "")
+          .trim()
+          .toLowerCase(),
+      )
+      .filter(Boolean);
+    for (const candidate of candidates) {
+      const matched = visiblePackageVariants.find(
+        (variant) =>
+          String(variant.packageIdentifier || "")
+            .trim()
+            .toLowerCase() === candidate,
+      );
+      if (matched) return matched;
+    }
+
+    const preferredVariantKey = String(pkg?.preferredVariantKey || "")
+      .trim()
+      .toLowerCase();
+    if (preferredVariantKey) {
+      const preferredVariant = visiblePackageVariants.find(
+        (variant) =>
+          String(variant.key || "")
+            .trim()
+            .toLowerCase() === preferredVariantKey,
+      );
+      if (preferredVariant) return preferredVariant;
+    }
+
+    return visiblePackageVariants[0] || null;
+  }, [
+    visiblePackageVariants,
+    pkg?.preferredVariantKey,
+    routeVariantIdentifier,
+    selectedVariantIdentifier,
+  ]);
+
+  const activePackageIdentifier = useMemo<string>(
+    () =>
+      String(activeVariant?.packageIdentifier || pkg?.identifier || "").trim(),
+    [activeVariant?.packageIdentifier, pkg?.identifier],
+  );
+
+  const activeVariantDisplayLabel = useMemo<string>(
+    () => getVariantDisplayLabel(activeVariant, t("lip.files.variant_default")),
+    [activeVariant, t],
+  );
+
+  const activeVariantFiles = useMemo<LIPPackageFileInfo[]>(
+    () => activeVariant?.files || pkg?.files || [],
+    [activeVariant?.files, pkg?.files],
+  );
+
+  const filesWithGameVersionState = useMemo<FileGameVersionState[]>(
+    () =>
+      activeVariantFiles.map((file) => {
+        const hasLLRequirement = file.llDependencyRanges.length > 0;
+        const supportedGameVersions = hasLLRequirement
+          ? resolveSupportedGameVersionsByLLRanges(
+              file.llDependencyRanges,
+              gameToLLVersions,
+            )
+          : [];
+
+        return {
+          file,
+          supportedGameVersions,
+          hasLLRequirement,
+        };
+      }),
+    [activeVariantFiles, gameToLLVersions],
+  );
+
+  const installDialogFileState = useMemo<FileGameVersionState | null>(() => {
+    if (!installDialogTriggerVersion) return null;
+    return (
+      filesWithGameVersionState.find(
+        (state) => state.file.version === installDialogTriggerVersion,
+      ) || null
+    );
+  }, [filesWithGameVersionState, installDialogTriggerVersion]);
+
+  const installDialogInstanceGameVersion = useMemo<string>(() => {
+    const raw = instanceGameVersions[installDialogSelectedInstance] || "";
+    return normalizeGameVersion(raw);
+  }, [instanceGameVersions, installDialogSelectedInstance]);
+
+  const dialogRequiresLL = Boolean(installDialogFileState?.hasLLRequirement);
+
+  const dialogInstancePackageState =
+    useMemo<InstancePackageState | null>(() => {
+      const instanceName = String(installDialogSelectedInstance || "").trim();
+      if (!instanceName) return null;
+      return instancePackageStates[instanceName] || null;
+    }, [installDialogSelectedInstance, instancePackageStates]);
+
+  const dialogInstalledPackageVersion = useMemo<string>(() => {
+    const installedVersion = String(
+      dialogInstancePackageState?.installedVersion || "",
+    ).trim();
+    if (!dialogInstancePackageState?.installed || !installedVersion) return "";
+    return installedVersion;
+  }, [dialogInstancePackageState]);
+
+  const dialogPackageStateLoading = Boolean(
+    dialogInstancePackageState?.loading,
+  );
+
+  const installDialogActionKind = useMemo<InstallDialogActionKind>(() => {
+    if (!installDialogTriggerVersion || dialogPackageStateLoading) {
+      return "install";
+    }
+    if (!dialogInstancePackageState?.installed) {
+      return "install";
+    }
+    if (!dialogInstalledPackageVersion) {
+      return "reinstall";
+    }
+
+    const versionCompare = compareVersions(
+      installDialogTriggerVersion,
+      dialogInstalledPackageVersion,
+    );
+    if (versionCompare > 0) return "upgrade";
+    if (versionCompare < 0) return "downgrade";
+    return "reinstall";
+  }, [
+    dialogInstalledPackageVersion,
+    dialogInstancePackageState?.installed,
+    dialogPackageStateLoading,
+    installDialogTriggerVersion,
+  ]);
+
+  const installDialogActionLabelKey =
+    INSTALL_DIALOG_ACTION_LABEL_KEYS[installDialogActionKind];
+  const installDialogSuccessKey =
+    INSTALL_DIALOG_ACTION_SUCCESS_KEYS[installDialogActionKind];
+
+  const dialogInstanceLLState = useMemo<InstanceLLState | null>(() => {
+    const instanceName = String(installDialogSelectedInstance || "").trim();
+    if (!instanceName) return null;
+    return instanceLLStates[instanceName] || null;
+  }, [instanceLLStates, installDialogSelectedInstance]);
+
+  const dialogLLStateLoading =
+    dialogRequiresLL &&
+    (!dialogInstanceLLState || dialogInstanceLLState.loading);
+  const dialogLLInstalled = Boolean(dialogInstanceLLState?.installed);
+  const dialogLLVersion = String(
+    dialogInstanceLLState?.installedVersion || "",
+  ).trim();
+
+  const installDialogPrimaryActionLabelKey = useMemo<string>(() => {
+    if (dialogRequiresLL && !dialogLLStateLoading && !dialogLLInstalled) {
+      return "lip.files.redirect";
+    }
+    return installDialogActionLabelKey;
+  }, [
+    dialogLLInstalled,
+    dialogLLStateLoading,
+    dialogRequiresLL,
+    installDialogActionLabelKey,
+  ]);
+
+  const dialogInstalledLLCompatible = useMemo<boolean>(() => {
+    if (!dialogRequiresLL) return true;
+    if (!dialogLLInstalled || !dialogLLVersion || !installDialogFileState) {
+      return false;
+    }
+    return isLeviLaminaVersionCompatible(
+      dialogLLVersion,
+      installDialogFileState.file.llDependencyRanges,
+    );
+  }, [
+    dialogRequiresLL,
+    dialogLLInstalled,
+    dialogLLVersion,
+    installDialogFileState,
+  ]);
+
+  useEffect(() => {
+    if (!lipAvailable) return;
+    const instanceName = String(installDialogSelectedInstance || "").trim();
+    if (!instanceName) return;
+    const existingState = instanceLLStates[instanceName];
+    if (existingState && !existingState.loading) return;
+
+    let cancelled = false;
+    setInstanceLLStates((prev) => ({
+      ...prev,
+      [instanceName]: {
+        ...EMPTY_INSTANCE_LL_STATE,
+        loading: true,
+      },
+    }));
+
+    const run = async () => {
+      const llState = await queryInstanceLLState(instanceName);
+      if (cancelled) return;
+      setInstanceLLStates((prev) => ({
+        ...prev,
+        [instanceName]: llState,
+      }));
+    };
+    void run();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [installDialogSelectedInstance, lipAvailable, queryInstanceLLState]);
+
+  useEffect(() => {
+    setSelectedVariantIdentifier("");
+  }, [pkg?.identifier]);
+
+  useEffect(() => {
+    setInstancePackageStates({});
+  }, [activePackageIdentifier]);
+
+  useEffect(() => {
+    if (!lipAvailable) return;
+    const instanceName = String(installDialogSelectedInstance || "").trim();
+    const packageIdentifier = activePackageIdentifier;
+    if (!installDialogOpen || !instanceName || !packageIdentifier) return;
+    const existingState = instancePackageStates[instanceName];
+    if (existingState && !existingState.loading) return;
+
+    let cancelled = false;
+    setInstancePackageStates((prev) => ({
+      ...prev,
+      [instanceName]: {
+        ...EMPTY_INSTANCE_LL_STATE,
+        loading: true,
+      },
+    }));
+
+    const run = async () => {
+      const state = await queryInstancePackageState(
+        instanceName,
+        packageIdentifier,
+      );
+      if (cancelled) return;
+      setInstancePackageStates((prev) => ({
+        ...prev,
+        [instanceName]: state,
+      }));
+    };
+    void run();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    activePackageIdentifier,
+    installDialogOpen,
+    installDialogSelectedInstance,
+    lipAvailable,
+    queryInstancePackageState,
+  ]);
+
+  const installDialogGameVersionCompatible = useMemo<boolean>(() => {
+    if (!installDialogFileState) return false;
+    if (!installDialogFileState.hasLLRequirement) return true;
+    if (!mappingAvailable) return false;
+    if (!installDialogInstanceGameVersion) return false;
+
+    const supported = new Set(installDialogFileState.supportedGameVersions);
+    return supported.has(installDialogInstanceGameVersion);
+  }, [
+    installDialogFileState,
+    installDialogInstanceGameVersion,
+    mappingAvailable,
+  ]);
+
+  const installDialogVersionInstallable = useMemo<boolean>(() => {
+    if (!installDialogFileState) return false;
+    if (dialogRequiresLL && !mappingAvailable) return false;
+    if (!installDialogGameVersionCompatible) return false;
+    if (!dialogRequiresLL) return true;
+    if (dialogLLStateLoading) return false;
+
+    if (dialogLLInstalled) {
+      return dialogInstalledLLCompatible;
+    }
+
+    return true;
+  }, [
+    installDialogFileState,
+    installDialogGameVersionCompatible,
+    dialogRequiresLL,
+    dialogLLStateLoading,
+    dialogLLInstalled,
+    dialogInstalledLLCompatible,
+    mappingAvailable,
+  ]);
+
+  const redirectToInstanceLoaderSettings = useCallback(
+    (instanceName: string) => {
+      const normalizedName = String(instanceName || "").trim();
+      if (!normalizedName) return;
+
+      setInstallDialogOpen(false);
+      setInstallDialogTriggerVersion("");
+      toast(t("common.tip"), {
+        variant: "warning",
+        description: t("lip.files.ll_missing_redirect_to_loader"),
+        timeout: 2000,
+      });
+      navigate(ROUTES.instanceSettings, {
+        state: {
+          name: normalizedName,
+          returnTo: `${location.pathname}${location.search}`,
+          tab: "loader",
+        },
+      });
+    },
+    [location.pathname, location.search, navigate, t],
+  );
+
+  const openInstallDialog = useCallback(
+    (version: string) => {
+      const normalized = String(version || "").trim();
+      if (!normalized) return;
+
+      setInstallDialogTriggerVersion(normalized);
+      setInstallDialogSelectedInstance((prev) => {
+        if (prev && instanceOptions.includes(prev)) {
+          return prev;
+        }
+        if (selectedInstance && instanceOptions.includes(selectedInstance)) {
+          return selectedInstance;
+        }
+        return instanceOptions[0] || "";
+      });
+      setInstallDialogOpen(true);
+    },
+    [instanceOptions, selectedInstance],
+  );
+
+  const closeInstallDialog = useCallback(() => {
+    if (actionRunning) return;
+    setInstallDialogOpen(false);
+    setInstallDialogTriggerVersion("");
+  }, [actionRunning]);
+
+  const handleConfirmInstall = useCallback(async () => {
+    if (
+      !pkg ||
+      !installDialogSelectedInstance ||
+      !installDialogTriggerVersion ||
+      dialogPackageStateLoading
+    ) {
+      return;
+    }
+
+    if (dialogRequiresLL && !dialogLLStateLoading && !dialogLLInstalled) {
+      redirectToInstanceLoaderSettings(installDialogSelectedInstance);
+      return;
+    }
+
+    setActionRunning(true);
+    try {
+      await runWithLipTask(
+        {
+          action: installDialogActionKind,
+          target: installDialogSelectedInstance,
+          methods: ["Install", "Update"],
+          feedbackMode: "on_error",
+        },
+        async ({ addLog }) => {
+          addLog(
+            "info",
+            `${t(installDialogActionLabelKey)} ${activePackageIdentifier}@${installDialogTriggerVersion}`,
+          );
+
+          const err = await InstallLIPPackage(
+            installDialogSelectedInstance,
+            activePackageIdentifier,
+            installDialogTriggerVersion,
+          );
+          if (String(err || "").trim()) {
+            throw new Error(String(err));
+          }
+        },
+      );
+
+      toast(t("common.success"), {
+        variant: "success",
+        description: t(installDialogSuccessKey),
+        timeout: 2000,
+      });
+      await refreshInstance(
+        installDialogSelectedInstance,
+        "lip-package-install",
+      );
+      const latestSnapshot = getInstanceSnapshot(installDialogSelectedInstance);
+      if (latestSnapshot?.llState) {
+        setInstanceLLStates((prev) => ({
+          ...prev,
+          [installDialogSelectedInstance]: toInstanceState(
+            latestSnapshot.llState,
+          ),
+        }));
+      }
+      const packageState = await ensurePackageInstallState(
+        installDialogSelectedInstance,
+        activePackageIdentifier,
+      );
+      setInstancePackageStates((prev) => ({
+        ...prev,
+        [installDialogSelectedInstance]: toInstanceState(packageState),
+      }));
+      setInstallDialogOpen(false);
+      setInstallDialogTriggerVersion("");
+    } catch (actionError) {
+      toast(t("common.error"), {
+        variant: "danger",
+        description: t("lip.files.action_failed", {
+          error: resolveErrorText(actionError),
+        }),
+        timeout: 2000,
+      });
+    } finally {
+      setActionRunning(false);
+    }
+  }, [
+    activePackageIdentifier,
+    dialogLLInstalled,
+    dialogLLStateLoading,
+    dialogPackageStateLoading,
+    dialogRequiresLL,
+    installDialogActionKind,
+    installDialogActionLabelKey,
+    installDialogSelectedInstance,
+    pkg,
+    redirectToInstanceLoaderSettings,
+    resolveErrorText,
+    runWithLipTask,
+    ensurePackageInstallState,
+    getInstanceSnapshot,
+    installDialogSuccessKey,
+    installDialogTriggerVersion,
+    refreshInstance,
+    t,
+    toInstanceState,
+  ]);
+
+  if (loading) {
+    return (
+      <PageContainer animate={false} className="min-h-0 no-scrollbar">
+        <Card className={LAYOUT.GLASS_CARD.BASE}>
+          <Card.Content className="p-6">
+            <div className="flex flex-col md:flex-row gap-6">
+              <div className="flex items-start gap-4 flex-1">
+                <Skeleton className="w-24 h-24 rounded-2xl shrink-0" />
+                <div className="flex flex-col gap-3 w-full max-w-lg">
+                  <Skeleton className="h-8 w-3/4 rounded-lg" />
+                  <div className="flex gap-2">
+                    <Skeleton className="h-4 w-20 rounded-md" />
+                    <Skeleton className="h-4 w-20 rounded-md" />
+                  </div>
+                  <div className="flex gap-2">
+                    <Skeleton className="h-6 w-16 rounded-full" />
+                    <Skeleton className="h-6 w-16 rounded-full" />
+                  </div>
+                </div>
+              </div>
+              <div className="flex flex-col gap-3 min-w-[200px] justify-center">
+                <Skeleton className="h-12 w-full rounded-xl" />
+                <div className="flex gap-2 justify-center">
+                  <Skeleton className="h-10 w-10 rounded-lg" />
+                  <Skeleton className="h-10 w-10 rounded-lg" />
+                  <Skeleton className="h-10 w-10 rounded-lg" />
+                </div>
+              </div>
+            </div>
+          </Card.Content>
+        </Card>
+
+        <Card className={cn(LAYOUT.GLASS_CARD.BASE, "mt-6 min-h-[300px]")}>
+          <Card.Content className="p-6">
+            <div className="flex gap-6 mb-6">
+              <Skeleton className="h-8 w-24 rounded-lg" />
+              <Skeleton className="h-8 w-24 rounded-lg" />
+            </div>
+            <div className="space-y-4">
+              <Skeleton className="h-4 w-full rounded-md" />
+              <Skeleton className="h-4 w-full rounded-md" />
+              <Skeleton className="h-4 w-3/4 rounded-md" />
+            </div>
+          </Card.Content>
+        </Card>
+      </PageContainer>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="w-full h-full min-h-0 flex flex-col p-4 sm:p-6 gap-4 items-center justify-center">
+        <Card className="bg-surface/50 dark:bg-surface/40 launcher-material-blur rounded-4xl p-8">
+          <Card.Content className="flex flex-col items-center gap-4">
+            <p className="text-xl font-bold text-rose-500">{error}</p>
+            <Button
+              onPress={() => void loadPackage(identifier, true)}
+              variant={"primary"}
+              className={
+                "bg-brand-500 hover:bg-brand-500 brand-primary-foreground font-bold shadow-lg shadow-brand-900/20"
+              }
+            >
+              {t("common.retry")}
+            </Button>
+            <Button onPress={() => navigate(-1)} variant={"ghost"}>
+              {t("common.back")}
+            </Button>
+          </Card.Content>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!pkg) {
+    return (
+      <div className="w-full h-full min-h-0 flex flex-col p-4 sm:p-6 gap-4 items-center justify-center">
+        <Card className="bg-surface/50 dark:bg-surface/40 launcher-material-blur rounded-4xl p-8">
+          <Card.Content className="flex flex-col items-center gap-4">
+            <p className="text-xl font-bold">{t("common.empty")}</p>
+            <Button
+              onPress={() => navigate(-1)}
+              variant={"primary"}
+              className={
+                "bg-brand-500 hover:bg-brand-500 brand-primary-foreground font-bold shadow-lg shadow-brand-900/20"
+              }
+            >
+              {t("common.back")}
+            </Button>
+          </Card.Content>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <PageContainer animate={false} className="min-h-0 no-scrollbar">
+      <div className="max-w-7xl mx-auto w-full">
+        <motion.div
+          data-material-motion
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+        >
+          <Card className={cn(LAYOUT.GLASS_CARD.BASE, "mb-6")}>
+            <Card.Content className="p-6">
+              <div className="flex flex-col md:flex-row gap-6">
+                <div className="shrink-0">
+                  {pkg.avatarUrl ? (
+                    <img
+                      src={pkg.avatarUrl}
+                      alt={pkg.name}
+                      className={
+                        "w-32 h-32 object-cover rounded-2xl shadow-lg bg-surface-secondary"
+                      }
+                    />
+                  ) : (
+                    <div className="w-32 h-32 rounded-2xl bg-surface-secondary shadow-lg flex items-center justify-center text-muted">
+                      <LuDownload size={36} />
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex min-w-0 flex-col grow gap-3">
+                  <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-foreground dark:text-zinc-100 pb-1 break-words">
+                    {pkg.name}
+                  </h1>
+
+                  <div className="flex items-center gap-3 text-muted dark:text-zinc-400 text-sm flex-wrap">
+                    <div className="flex items-center gap-1">
+                      <LuUser size={14} />
+                      <span className="font-medium text-foreground dark:text-zinc-200">
+                        {pkg.author || t("common.unknown")}
+                      </span>
+                    </div>
+                    <span className="w-1 h-1 rounded-full bg-surface-quaternary"></span>
+                    <div className="flex items-center gap-1">
+                      <LuClock size={14} />
+                      <span>{formatDateStr(pkg.updated)}</span>
+                    </div>
+                    <span className="w-1 h-1 rounded-full bg-surface-quaternary"></span>
+                    <div className="flex items-center gap-1">
+                      <LuFlame size={14} className="text-orange-500" />
+                      <span>{pkg.hotness}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2 mt-1">
+                    {pkg.tags.map((tag) => (
+                      <Chip key={tag} size="sm" variant="soft">
+                        {<LuTag size={12} />}
+                        <Chip.Label>{tag}</Chip.Label>
+                      </Chip>
+                    ))}
+                    <Chip size="sm" variant="secondary">
+                      {<LuGamepad2 size={12} />}
+                      <Chip.Label className="select-text">
+                        ID: {pkg.identifier}
+                      </Chip.Label>
+                    </Chip>
+                  </div>
+
+                  <p className="text-muted dark:text-zinc-400 mt-4 text-sm leading-relaxed max-w-4xl">
+                    {pkg.description || t("lip.no_description")}
+                  </p>
+                </div>
+
+                <div className="flex flex-col gap-3 min-w-[240px] md:border-l md:border-border md:pl-8 justify-center">
+                  <Button
+                    size="lg"
+                    onPress={() => {
+                      setSelectedTab("files");
+                      setTimeout(() => {
+                        tabsRef.current?.scrollIntoView({
+                          behavior: shouldDisableAnimations()
+                            ? "auto"
+                            : "smooth",
+                          block: "start",
+                        });
+                      }, 100);
+                    }}
+                    variant={"secondary"}
+                    className={
+                      "w-full font-semibold shadow-md shadow-brand-900/20 brand-primary-foreground bg-brand-500 hover:bg-brand-500"
+                    }
+                  >
+                    {<LuDownload size={20} />}
+                    {t("lip.files.install")}
+                  </Button>
+                  <div className="flex gap-2 justify-center">
+                    {pkg.projectUrl && (
+                      <Tooltip>
+                        <Button
+                          onPress={() => Browser.OpenURL(pkg.projectUrl)}
+                          isIconOnly
+                          aria-label={t("audit.mods.project_page")}
+                          variant={"secondary"}
+                        >
+                          <LuGlobe size={20} />
+                        </Button>
+                        <Tooltip.Content>
+                          {t("audit.mods.project_page")}
+                        </Tooltip.Content>
+                      </Tooltip>
+                    )}
+                    <ProjectShareButton url={pkg.projectUrl} />
+                  </div>
+                </div>
+              </div>
+            </Card.Content>
+          </Card>
+        </motion.div>
+
+        <motion.div
+          data-material-motion
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.1 }}
+        >
+          <Card className={cn(LAYOUT.GLASS_CARD.BASE, "min-h-[500px]")}>
+            <Card.Content className="p-6 overflow-hidden">
+              <div ref={tabsRef} className="flex w-full flex-col scroll-mt-24">
+                <Tabs
+                  selectedKey={selectedTab}
+                  onSelectionChange={(key) => setSelectedTab(key as string)}
+                  variant="secondary"
+                >
+                  <Tabs.ListContainer>
+                    <Tabs.List
+                      aria-label={t("lip.package_details_aria_label")}
+                      className={
+                        "gap-6 w-full relative rounded-none p-0 border-b border-border mb-6"
+                      }
+                    >
+                      <Tabs.Tab
+                        key="description"
+                        id={"description"}
+                        className={
+                          "group-data-[selected]:text-brand-600 dark:group-data-[selected]:text-brand-500 font-bold"
+                        }
+                      >
+                        {t("common.details")}
+                        <Tabs.Indicator
+                          className={
+                            "w-full bg-accent h-[3px]"
+                          }
+                        />
+                      </Tabs.Tab>
+                      <Tabs.Tab
+                        key="files"
+                        id={"files"}
+                        className={
+                          "group-data-[selected]:text-brand-600 dark:group-data-[selected]:text-brand-500 font-bold"
+                        }
+                      >
+                        {t("lip.files.tab_label")}
+                        <Tabs.Indicator
+                          className={
+                            "w-full bg-accent h-[3px]"
+                          }
+                        />
+                      </Tabs.Tab>
+                    </Tabs.List>
+                  </Tabs.ListContainer>
+
+                  <Tabs.Panel id="description">
+                    <div className="prose dark:prose-invert max-w-none min-w-0 break-words prose-pre:max-w-full prose-pre:overflow-x-auto [&_table]:block [&_table]:max-w-full [&_table]:overflow-x-auto">
+                      {readmeLoading ? (
+                        <div className="flex flex-col items-center justify-center py-12 gap-3 text-muted dark:text-zinc-500">
+                          <Spinner size="lg" color={"accent"} />
+                          <p>{t("common.loading")}</p>
+                        </div>
+                      ) : readmeContent || pkg.description ? (
+                        <ReactMarkdown
+                          remarkPlugins={[remarkGfm]}
+                          rehypePlugins={[rehypeRaw, rehypeSlug, rehypeSanitize]}
+                          components={markdownComponents}
+                        >
+                          {readmeContent || pkg.description}
+                        </ReactMarkdown>
+                      ) : (
+                        <div className="flex flex-col items-center justify-center py-12 text-muted gap-3">
+                          <p>{t("lip.no_description")}</p>
+                        </div>
+                      )}
+                    </div>
+                  </Tabs.Panel>
+
+                  <Tabs.Panel id="files">
+                    <div className="flex flex-col gap-4">
+                      {visiblePackageVariants.length > 1 ? (
+                        <div className="max-w-sm">
+                          <Select
+                            placeholder={t("lip.files.variant_placeholder")}
+                            isDisabled={actionRunning}
+                            value={
+                              Array.from(
+                                activePackageIdentifier
+                                  ? [activePackageIdentifier]
+                                  : [],
+                              )[0] ?? null
+                            }
+                            onChange={(e) =>
+                              setSelectedVariantIdentifier(
+                                String(e || "").trim(),
+                              )
+                            }
+                          >
+                            <Label>
+                              {
+                                <div className="flex items-center gap-2">
+                                  <span>{t("lip.files.variant_label")}</span>
+                                  <span className="text-xs font-normal text-muted dark:text-zinc-500">
+                                    {t("lip.files.variant_hint_keep_default")}
+                                  </span>
+                                </div>
+                              }
+                            </Label>
+                            <Select.Trigger
+                              className={cn(
+                                COMPONENT_STYLES.select.trigger,
+                                "min-h-8 text-sm",
+                              )}
+                            >
+                              <Select.Value />
+                              <Select.Indicator />
+                            </Select.Trigger>
+                            <Select.Popover
+                              className={COMPONENT_STYLES.select.popoverContent}
+                            >
+                              <ListBox
+                                className={COMPONENT_STYLES.select.listbox}
+                              >
+                                {visiblePackageVariants.map((variant) => {
+                                  const label = getVariantDisplayLabel(
+                                    variant,
+                                    t("lip.files.variant_default"),
+                                  );
+                                  return (
+                                    <ListBox.Item
+                                      key={variant.packageIdentifier}
+                                      id={variant.packageIdentifier}
+                                      textValue={label}
+                                    >
+                                      <Label>
+                                        <div className="flex flex-col">
+                                          <span className="text-sm">
+                                            {label}
+                                          </span>
+                                          <span className="text-xs text-muted font-mono">
+                                            {variant.key
+                                              ? variant.packageIdentifier
+                                              : String(
+                                                  pkg?.identifier || "",
+                                                ).trim()}
+                                          </span>
+                                        </div>
+                                      </Label>
+                                      <ListBox.ItemIndicator />
+                                    </ListBox.Item>
+                                  );
+                                })}
+                              </ListBox>
+                            </Select.Popover>
+                          </Select>
+                        </div>
+                      ) : null}
+                      <LIPVersionList
+                        key={activePackageIdentifier}
+                        files={filesWithGameVersionState}
+                        packageName={pkg.name}
+                        mappingReady={mappingReady}
+                        mappingAvailable={mappingAvailable}
+                        installDisabled={instanceOptions.length === 0 || actionRunning}
+                        onInstall={openInstallDialog}
+                      />
+                    </div>
+                  </Tabs.Panel>
+                </Tabs>
+              </div>
+            </Card.Content>
+          </Card>
+        </motion.div>
+      </div>
+
+      <UnifiedModal
+        size="wide"
+        isOpen={installDialogOpen}
+        onOpenChange={(open) => {
+          if (open) {
+            setInstallDialogOpen(true);
+            return;
+          }
+          closeInstallDialog();
+        }}
+        type="primary"
+        icon={<LuGamepad2 size={24} />}
+        title={t("lip.files.select_instance_title")}
+        isDismissable={!actionRunning}
+        isPending={actionRunning}
+        showCancelButton
+        onCancel={closeInstallDialog}
+        onConfirm={() => void handleConfirmInstall()}
+        confirmText={t(installDialogPrimaryActionLabelKey)}
+        confirmButtonProps={{
+          isDisabled:
+            !installDialogSelectedInstance ||
+            !installDialogTriggerVersion ||
+            dialogPackageStateLoading ||
+            !installDialogVersionInstallable,
+        }}
+      >
+        <div className="space-y-4">
+          <ModalDescription>
+            {t("curseforge.install.select_version_body")}
+          </ModalDescription>
+          <Select
+            placeholder={t("curseforge.install.select_version_placeholder")}
+            isDisabled={actionRunning || instanceOptions.length === 0}
+            value={
+              Array.from(
+                installDialogSelectedInstance
+                  ? [installDialogSelectedInstance]
+                  : [],
+              )[0] ?? null
+            }
+            onChange={(e) => setInstallDialogSelectedInstance(String(e ?? ""))}
+          >
+            <Label>{t("curseforge.install.local_installation")}</Label>
+            <Select.Trigger
+              className={cn(COMPONENT_STYLES.select.trigger, "min-h-8 text-sm")}
+            >
+              <Select.Value />
+              <Select.Indicator />
+            </Select.Trigger>
+            <Select.Popover className={COMPONENT_STYLES.select.popoverContent}>
+              <ListBox className={COMPONENT_STYLES.select.listbox}>
+                {instanceOptions.map((instanceName) => (
+                  <ListBox.Item
+                    key={instanceName}
+                    id={instanceName}
+                    textValue={instanceName}
+                  >
+                    <Label>
+                      <div className="flex gap-2 items-center">
+                        <div className="w-8 h-8 rounded bg-surface-tertiary flex items-center justify-center overflow-hidden">
+                          <img
+                            src={
+                              instanceLogos[instanceName] ||
+                              "https://raw.githubusercontent.com/LiteLDev/LeviLauncher/main/build/appicon.png"
+                            }
+                            alt="icon"
+                            className="w-full h-full object-cover"
+                            onError={(e) =>
+                              (e.currentTarget.style.display = "none")
+                            }
+                          />
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-sm">{instanceName}</span>
+                          <span className="text-xs text-muted">
+                            {normalizeGameVersion(
+                              instanceGameVersions[instanceName],
+                            ) || t("contentpage.none")}
+                          </span>
+                        </div>
+                      </div>
+                    </Label>
+                    <ListBox.ItemIndicator />
+                  </ListBox.Item>
+                ))}
+              </ListBox>
+            </Select.Popover>
+          </Select>
+          <ModalDetails items={[
+            { label: t("lip.files.variant_label"), value: activeVariantDisplayLabel || t("contentpage.none") },
+            { label: t("lip.files.installing_version_label"), value: installDialogTriggerVersion || t("contentpage.none"), mono: true },
+            { label: t("lip.files.current_installed_version_label"), value: dialogInstancePackageState?.loading ? t("lip.files.checking_current_installed_version") : dialogInstalledPackageVersion || t("contentpage.none") },
+            { label: t("lip.files.instance_game_version_label"), value: installDialogInstanceGameVersion || t("contentpage.none"), mono: true },
+          ]} />
+          {dialogRequiresLL && dialogLLStateLoading ? (
+            <div className="text-xs text-muted dark:text-zinc-400">
+              {t("lip.files.checking_ll_state")}
+            </div>
+          ) : null}
+          {dialogRequiresLL && mappingUnavailable ? (
+            <div className="text-xs text-amber-600 dark:text-amber-400">
+              {t("lip.files.mapping_unavailable_blocked_hint")}
+            </div>
+          ) : null}
+          {dialogRequiresLL && !dialogLLStateLoading && !dialogLLInstalled ? (
+            <div className="text-xs text-amber-600 dark:text-amber-400">
+              {t("lip.files.ll_missing_redirect_hint")}
+            </div>
+          ) : null}
+          {dialogRequiresLL &&
+          !dialogLLStateLoading &&
+          dialogLLInstalled &&
+          !dialogInstalledLLCompatible ? (
+            <div className="text-xs text-rose-500">
+              {t("lip.files.ll_installed_incompatible_hint", {
+                installedVersion: dialogLLVersion || t("contentpage.none"),
+              })}
+            </div>
+          ) : null}
+          {installDialogFileState?.hasLLRequirement &&
+          mappingReady &&
+          !installDialogGameVersionCompatible ? (
+            <div className="text-xs text-rose-500">
+              {t("lip.files.select_version_incompatible_hint", {
+                version: installDialogTriggerVersion || t("contentpage.none"),
+                gameVersion:
+                  installDialogInstanceGameVersion || t("contentpage.none"),
+              })}
+            </div>
+          ) : null}
+        </div>
+      </UnifiedModal>
+
+      <UnifiedModal
+        size="standard"
+        isOpen={lipMissingModalOpen}
+        onOpenChange={setLipMissingModalOpen}
+        type="warning"
+        title={t("lip.guard.title")}
+        isDismissable={false}
+        confirmText={t("settings.lip.startup_prompt.open_settings_button")}
+        onConfirm={openLipSettings}
+      >
+        <div className="flex flex-col gap-3 text-sm leading-6 text-foreground dark:text-zinc-300">
+          <p>{t("lip.guard.description")}</p>
+        </div>
+      </UnifiedModal>
+    </PageContainer>
+  );
+};
+
+export default LIPPackagePage;

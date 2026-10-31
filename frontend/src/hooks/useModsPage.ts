@@ -1,0 +1,2469 @@
+import { openDirectory, openModsDirectory } from "@/utils/explorer";
+import { toast, useOverlayState } from "@heroui/react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+
+import { useNavigate, useBlocker } from "react-router-dom";
+import { Events } from "@wailsio/runtime";
+import {
+  InstallLIPPackage,
+  ListDir,
+  UninstallLIPPackage,
+} from "bindings/github.com/liteldev/LeviLauncher/internal/app/minecraft";
+import {
+  GetVersionMeta,
+  GetVersionsDir,
+} from "bindings/github.com/liteldev/LeviLauncher/internal/app/versionservice";
+import {
+  DeleteMod,
+  EnableMod,
+  DisableMod,
+  ImportModZipPath,
+  ImportModDllPath,
+  UpdateModManifest,
+} from "bindings/github.com/liteldev/LeviLauncher/internal/app/modsservice";
+import * as types from "bindings/github.com/liteldev/LeviLauncher/internal/types/models";
+import {
+  fetchLIPPackagesIndex,
+  fetchLIPSelfVariantRelations,
+  type LIPPackageBasicInfo,
+  type LIPSelfVariantRelation,
+} from "@/utils/content";
+import { readCurrentVersionName } from "@/utils/currentVersion";
+import { useCurrentVersion } from "@/utils/CurrentVersionContext";
+import { useModIntelligence } from "@/utils/ModIntelligenceContext";
+import { useLipTaskConsole } from "@/utils/LipTaskConsoleContext";
+import { setNavLockReason } from "@/hooks/useAppNavigation";
+import { ROUTES, routeTo } from "@/constants/routes";
+import { getPathBaseName, normalizeDroppedFiles } from "@/utils/fs";
+
+const LEVILAMINA_NORMALIZED = "levilamina";
+const ERR_LL_MANAGED_IN_VERSION_SETTINGS = "ERR_LL_MANAGED_IN_VERSION_SETTINGS";
+const ERR_NO_UPDATE_SOURCE = "ERR_NO_UPDATE_SOURCE";
+const ERR_ALREADY_LATEST = "ERR_ALREADY_LATEST";
+const ERR_LIP_PACKAGE_REQUIRED_BY_DEPENDENTS =
+  "ERR_LIP_PACKAGE_REQUIRED_BY_DEPENDENTS";
+const ERR_LIP_PACKAGE_DEMOTED_TO_DEPENDENCY =
+  "ERR_LIP_PACKAGE_DEMOTED_TO_DEPENDENCY";
+
+type TFunc = (key: string, opts?: Record<string, unknown>) => string;
+export type TabKey = "all" | "normal" | "lip";
+type MappingKind = "none" | "name" | "self_variant";
+
+export type ModLIPState = {
+  sourceType: "none" | "ambiguous" | "unique" | "levilamina";
+  identifier: string;
+  identifierKey: string;
+  targetVersion: string;
+  canUpdate: boolean;
+  packageName: string;
+  mappingKind: MappingKind;
+  matchedAlias: string;
+};
+
+export type ModListItem = {
+  kind: "mod";
+  key: string;
+  folder: string;
+  mod: types.ModInfo;
+  lipState: ModLIPState;
+};
+
+export type LipGroupItem = {
+  kind: "lip";
+  key: string;
+  identifier: string;
+  identifierKey: string;
+  displayIdentifier: string;
+  packageName: string;
+  installedVersion: string;
+  explicitInstalled: boolean;
+  folders: string[];
+  mods: types.ModInfo[];
+  childLabels: string[];
+  childPreview: string;
+  extraChildrenCount: number;
+  allEnabled: boolean;
+  anyEnabled: boolean;
+  lipState: ModLIPState;
+};
+
+export type VisibleItem = ModListItem | LipGroupItem;
+
+type TaskLogLevel = "info" | "success" | "warning" | "error";
+type TaskLogger = (level: TaskLogLevel, message: string) => void;
+
+type LIPPackageInstallState = {
+  installed: boolean;
+  explicitInstalled: boolean;
+  installedVersion: string;
+  error: string;
+};
+
+type LIPAliasCandidate = {
+  identifier: string;
+  identifierKey: string;
+  packageName: string;
+  alias: string;
+  matchTokens: string[];
+  packageHints: string[];
+};
+
+type CandidateLIPIdentifier = {
+  identifier: string;
+  identifierKey: string;
+};
+
+const normalizeName = (value: string): string =>
+  String(value || "")
+    .trim()
+    .toLowerCase();
+
+const normalizeIdentifier = (value: string): string =>
+  String(value || "")
+    .trim()
+    .toLowerCase();
+
+const normalizeVersionForCompare = (value: string): string =>
+  String(value || "")
+    .trim()
+    .replace(/^v/i, "")
+    .toLowerCase();
+
+const normalizeMatchValue = (value: string): string =>
+  String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "");
+
+const slugifyText = (value: string): string =>
+  String(value || "")
+    .replace(/([a-z0-9])([A-Z])/g, "$1-$2")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+const ALIAS_GENERIC_TOKENS = new Set([
+  "client",
+  "server",
+  "mod",
+  "mods",
+  "plugin",
+  "plugins",
+  "pack",
+  "package",
+]);
+
+const buildAliasMatchTokens = (alias: string): string[] => {
+  const normalized = normalizeMatchValue(alias);
+  if (!normalized) return [];
+
+  const set = new Set<string>();
+  const add = (value: string) => {
+    const token = normalizeMatchValue(value);
+    if (!token || token.length < 3) return;
+    if (ALIAS_GENERIC_TOKENS.has(token)) return;
+    set.add(token);
+  };
+
+  add(normalized);
+  add(normalized.replace(/_/g, "-"));
+  add(normalized.replace(/-/g, "_"));
+
+  const stripped = normalized.replace(
+    /^(client|server|mod|mods|plugin|plugins|pack|package)[_-]/,
+    "",
+  );
+  if (stripped && stripped !== normalized) {
+    add(stripped);
+    add(stripped.replace(/_/g, "-"));
+    add(stripped.replace(/-/g, "_"));
+  }
+
+  for (const part of normalized.split(/[_-]+/)) {
+    add(part);
+  }
+
+  const parts = normalized.split(/[_-]+/).filter(Boolean);
+  if (parts.length > 1) {
+    add(parts[parts.length - 1]);
+  }
+
+  return Array.from(set);
+};
+
+const buildPackageHints = (
+  packageName: string,
+  identifier: string,
+): string[] => {
+  const set = new Set<string>();
+  const add = (value: string) => {
+    const slug = slugifyText(value);
+    if (!slug || slug.length < 4) return;
+    set.add(slug);
+    set.add(slug.replace(/-/g, ""));
+  };
+
+  add(packageName);
+
+  const normalizedIdentifier = normalizeIdentifier(identifier).split("#")[0];
+  const parts = normalizedIdentifier.split("/").filter(Boolean);
+  if (parts.length > 0) {
+    add(parts[parts.length - 1]);
+  }
+  if (parts.length > 1) {
+    add(`${parts[parts.length - 2]}-${parts[parts.length - 1]}`);
+  }
+
+  return Array.from(set);
+};
+
+const isTokenMatchedInValue = (token: string, rawValue: string): boolean => {
+  const value = normalizeMatchValue(rawValue);
+  if (!token || !value) return false;
+
+  const tokenVariants = [
+    token,
+    token.replace(/_/g, "-"),
+    token.replace(/-/g, "_"),
+  ];
+  const valueVariants = [
+    value,
+    value.replace(/_/g, "-"),
+    value.replace(/-/g, "_"),
+  ];
+
+  for (const tokenVariant of tokenVariants) {
+    for (const valueVariant of valueVariants) {
+      if (valueVariant === tokenVariant) return true;
+      if (valueVariant.endsWith(`-${tokenVariant}`)) return true;
+      if (valueVariant.endsWith(`_${tokenVariant}`)) return true;
+      if (valueVariant.split(/[_-]+/).includes(tokenVariant)) return true;
+    }
+  }
+
+  return false;
+};
+
+const isPackageHintMatched = (hint: string, rawValue: string): boolean => {
+  const value = normalizeMatchValue(rawValue);
+  if (!hint || !value) return false;
+  if (value.includes(hint)) return true;
+  const normalizedHint = hint.replace(/-/g, "");
+  if (normalizedHint && value.includes(normalizedHint)) return true;
+  return false;
+};
+
+const isSelfVariantCandidateFuzzyMatched = (
+  candidate: LIPAliasCandidate,
+  values: string[],
+): boolean => {
+  const hasAliasTokenMatch = candidate.matchTokens.some((token) =>
+    values.some((value) => isTokenMatchedInValue(token, value)),
+  );
+  if (!hasAliasTokenMatch) return false;
+
+  if (candidate.packageHints.length === 0) return true;
+  return candidate.packageHints.some((hint) =>
+    values.some((value) => isPackageHintMatched(hint, value)),
+  );
+};
+
+const isStableVersion = (value: string): boolean =>
+  !String(value || "")
+    .trim()
+    .includes("-");
+
+export const resolveModFolder = (mod: types.ModInfo): string => {
+  const folder = String((mod as any)?.folder || "").trim();
+  if (folder) return folder;
+  return String(mod?.name || "").trim();
+};
+
+export const isLeviLaminaMod = (mod: types.ModInfo): boolean =>
+  normalizeName(mod?.name || "") === LEVILAMINA_NORMALIZED;
+
+const filterVisibleMods = (
+  mods: types.ModInfo[] | null | undefined,
+): types.ModInfo[] =>
+  Array.isArray(mods) ? mods.filter((mod) => !isLeviLaminaMod(mod)) : [];
+
+const parseErrorCode = (value: unknown): string => {
+  const source =
+    typeof value === "string"
+      ? value
+      : value instanceof Error
+        ? value.message
+        : String(value || "");
+  const trimmed = source.trim();
+  if (!trimmed) return "";
+  const match = trimmed.match(/ERR_[A-Z0-9_]+/);
+  return match ? match[0] : trimmed;
+};
+
+const resolveErrorText = (t: TFunc, value: unknown): string => {
+  const code = parseErrorCode(value);
+  if (!code) return t("common.error");
+
+  const direct = t(code);
+  if (direct !== code) {
+    return direct;
+  }
+
+  const byErrorKey = t(`errors.${code}`);
+  if (byErrorKey !== `errors.${code}`) {
+    return byErrorKey;
+  }
+
+  return code;
+};
+
+const pickTargetVersion = (versions: string[]): string => {
+  const list = Array.isArray(versions)
+    ? versions.map((item) => String(item || "").trim()).filter(Boolean)
+    : [];
+  if (list.length === 0) return "";
+  const stable = list.find((version) => isStableVersion(version));
+  return stable || list[0];
+};
+
+const buildDefaultModLIPState = (): ModLIPState => ({
+  sourceType: "none",
+  identifier: "",
+  identifierKey: "",
+  targetVersion: "",
+  canUpdate: false,
+  packageName: "",
+  mappingKind: "none",
+  matchedAlias: "",
+});
+
+const formatChildPreview = (
+  labels: string[],
+): { preview: string; extra: number; deduped: string[] } => {
+  const deduped = Array.from(
+    new Set(labels.map((item) => String(item || "").trim()).filter(Boolean)),
+  );
+  deduped.sort((a, b) =>
+    a.localeCompare(b, undefined, { sensitivity: "base" }),
+  );
+  const previewItems = deduped.slice(0, 2);
+  return {
+    preview: previewItems.join(", "),
+    extra: Math.max(0, deduped.length - previewItems.length),
+    deduped,
+  };
+};
+
+export const useModsPage = (
+  t: TFunc,
+  scrollRef: React.RefObject<HTMLDivElement | null>,
+) => {
+  const navigate = useNavigate();
+  const { runWithLipTask } = useLipTaskConsole();
+  const { currentVersionName } = useCurrentVersion();
+  const {
+    ensureInstanceHydrated,
+    getInstanceSnapshot,
+    ensurePackageInstallState,
+    refreshInstance,
+    snapshotRevision,
+  } = useModIntelligence();
+
+  const [modsInfo, setModsInfo] = useState<Array<types.ModInfo>>([]);
+  const [query, setQuery] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
+  const [errorFile, setErrorFile] = useState("");
+  const [resultSuccess, setResultSuccess] = useState<string[]>([]);
+  const [resultFailed, setResultFailed] = useState<
+    Array<{ name: string; err: string }>
+  >([]);
+  const [currentFile, setCurrentFile] = useState("");
+  const [activeMod, setActiveMod] = useState<types.ModInfo | null>(null);
+  const [editMod, setEditMod] = useState<types.ModInfo | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editVersion, setEditVersion] = useState("");
+  const [editType, setEditType] = useState("");
+  const [editEntry, setEditEntry] = useState("");
+  const [editAuthor, setEditAuthor] = useState("");
+  const [editSaving, setEditSaving] = useState(false);
+  const [activeLipIdentifier, setActiveLipIdentifier] = useState("");
+  const [deleting, setDeleting] = useState<boolean>(false);
+  const [batchUpdating, setBatchUpdating] = useState<boolean>(false);
+  const [batchUninstalling, setBatchUninstalling] = useState<boolean>(false);
+  const [demotedWarningNames, setDemotedWarningNames] = useState<string[]>([]);
+  const [actionConfirmTitle, setActionConfirmTitle] = useState("");
+  const [actionConfirmBody, setActionConfirmBody] = useState("");
+  const [actionConfirming, setActionConfirming] = useState<boolean>(false);
+  const [enabledByFolder, setEnabledByFolder] = useState<Map<string, boolean>>(
+    new Map(),
+  );
+  const [onlyEnabled, setOnlyEnabled] = useState<boolean>(false);
+  const [dllName, setDllName] = useState("");
+  const [dllType, setDllType] = useState("preload-native");
+  const [dllVersion, setDllVersion] = useState("0.0.0");
+  const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set());
+  const [sortConfig, setSortConfig] = useState<{
+    key: string;
+    direction: "asc" | "desc";
+  }>({ key: "name", direction: "asc" });
+  const [tabKey, setTabKey] = useState<TabKey>("all");
+  const [gameVersion, setGameVersion] = useState("");
+  const [lipInstallStateByIdentifier, setLipInstallStateByIdentifier] =
+    useState<Map<string, LIPPackageInstallState>>(new Map());
+
+  const dllResolveRef = useRef<((ok: boolean) => void) | null>(null);
+  const dllConfirmRef = useRef<{
+    name: string;
+    type: string;
+    version: string;
+  } | null>(null);
+  const dupResolveRef = useRef<((overwrite: boolean) => void) | null>(null);
+  const dupNameRef = useRef<string>("");
+  const actionConfirmRunnerRef = useRef<(() => Promise<void>) | null>(null);
+  const lastScrollTopRef = useRef<number>(0);
+  const restorePendingRef = useRef<boolean>(false);
+
+  const {
+    isOpen: errOpen,
+    open: errOnOpen,
+    setOpen: errOnOpenChange,
+    close: errOnClose,
+  } = useOverlayState();
+  const {
+    isOpen: delOpen,
+    open: delOnOpen,
+    setOpen: delOnOpenChange,
+    close: delOnClose,
+  } = useOverlayState();
+  const {
+    isOpen: dllOpen,
+    open: dllOnOpen,
+    setOpen: dllOnOpenChange,
+    close: dllOnClose,
+  } = useOverlayState();
+  const {
+    isOpen: dupOpen,
+    open: dupOnOpen,
+    setOpen: dupOnOpenChange,
+    close: dupOnClose,
+  } = useOverlayState();
+  const {
+    isOpen: delCfmOpen,
+    open: delCfmOnOpen,
+    setOpen: delCfmOnOpenChange,
+    close: delCfmOnClose,
+  } = useOverlayState();
+  const {
+    isOpen: infoOpen,
+    open: infoOnOpen,
+    setOpen: infoOnOpenChange,
+    close: infoOnClose,
+  } = useOverlayState();
+  const {
+    isOpen: editOpen,
+    open: editOnOpen,
+    close: editOnClose,
+  } = useOverlayState();
+  const {
+    isOpen: batchUpdateOpen,
+    open: batchUpdateOnOpen,
+    setOpen: batchUpdateOnOpenChange,
+    close: batchUpdateOnClose,
+  } = useOverlayState();
+  const {
+    isOpen: batchUninstallOpen,
+    open: batchUninstallOnOpen,
+    setOpen: batchUninstallOnOpenChange,
+    close: batchUninstallOnClose,
+  } = useOverlayState();
+  const {
+    isOpen: demotedWarningOpen,
+    open: demotedWarningOnOpen,
+    close: demotedWarningOnClose,
+  } = useOverlayState();
+  const {
+    isOpen: actionConfirmOpen,
+    open: actionConfirmOnOpen,
+    close: actionConfirmOnClose,
+  } = useOverlayState();
+
+  useBlocker(() => importing);
+
+  useEffect(() => {
+    setNavLockReason("mods-import", importing);
+    return () => {
+      if (importing) {
+        setNavLockReason("mods-import", false);
+      }
+    };
+  }, [importing]);
+
+  const resolveLIPIdentifierForRequest = (
+    identifier: string,
+    identifierKey?: string,
+  ): string => {
+    return String(identifier || identifierKey || "").trim();
+  };
+
+  const activeVersionName = useMemo(
+    () => currentVersionName || readCurrentVersionName(),
+    [currentVersionName],
+  );
+  const currentSnapshot = useMemo(
+    () => (activeVersionName ? getInstanceSnapshot(activeVersionName) : null),
+    [activeVersionName, getInstanceSnapshot, snapshotRevision],
+  );
+  const lipSyncStatus = currentSnapshot?.lipSyncStatus || "idle";
+  const lipSyncError = String(currentSnapshot?.lipSyncError || "").trim();
+  const lipSourceLoaded = lipSyncStatus !== "idle";
+
+  useEffect(() => {
+    if (!activeVersionName) {
+      setModsInfo([]);
+      setEnabledByFolder(new Map());
+      setLipInstallStateByIdentifier(new Map());
+      return;
+    }
+    void ensureInstanceHydrated(activeVersionName, {
+      background: true,
+      reason: "mods-page-enter",
+    });
+  }, [activeVersionName, ensureInstanceHydrated]);
+
+  useEffect(() => {
+    if (!activeVersionName) return;
+    if (!currentSnapshot) {
+      setModsInfo([]);
+      setEnabledByFolder(new Map());
+      setLipInstallStateByIdentifier(new Map());
+      return;
+    }
+
+    setModsInfo(
+      Array.isArray(currentSnapshot.modsInfo) ? currentSnapshot.modsInfo : [],
+    );
+    setEnabledByFolder(
+      currentSnapshot.enabledByFolder instanceof Map
+        ? new Map(currentSnapshot.enabledByFolder)
+        : new Map(),
+    );
+    setLipInstallStateByIdentifier(
+      currentSnapshot.lipInstallStateByIdentifier instanceof Map
+        ? new Map(currentSnapshot.lipInstallStateByIdentifier)
+        : new Map(),
+    );
+  }, [activeVersionName, currentSnapshot]);
+
+  useEffect(() => {
+    const fetchVersion = async () => {
+      if (!activeVersionName) return;
+      try {
+        const meta = await GetVersionMeta(activeVersionName);
+        if (meta && meta.gameVersion) {
+          setGameVersion(meta.gameVersion);
+        } else {
+          setGameVersion(activeVersionName);
+        }
+      } catch {
+        setGameVersion(activeVersionName);
+      }
+    };
+    void fetchVersion();
+  }, [activeVersionName]);
+
+  const modLIPStateByFolder = useMemo(
+    () =>
+      currentSnapshot?.modLIPStateByFolder instanceof Map
+        ? new Map(currentSnapshot.modLIPStateByFolder)
+        : new Map<string, ModLIPState>(),
+    [currentSnapshot],
+  );
+
+  const baseLipGroupItems = useMemo(
+    () =>
+      Array.isArray(currentSnapshot?.lipGroupItems)
+        ? currentSnapshot.lipGroupItems
+        : [],
+    [currentSnapshot],
+  );
+
+  const baseNormalItems = useMemo(
+    () =>
+      Array.isArray(currentSnapshot?.normalItems)
+        ? currentSnapshot.normalItems
+        : [],
+    [currentSnapshot],
+  );
+
+  const modsByFolder = useMemo(() => {
+    const map = new Map<string, types.ModInfo>();
+    for (const mod of modsInfo) {
+      const folder = resolveModFolder(mod);
+      if (!folder) continue;
+      map.set(folder, mod);
+    }
+    return map;
+  }, [modsInfo]);
+
+  const allLipGroupItems = useMemo(() => {
+    return baseLipGroupItems.map((group) => {
+      const installState = lipInstallStateByIdentifier.get(group.identifierKey);
+      if (!installState) return group;
+
+      const uniqueModVersions = Array.from(
+        new Set(
+          group.mods
+            .map((mod) => String(mod.version || "").trim())
+            .filter(Boolean),
+        ),
+      );
+      const installedVersion =
+        String(installState.installedVersion || "").trim() ||
+        (uniqueModVersions.length === 1
+          ? uniqueModVersions[0]
+          : group.installedVersion);
+
+      return {
+        ...group,
+        installedVersion,
+        explicitInstalled: Boolean(installState.explicitInstalled),
+      };
+    });
+  }, [baseLipGroupItems, lipInstallStateByIdentifier]);
+
+  const lipGroupByIdentifier = useMemo(() => {
+    const map = new Map<string, LipGroupItem>();
+    for (const group of allLipGroupItems) {
+      map.set(group.identifierKey, group);
+    }
+    return map;
+  }, [allLipGroupItems]);
+
+  const lipManagedFolderSet = useMemo(() => {
+    const set = new Set<string>();
+    for (const group of allLipGroupItems) {
+      for (const folder of group.folders) {
+        set.add(folder);
+      }
+    }
+    return set;
+  }, [allLipGroupItems]);
+
+  const normalMods = useMemo(() => {
+    return baseNormalItems.map((item) => item.mod);
+  }, [baseNormalItems]);
+
+  const filteredNormalMods = useMemo(() => {
+    let list = normalMods;
+    if (onlyEnabled) {
+      list = list.filter((mod) => {
+        const folder = resolveModFolder(mod);
+        return folder ? Boolean(enabledByFolder.get(folder)) : false;
+      });
+    }
+
+    const q = query.trim().toLowerCase();
+    if (!q) return list;
+
+    return list.filter(
+      (mod) =>
+        `${mod.name}`.toLowerCase().includes(q) ||
+        `${mod.version}`.toLowerCase().includes(q),
+    );
+  }, [normalMods, onlyEnabled, enabledByFolder, query]);
+
+  const sortedNormalMods = useMemo(() => {
+    const items = [...filteredNormalMods];
+    if (sortConfig.key === "name") {
+      items.sort((a, b) => {
+        const nameA = String(a.name || "").toLowerCase();
+        const nameB = String(b.name || "").toLowerCase();
+        if (nameA < nameB) return sortConfig.direction === "asc" ? -1 : 1;
+        if (nameA > nameB) return sortConfig.direction === "asc" ? 1 : -1;
+        return 0;
+      });
+    }
+    return items;
+  }, [filteredNormalMods, sortConfig]);
+
+  const baseNormalItemsByFolder = useMemo(() => {
+    const map = new Map<string, ModListItem>();
+    for (const item of baseNormalItems) {
+      map.set(item.folder, item);
+    }
+    return map;
+  }, [baseNormalItems]);
+
+  const normalItems = useMemo<ModListItem[]>(() => {
+    return sortedNormalMods.map((mod) => {
+      const folder = resolveModFolder(mod);
+      const baseItem = baseNormalItemsByFolder.get(folder);
+      const lipState =
+        (folder && modLIPStateByFolder.get(folder)) ||
+        baseItem?.lipState ||
+        buildDefaultModLIPState();
+      return {
+        kind: "mod",
+        key: baseItem?.key || `mod:${folder}`,
+        folder,
+        mod,
+        lipState,
+      };
+    });
+  }, [baseNormalItemsByFolder, modLIPStateByFolder, sortedNormalMods]);
+
+  const filteredLipItems = useMemo(() => {
+    let list = allLipGroupItems;
+    if (onlyEnabled) {
+      list = list.filter((item) => item.anyEnabled);
+    }
+
+    const q = query.trim().toLowerCase();
+    if (!q) return list;
+
+    return list.filter((item) => {
+      const haystacks = [
+        item.packageName,
+        item.identifier,
+        item.childLabels.join(" "),
+      ];
+      return haystacks.some((text) =>
+        String(text || "")
+          .toLowerCase()
+          .includes(q),
+      );
+    });
+  }, [allLipGroupItems, onlyEnabled, query]);
+
+  const lipGroupItems = useMemo(() => {
+    const items = [...filteredLipItems];
+    items.sort((a, b) => {
+      const nameA = String(a.packageName || "").toLowerCase();
+      const nameB = String(b.packageName || "").toLowerCase();
+      if (nameA < nameB) return sortConfig.direction === "asc" ? -1 : 1;
+      if (nameA > nameB) return sortConfig.direction === "asc" ? 1 : -1;
+      return 0;
+    });
+    return items;
+  }, [filteredLipItems, sortConfig.direction]);
+
+  const visibleItems = useMemo<VisibleItem[]>(() => {
+    if (tabKey === "normal") return normalItems;
+    if (tabKey === "lip") return lipGroupItems;
+    return [...normalItems, ...lipGroupItems];
+  }, [lipGroupItems, normalItems, tabKey]);
+
+  const listHydrating =
+    Boolean(activeVersionName) &&
+    (!currentSnapshot || currentSnapshot.status === "loading");
+
+  const lipInfoPending =
+    Boolean(activeVersionName) &&
+    currentSnapshot?.status === "ready" &&
+    lipSyncStatus === "loading";
+
+  const lipInfoWarning =
+    lipSyncStatus === "error" && lipSyncError !== "ERR_LIP_NOT_INSTALLED"
+      ? lipSyncError
+      : "";
+
+  const visibleItemMap = useMemo(() => {
+    const map = new Map<string, VisibleItem>();
+    for (const item of visibleItems) {
+      map.set(item.key, item);
+    }
+    return map;
+  }, [visibleItems]);
+
+  const selectedItems = useMemo(
+    () =>
+      Array.from(selectedKeys)
+        .map((key) => visibleItemMap.get(key))
+        .filter((item): item is VisibleItem => Boolean(item)),
+    [selectedKeys, visibleItemMap],
+  );
+
+  const selectedMods = useMemo(
+    () =>
+      selectedItems
+        .filter((item): item is ModListItem => item.kind === "mod")
+        .map((item) => item.mod),
+    [selectedItems],
+  );
+
+  const selectedUpdatableCount = useMemo(
+    () => selectedItems.filter((item) => item.lipState.canUpdate).length,
+    [selectedItems],
+  );
+
+  const activeLipGroup = useMemo(() => {
+    if (!activeLipIdentifier) return null;
+    return lipGroupByIdentifier.get(activeLipIdentifier) || null;
+  }, [activeLipIdentifier, lipGroupByIdentifier]);
+
+  const activeLipInstallState = useMemo(() => {
+    if (!activeLipGroup) return null;
+    return (
+      lipInstallStateByIdentifier.get(activeLipGroup.identifierKey) || null
+    );
+  }, [activeLipGroup, lipInstallStateByIdentifier]);
+
+  const activeDeleteBlocked = useMemo(() => {
+    if (!activeLipGroup || !activeLipInstallState) return false;
+    return (
+      Boolean(activeLipInstallState.installed) &&
+      !Boolean(activeLipInstallState.explicitInstalled)
+    );
+  }, [activeLipGroup, activeLipInstallState]);
+
+  const activeDeleteWarning = useMemo(() => {
+    if (!activeDeleteBlocked) return "";
+    return resolveErrorText(t, ERR_LIP_PACKAGE_REQUIRED_BY_DEPENDENTS);
+  }, [activeDeleteBlocked, t]);
+
+  useEffect(() => {
+    setSelectedKeys(new Set());
+  }, [tabKey]);
+
+  useEffect(() => {
+    setSelectedKeys((prev) => {
+      const next = new Set<string>();
+      for (const key of prev) {
+        if (visibleItemMap.has(key)) next.add(key);
+      }
+      return next;
+    });
+  }, [visibleItemMap]);
+
+  const refreshEnabledStates = async (name: string) => {
+    const normalized = String(name || "").trim();
+    if (!normalized) return;
+    await refreshInstance(normalized, "mods-refresh-enabled");
+  };
+
+  const refreshModsAndStates = async (name: string) => {
+    const normalized = String(name || "").trim();
+    if (!normalized) return;
+    await refreshInstance(normalized, "mods-refresh-mods-and-states");
+  };
+
+  const refreshAll = async () => {
+    setLoading(true);
+    const name = activeVersionName;
+    if (name) {
+      try {
+        await refreshInstance(name, "mods-refresh-all");
+      } catch {}
+    }
+    setLoading(false);
+  };
+
+  const setLipInstallStateCache = (
+    identifierKey: string,
+    state: LIPPackageInstallState,
+  ) => {
+    const normalizedKey = String(identifierKey || "").trim();
+    if (!normalizedKey) return;
+    setLipInstallStateByIdentifier((prev) => {
+      const next = new Map(prev);
+      let targetKey = normalizedKey;
+      const lookupKey = normalizeIdentifier(normalizedKey);
+      for (const key of next.keys()) {
+        if (normalizeIdentifier(key) === lookupKey) {
+          targetKey = key;
+          break;
+        }
+      }
+      next.set(targetKey, state);
+      return next;
+    });
+  };
+
+  const queryLipGroupInstallState = async (
+    group: LipGroupItem,
+  ): Promise<LIPPackageInstallState> => {
+    const name = activeVersionName;
+    if (!name) {
+      return {
+        installed: false,
+        explicitInstalled: false,
+        installedVersion: "",
+        error: "ERR_INVALID_NAME",
+      };
+    }
+
+    try {
+      const state = await ensurePackageInstallState(
+        name,
+        group.identifierKey || group.identifier,
+      );
+      const normalizedState: LIPPackageInstallState = {
+        installed: Boolean(state.installed),
+        explicitInstalled: Boolean(state.explicitInstalled),
+        installedVersion: String(state.installedVersion || "").trim(),
+        error: String(state.error || "").trim(),
+      };
+      setLipInstallStateCache(group.identifierKey, normalizedState);
+      return normalizedState;
+    } catch (error) {
+      return {
+        installed: false,
+        explicitInstalled: false,
+        installedVersion: "",
+        error: parseErrorCode(error) || "ERR_LIP_PACKAGE_QUERY_FAILED",
+      };
+    }
+  };
+
+  const resolvePromoteInstallVersion = (group: LipGroupItem): string => {
+    const installState = lipInstallStateByIdentifier.get(group.identifierKey);
+    const installedVersion = String(
+      installState?.installedVersion || "",
+    ).trim();
+    if (installedVersion) return installedVersion;
+    return String(group.installedVersion || "").trim();
+  };
+
+  const isLipGroupPromotable = (group: LipGroupItem): boolean => {
+    const installState = lipInstallStateByIdentifier.get(group.identifierKey);
+    if (!installState) {
+      return Boolean(group.installedVersion) && !group.explicitInstalled;
+    }
+    return Boolean(installState.installed) && !installState.explicitInstalled;
+  };
+
+  const showActionToast = (
+    type: "success" | "error",
+    actionLabel: string,
+    name: string,
+    err?: unknown,
+  ) => {
+    if (type === "success") {
+      toast(t("common.success"), {
+        variant: "success",
+        description: `${actionLabel}: ${name}`,
+        timeout: 2000,
+      });
+      return;
+    }
+
+    toast(t("common.error"), {
+      variant: "danger",
+      description: `${actionLabel}: ${resolveErrorText(t, err)}`,
+      timeout: 2000,
+    });
+  };
+
+  const showActionResult = (
+    success: string[],
+    failed: Array<{ name: string; err: string }>,
+  ) => {
+    setResultSuccess(success);
+    setResultFailed(failed);
+    if (success.length > 0 || failed.length > 0) {
+      delOnOpen();
+    }
+  };
+
+  const populateEditForm = (mod: types.ModInfo) => {
+    setEditName(String(mod.name || ""));
+    setEditVersion(String(mod.version || ""));
+    setEditType(String(mod.type || ""));
+    setEditEntry(String(mod.entry || ""));
+    setEditAuthor(String((mod as any).author || ""));
+  };
+
+  const openEditForMod = (mod: types.ModInfo) => {
+    setActiveLipIdentifier("");
+    setEditMod(mod);
+    populateEditForm(mod);
+    editOnOpen();
+  };
+
+  const resetEditForm = () => {
+    setEditMod(null);
+    setEditName("");
+    setEditVersion("");
+    setEditType("");
+    setEditEntry("");
+    setEditAuthor("");
+  };
+
+  const closeEditModal = () => {
+    if (editSaving) return;
+    editOnClose();
+    resetEditForm();
+  };
+
+  const editOnOpenChange = (nextOpen: boolean) => {
+    if (nextOpen) {
+      editOnOpen();
+      return;
+    }
+    closeEditModal();
+  };
+
+  const editFormValid = editName.trim().length > 0 && !editSaving;
+
+  const handleSaveModEdit = async () => {
+    const name = activeVersionName;
+    const mod = editMod;
+    const folder = mod ? resolveModFolder(mod) : "";
+    const nextName = editName.trim();
+
+    if (!name || !mod || !folder || !nextName) {
+      toast(t("common.error"), {
+        variant: "danger",
+        description: t("mods.err_invalid_name"),
+        timeout: 2000,
+      });
+      return;
+    }
+
+    const nextMod = {
+      ...mod,
+      name: nextName,
+      version: editVersion.trim(),
+      type: editType.trim(),
+      entry: editEntry.trim(),
+      author: editAuthor.trim(),
+      folder,
+    } as types.ModInfo;
+
+    const pos = scrollRef.current?.scrollTop || 0;
+    lastScrollTopRef.current = pos;
+    restorePendingRef.current = true;
+    setEditSaving(true);
+
+    try {
+      const err = await UpdateModManifest(
+        name,
+        folder,
+        nextMod.name,
+        nextMod.version,
+        nextMod.type,
+        nextMod.entry,
+        String((nextMod as any).author || ""),
+      );
+
+      if (err) {
+        showActionToast("error", t("common.save"), mod.name, err);
+        return;
+      }
+
+      setModsInfo((prev) =>
+        prev.map((item) =>
+          resolveModFolder(item) === folder ? nextMod : item,
+        ),
+      );
+      setActiveMod((current) =>
+        current && resolveModFolder(current) === folder ? nextMod : current,
+      );
+      setEditMod(nextMod);
+      await refreshInstance(name, "mods-edit");
+      showActionToast("success", t("common.save"), nextMod.name);
+      editOnClose();
+      resetEditForm();
+    } catch (error) {
+      showActionToast(
+        "error",
+        t("common.save"),
+        mod.name,
+        parseErrorCode(error) || "ERR_WRITE_FILE",
+      );
+    } finally {
+      setEditSaving(false);
+    }
+  };
+
+  const openDemotedWarning = (names: string[]) => {
+    const uniqueNames = Array.from(
+      new Set(names.map((item) => String(item || "").trim()).filter(Boolean)),
+    );
+    if (uniqueNames.length === 0) return;
+    setDemotedWarningNames(uniqueNames);
+    demotedWarningOnOpen();
+  };
+
+  const closeDemotedWarning = () => {
+    setDemotedWarningNames([]);
+    demotedWarningOnClose();
+  };
+
+  const demotedWarningOnOpenChange = (nextOpen: boolean) => {
+    if (nextOpen) {
+      demotedWarningOnOpen();
+      return;
+    }
+    closeDemotedWarning();
+  };
+
+  const doImportFromPaths = async (paths: string[]) => {
+    try {
+      const normalizedPaths = normalizeDroppedFiles(paths);
+      if (!normalizedPaths.length) return;
+      const name = activeVersionName;
+      if (!name) {
+        setErrorMsg(t("launcherpage.currentVersion_none") as string);
+        return;
+      }
+      let started = false;
+      const succFiles: string[] = [];
+      const errPairs: Array<{ name: string; err: string }> = [];
+      for (const p of normalizedPaths) {
+        const lower = p.toLowerCase();
+        if (lower.endsWith(".zip")) {
+          if (!started) {
+            setImporting(true);
+            started = true;
+          }
+          const base = getPathBaseName(p);
+          setCurrentFile(base);
+          let err = await ImportModZipPath(name, p, false);
+          if (err) {
+            if (String(err) === "ERR_DUPLICATE_FOLDER") {
+              dupNameRef.current = base;
+              await new Promise<void>((r) => setTimeout(r, 0));
+              dupOnOpen();
+              const ok = await new Promise<boolean>((resolve) => {
+                dupResolveRef.current = resolve;
+              });
+              if (ok) {
+                err = await ImportModZipPath(name, p, true);
+                if (!err) {
+                  succFiles.push(base);
+                  continue;
+                }
+              } else {
+                continue;
+              }
+            }
+            errPairs.push({ name: base, err });
+            continue;
+          }
+          succFiles.push(base);
+        } else if (lower.endsWith(".dll")) {
+          const base = getPathBaseName(p);
+          const baseNoExt = base.replace(/\.[^/.]+$/, "");
+          setDllName(baseNoExt);
+          setDllType("preload-native");
+          setDllVersion("0.0.0");
+          await new Promise<void>((resolve) => setTimeout(resolve, 0));
+          dllOnOpen();
+          const ok = await new Promise<boolean>((resolve) => {
+            dllResolveRef.current = resolve;
+          });
+          if (!ok) {
+            continue;
+          }
+          if (!started) {
+            setImporting(true);
+            started = true;
+          }
+          setCurrentFile(base || p);
+          const vals = dllConfirmRef.current || {
+            name: dllName,
+            type: dllType,
+            version: dllVersion,
+          };
+          dllConfirmRef.current = null;
+          let err = await ImportModDllPath(
+            name,
+            p,
+            vals.name,
+            vals.type || "preload-native",
+            vals.version || "0.0.0",
+            false,
+          );
+          if (err) {
+            if (String(err) === "ERR_DUPLICATE_FOLDER") {
+              dupNameRef.current = base || p;
+              await new Promise<void>((r) => setTimeout(r, 0));
+              dupOnOpen();
+              const overwrite = await new Promise<boolean>((resolve) => {
+                dupResolveRef.current = resolve;
+              });
+              if (overwrite) {
+                err = await ImportModDllPath(
+                  name,
+                  p,
+                  vals.name,
+                  vals.type || "preload-native",
+                  vals.version || "0.0.0",
+                  true,
+                );
+                if (!err) {
+                  succFiles.push(base || p);
+                  continue;
+                }
+              } else {
+                continue;
+              }
+            }
+            errPairs.push({ name: base || p, err });
+            continue;
+          }
+          succFiles.push(base || p);
+        }
+      }
+      await refreshInstance(name, "mods-import-complete");
+      setResultSuccess(succFiles);
+      setResultFailed(errPairs);
+      if (succFiles.length > 0 || errPairs.length > 0) {
+        errOnOpen();
+      }
+    } catch (e: any) {
+      setErrorMsg(String(e?.message || e || "IMPORT_ERROR"));
+    } finally {
+      setImporting(false);
+      setCurrentFile("");
+    }
+  };
+
+  const doImportRef = useRef(doImportFromPaths);
+  doImportRef.current = doImportFromPaths;
+
+  useEffect(() => {
+    if (!activeVersionName) {
+      navigate(ROUTES.instances, { replace: true });
+    }
+  }, [activeVersionName, navigate]);
+
+  useEffect(() => {
+    return Events.On("files-dropped", (event) => {
+      const data = (event.data as { files: string[] }) || {};
+      const files = normalizeDroppedFiles(data.files);
+      if (files.length > 0) {
+        void doImportRef.current(files);
+      }
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!restorePendingRef.current) return;
+    requestAnimationFrame(() => {
+      try {
+        if (scrollRef.current)
+          scrollRef.current.scrollTop = lastScrollTopRef.current;
+      } catch {}
+    });
+    restorePendingRef.current = false;
+  }, [modsInfo, scrollRef]);
+
+  const filtered = filteredNormalMods;
+  const sortedItems = sortedNormalMods;
+
+  const handleSort = (key: string) => {
+    let direction: "asc" | "desc" = "asc";
+    if (sortConfig.key === key && sortConfig.direction === "asc") {
+      direction = "desc";
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const onSelectionChange = (itemKey: string) => {
+    setSelectedKeys((prev) => {
+      const next = new Set(prev);
+      if (next.has(itemKey)) next.delete(itemKey);
+      else next.add(itemKey);
+      return next;
+    });
+  };
+
+  const onSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedKeys(new Set(visibleItems.map((item) => item.key)));
+      return;
+    }
+    setSelectedKeys(new Set());
+  };
+
+  const installLIPIdentifier = async (
+    identifier: string,
+    identifierKey: string,
+    targetVersion: string,
+    onLog?: TaskLogger,
+  ): Promise<string> => {
+    const name = activeVersionName;
+    const requestIdentifier = resolveLIPIdentifierForRequest(
+      identifier,
+      identifierKey,
+    );
+    if (!name) return "ERR_INVALID_NAME";
+    if (!requestIdentifier || !targetVersion) return ERR_NO_UPDATE_SOURCE;
+
+    try {
+      onLog?.("info", t("lip.task_console.stage_install_pkg"));
+      const err = await InstallLIPPackage(
+        name,
+        requestIdentifier,
+        targetVersion,
+      );
+      return String(err || "").trim();
+    } catch (error) {
+      return parseErrorCode(error) || "ERR_LIP_PACKAGE_INSTALL_FAILED";
+    }
+  };
+
+  const installModByLIP = async (
+    mod: types.ModInfo,
+    onLog?: TaskLogger,
+  ): Promise<string> => {
+    if (isLeviLaminaMod(mod)) {
+      return ERR_LL_MANAGED_IN_VERSION_SETTINGS;
+    }
+
+    const folder = resolveModFolder(mod);
+    const state = modLIPStateByFolder.get(folder);
+    if (!state || state.sourceType !== "unique") {
+      return ERR_NO_UPDATE_SOURCE;
+    }
+    if (!state.targetVersion) {
+      return ERR_NO_UPDATE_SOURCE;
+    }
+    if (!state.canUpdate) {
+      return ERR_ALREADY_LATEST;
+    }
+
+    return installLIPIdentifier(
+      state.identifier,
+      state.identifierKey,
+      state.targetVersion,
+      onLog,
+    );
+  };
+
+  const installLipGroupByLIP = async (
+    group: LipGroupItem,
+    onLog?: TaskLogger,
+  ): Promise<string> => {
+    const state = group.lipState;
+    if (state.sourceType !== "unique") return ERR_NO_UPDATE_SOURCE;
+    if (!state.targetVersion) return ERR_NO_UPDATE_SOURCE;
+    if (!state.canUpdate) return ERR_ALREADY_LATEST;
+    return installLIPIdentifier(
+      state.identifier,
+      state.identifierKey,
+      state.targetVersion,
+      onLog,
+    );
+  };
+
+  const uninstallModWithFallback = async (
+    mod: types.ModInfo,
+    onLog?: TaskLogger,
+  ): Promise<string> => {
+    const name = activeVersionName;
+    if (!name) return "ERR_INVALID_NAME";
+
+    if (isLeviLaminaMod(mod)) {
+      return ERR_LL_MANAGED_IN_VERSION_SETTINGS;
+    }
+
+    const folder = resolveModFolder(mod);
+    if (!folder) return "ERR_INVALID_PACKAGE";
+
+    const state = modLIPStateByFolder.get(folder);
+    const isLipManagedMod = lipManagedFolderSet.has(folder);
+    if (isLipManagedMod && state?.sourceType === "unique" && state.identifier) {
+      const requestIdentifier = resolveLIPIdentifierForRequest(
+        state.identifier,
+        state.identifierKey,
+      );
+      if (!requestIdentifier) return "ERR_LIP_PACKAGE_INVALID_IDENTIFIER";
+      try {
+        onLog?.("info", t("mods.action_uninstall"));
+        const uninstallErr = await UninstallLIPPackage(
+          name,
+          requestIdentifier,
+        );
+        return String(uninstallErr || "").trim();
+      } catch (error) {
+        return parseErrorCode(error) || "ERR_LIP_PACKAGE_UNINSTALL_FAILED";
+      }
+    }
+
+    try {
+      onLog?.("warning", t("lip.task_console.stage_fallback_delete"));
+      const deleteErr = await (DeleteMod as any)?.(name, folder);
+      return String(deleteErr || "").trim();
+    } catch (error) {
+      return parseErrorCode(error) || "ERR_WRITE_FILE";
+    }
+  };
+
+  const uninstallLipGroupWithFallback = async (
+    group: LipGroupItem,
+    onLog?: TaskLogger,
+  ): Promise<string> => {
+    const name = activeVersionName;
+    if (!name) return "ERR_INVALID_NAME";
+    const requestIdentifier = resolveLIPIdentifierForRequest(
+      group.identifier,
+      group.identifierKey,
+    );
+    if (!requestIdentifier) return "ERR_LIP_PACKAGE_INVALID_IDENTIFIER";
+
+    try {
+      onLog?.("info", t("mods.action_uninstall"));
+      const uninstallErr = await UninstallLIPPackage(
+        name,
+        requestIdentifier,
+      );
+      return String(uninstallErr || "").trim();
+    } catch (error) {
+      return parseErrorCode(error) || "ERR_LIP_PACKAGE_UNINSTALL_FAILED";
+    }
+  };
+
+  const resetActionConfirm = () => {
+    actionConfirmRunnerRef.current = null;
+    setActionConfirmTitle("");
+    setActionConfirmBody("");
+  };
+
+  const openInstallActionConfirm = (
+    packageName: string,
+    version: string,
+    actionLabel: string,
+    runner: () => Promise<void>,
+  ) => {
+    const name = activeVersionName;
+    if (!name) {
+      toast(t("common.error"), {
+        variant: "danger",
+        description: t("launcherpage.currentVersion_none"),
+        timeout: 2000,
+      });
+      return;
+    }
+
+    actionConfirmRunnerRef.current = runner;
+    setActionConfirmTitle(t("lip.package.confirm_install_title"));
+    setActionConfirmBody(
+      t("lip.package.confirm_install_body", {
+        package: packageName,
+        version: String(version || "").trim() || "-",
+        instance: name,
+        action: actionLabel,
+      }),
+    );
+    actionConfirmOnOpen();
+  };
+
+  const confirmPendingAction = async () => {
+    const runner = actionConfirmRunnerRef.current;
+    if (!runner) {
+      actionConfirmOnClose();
+      resetActionConfirm();
+      return;
+    }
+
+    setActionConfirming(true);
+    try {
+      await runner();
+      actionConfirmOnClose();
+      resetActionConfirm();
+    } finally {
+      setActionConfirming(false);
+    }
+  };
+
+  const handleActionConfirmOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen && actionConfirming) return;
+    if (nextOpen) {
+      actionConfirmOnOpen();
+      return;
+    }
+    actionConfirmOnClose();
+    resetActionConfirm();
+  };
+
+  const closeActionConfirm = () => {
+    if (actionConfirming) return;
+    actionConfirmOnClose();
+    resetActionConfirm();
+  };
+
+  const handleBatchEnable = async () => {
+    const name = activeVersionName;
+    if (!name) return;
+
+    const folders = new Set<string>();
+    for (const item of selectedItems) {
+      if (item.kind === "mod") {
+        folders.add(item.folder);
+      } else {
+        for (const folder of item.folders) folders.add(folder);
+      }
+    }
+
+    for (const folder of folders) {
+      try {
+        await (EnableMod as any)?.(name, folder);
+      } catch {}
+    }
+    await refreshEnabledStates(name);
+  };
+
+  const handleBatchDisable = async () => {
+    const name = activeVersionName;
+    if (!name) return;
+
+    const folders = new Set<string>();
+    for (const item of selectedItems) {
+      if (item.kind === "mod") {
+        folders.add(item.folder);
+      } else {
+        for (const folder of item.folders) folders.add(folder);
+      }
+    }
+
+    for (const folder of folders) {
+      try {
+        await (DisableMod as any)?.(name, folder);
+      } catch {}
+    }
+    await refreshEnabledStates(name);
+  };
+
+  const openBatchUpdateConfirm = () => {
+    if (selectedItems.length === 0) return;
+    batchUpdateOnOpen();
+  };
+
+  const openBatchUninstallConfirm = () => {
+    if (selectedItems.length === 0) return;
+    batchUninstallOnOpen();
+  };
+
+  const handleBatchUpdate = async () => {
+    const name = activeVersionName;
+    if (!name) {
+      toast(t("common.error"), {
+        variant: "danger",
+        description: t("launcherpage.currentVersion_none"),
+        timeout: 2000,
+      });
+      return;
+    }
+
+    const updatableItems = selectedItems.filter(
+      (item) =>
+        item.lipState.sourceType === "unique" && item.lipState.canUpdate,
+    );
+    if (updatableItems.length === 0) {
+      batchUpdateOnClose();
+      return;
+    }
+
+    setBatchUpdating(true);
+    const success: string[] = [];
+    const failed: Array<{ name: string; err: string }> = [];
+    const handledIdentifiers = new Set<string>();
+    let hasSuccess = false;
+
+    try {
+      try {
+        await runWithLipTask(
+          {
+            action: "update",
+            target: name,
+            methods: ["Install", "Update"],
+            feedbackMode: "never",
+          },
+          async ({ addLog }) => {
+            for (const item of updatableItems) {
+              if (item.kind === "mod") {
+                const identifierKey = item.lipState.identifierKey;
+                if (identifierKey && handledIdentifiers.has(identifierKey))
+                  continue;
+
+                addLog("info", `${t("mods.action_update")}: ${item.mod.name}`);
+                const err = await installModByLIP(item.mod, addLog);
+                if (err) {
+                  addLog("error", `${item.mod.name}: ${err}`);
+                  failed.push({ name: item.mod.name, err });
+                  continue;
+                }
+                if (identifierKey) handledIdentifiers.add(identifierKey);
+                hasSuccess = true;
+                success.push(item.mod.name);
+                addLog("success", `${item.mod.name}: ok`);
+                continue;
+              }
+
+              if (
+                item.identifierKey &&
+                handledIdentifiers.has(item.identifierKey)
+              ) {
+                continue;
+              }
+
+              addLog("info", `${t("mods.action_update")}: ${item.packageName}`);
+              const err = await installLipGroupByLIP(item, addLog);
+              if (err) {
+                addLog("error", `${item.packageName}: ${err}`);
+                failed.push({ name: item.packageName, err });
+                continue;
+              }
+              handledIdentifiers.add(item.identifierKey);
+              hasSuccess = true;
+              success.push(item.packageName);
+              addLog("success", `${item.packageName}: ok`);
+            }
+
+            if (failed.length > 0) {
+              throw new Error(
+                failed[0].err || "ERR_LIP_PACKAGE_INSTALL_FAILED",
+              );
+            }
+          },
+        );
+      } catch {}
+
+      if (hasSuccess) await refreshAll();
+      setSelectedKeys(new Set());
+      batchUpdateOnClose();
+      if (failed.length > 0) {
+        showActionResult(success, failed);
+      } else if (hasSuccess) {
+        toast(t("common.success"), {
+          variant: "success",
+          description: `${t("mods.action_update")} x${success.length}`,
+          timeout: 2000,
+        });
+      }
+    } finally {
+      setBatchUpdating(false);
+    }
+  };
+
+  const handleBatchUninstall = async () => {
+    const name = activeVersionName;
+    if (!name) {
+      toast(t("common.error"), {
+        variant: "danger",
+        description: t("launcherpage.currentVersion_none"),
+        timeout: 2000,
+      });
+      return;
+    }
+    if (selectedItems.length === 0) return;
+
+    setBatchUninstalling(true);
+    const success: string[] = [];
+    const failed: Array<{ name: string; err: string }> = [];
+    const demoted: string[] = [];
+    const handledIdentifiers = new Set<string>();
+    let hasStateChanged = false;
+
+    try {
+      try {
+        await runWithLipTask(
+          {
+            action: "uninstall",
+            target: name,
+            methods: ["Uninstall"],
+            feedbackMode: "never",
+          },
+          async ({ addLog }) => {
+            for (const item of selectedItems) {
+              if (item.kind === "mod") {
+                addLog(
+                  "info",
+                  `${t("mods.action_uninstall")}: ${item.mod.name}`,
+                );
+                const err = await uninstallModWithFallback(item.mod, addLog);
+                if (err) {
+                  if (err === ERR_LIP_PACKAGE_DEMOTED_TO_DEPENDENCY) {
+                    addLog("warning", `${item.mod.name}: ${err}`);
+                    demoted.push(item.mod.name);
+                    hasStateChanged = true;
+                  } else {
+                    addLog("error", `${item.mod.name}: ${err}`);
+                    failed.push({ name: item.mod.name, err });
+                  }
+                  continue;
+                }
+                hasStateChanged = true;
+                success.push(item.mod.name);
+                addLog("success", `${item.mod.name}: ok`);
+                continue;
+              }
+
+              if (
+                item.identifierKey &&
+                handledIdentifiers.has(item.identifierKey)
+              ) {
+                continue;
+              }
+
+              const latestState = await queryLipGroupInstallState(item);
+              if (latestState.installed && !latestState.explicitInstalled) {
+                const blockedErr = ERR_LIP_PACKAGE_REQUIRED_BY_DEPENDENTS;
+                addLog("warning", `${item.packageName}: ${blockedErr}`);
+                failed.push({ name: item.packageName, err: blockedErr });
+                continue;
+              }
+
+              addLog(
+                "info",
+                `${t("mods.action_uninstall")}: ${item.packageName}`,
+              );
+              const err = await uninstallLipGroupWithFallback(item, addLog);
+              if (err) {
+                if (err === ERR_LIP_PACKAGE_DEMOTED_TO_DEPENDENCY) {
+                  addLog("warning", `${item.packageName}: ${err}`);
+                  demoted.push(item.packageName);
+                  hasStateChanged = true;
+                } else {
+                  addLog("error", `${item.packageName}: ${err}`);
+                  failed.push({ name: item.packageName, err });
+                }
+                continue;
+              }
+
+              handledIdentifiers.add(item.identifierKey);
+              hasStateChanged = true;
+              success.push(item.packageName);
+              addLog("success", `${item.packageName}: ok`);
+            }
+
+            if (failed.length > 0) {
+              throw new Error(
+                failed[0].err || "ERR_LIP_PACKAGE_UNINSTALL_FAILED",
+              );
+            }
+          },
+        );
+      } catch {}
+
+      if (hasStateChanged) await refreshAll();
+      setSelectedKeys(new Set());
+      batchUninstallOnClose();
+      if (failed.length > 0) {
+        showActionResult(success, failed);
+      } else if (success.length > 0) {
+        toast(t("common.success"), {
+          variant: "success",
+          description: `${t("mods.action_uninstall")} x${success.length}`,
+          timeout: 2000,
+        });
+      }
+      if (demoted.length > 0) {
+        openDemotedWarning(demoted);
+      }
+    } finally {
+      setBatchUninstalling(false);
+    }
+  };
+
+  const openDetails = (mod: types.ModInfo) => {
+    setActiveLipIdentifier("");
+    setActiveMod(mod);
+    infoOnOpen();
+  };
+
+  const openLIPPackageDetails = (identifier: string) => {
+    const target = String(identifier || "").trim();
+    if (!target) return;
+    navigate(routeTo.lipPackage(target));
+  };
+
+  const openDeleteForMod = (mod: types.ModInfo) => {
+    setActiveLipIdentifier("");
+    setActiveMod(mod);
+    delCfmOnOpen();
+  };
+
+  const openDeleteForLipGroup = async (group: LipGroupItem) => {
+    setActiveMod(null);
+    setActiveLipIdentifier(group.identifierKey);
+    try {
+      await queryLipGroupInstallState(group);
+    } catch {}
+    delCfmOnOpen();
+  };
+
+  const executeUpdateMod = async (mod: types.ModInfo) => {
+    const name = activeVersionName;
+    if (!name) {
+      toast(t("common.error"), {
+        variant: "danger",
+        description: t("launcherpage.currentVersion_none"),
+        timeout: 2000,
+      });
+      return;
+    }
+
+    const pos = scrollRef.current?.scrollTop || 0;
+    lastScrollTopRef.current = pos;
+    restorePendingRef.current = true;
+
+    try {
+      await runWithLipTask(
+        {
+          action: "update",
+          target: name,
+          methods: ["Install", "Update"],
+          feedbackMode: "on_error",
+        },
+        async ({ addLog }) => {
+          addLog("info", `${t("mods.action_update")}: ${mod.name}`);
+          const err = await installModByLIP(mod, addLog);
+          if (err) throw new Error(err);
+        },
+      );
+    } catch (error) {
+      showActionToast(
+        "error",
+        t("mods.action_update"),
+        mod.name,
+        parseErrorCode(error) || "ERR_LIP_PACKAGE_INSTALL_FAILED",
+      );
+      return;
+    }
+
+    await refreshAll();
+    showActionToast("success", t("mods.action_update"), mod.name);
+  };
+
+  const handleUpdateMod = async (mod: types.ModInfo) => {
+    const lipState = getModLIPState(mod);
+    if (lipState.sourceType !== "unique") {
+      showActionToast(
+        "error",
+        t("mods.action_update"),
+        mod.name,
+        ERR_NO_UPDATE_SOURCE,
+      );
+      return;
+    }
+    if (!lipState.canUpdate) {
+      showActionToast(
+        "error",
+        t("mods.action_update"),
+        mod.name,
+        ERR_ALREADY_LATEST,
+      );
+      return;
+    }
+
+    openInstallActionConfirm(
+      mod.name,
+      lipState.targetVersion || mod.version || "-",
+      t("mods.action_update"),
+      async () => {
+        await executeUpdateMod(mod);
+      },
+    );
+  };
+
+  const executeUpdateLipGroup = async (group: LipGroupItem) => {
+    const name = activeVersionName;
+    if (!name) {
+      toast(t("common.error"), {
+        variant: "danger",
+        description: t("launcherpage.currentVersion_none"),
+        timeout: 2000,
+      });
+      return;
+    }
+
+    const pos = scrollRef.current?.scrollTop || 0;
+    lastScrollTopRef.current = pos;
+    restorePendingRef.current = true;
+
+    try {
+      await runWithLipTask(
+        {
+          action: "update",
+          target: name,
+          methods: ["Install", "Update"],
+          feedbackMode: "on_error",
+        },
+        async ({ addLog }) => {
+          addLog("info", `${t("mods.action_update")}: ${group.packageName}`);
+          const err = await installLipGroupByLIP(group, addLog);
+          if (err) throw new Error(err);
+        },
+      );
+    } catch (error) {
+      showActionToast(
+        "error",
+        t("mods.action_update"),
+        group.packageName,
+        parseErrorCode(error) || "ERR_LIP_PACKAGE_INSTALL_FAILED",
+      );
+      return;
+    }
+
+    await refreshAll();
+    showActionToast("success", t("mods.action_update"), group.packageName);
+  };
+
+  const handleUpdateLipGroup = async (group: LipGroupItem) => {
+    if (group.lipState.sourceType !== "unique") {
+      showActionToast(
+        "error",
+        t("mods.action_update"),
+        group.packageName,
+        ERR_NO_UPDATE_SOURCE,
+      );
+      return;
+    }
+    if (!group.lipState.canUpdate) {
+      showActionToast(
+        "error",
+        t("mods.action_update"),
+        group.packageName,
+        ERR_ALREADY_LATEST,
+      );
+      return;
+    }
+
+    openInstallActionConfirm(
+      group.packageName,
+      group.lipState.targetVersion || group.installedVersion || "-",
+      t("mods.action_update"),
+      async () => {
+        await executeUpdateLipGroup(group);
+      },
+    );
+  };
+
+  const executePromoteLipGroup = async (
+    group: LipGroupItem,
+    requestIdentifier: string,
+    version: string,
+  ) => {
+    const name = activeVersionName;
+    if (!name) {
+      toast(t("common.error"), {
+        variant: "danger",
+        description: t("launcherpage.currentVersion_none"),
+        timeout: 2000,
+      });
+      return;
+    }
+
+    try {
+      await runWithLipTask(
+        {
+          action: "install",
+          target: name,
+          methods: ["Install"],
+          feedbackMode: "on_error",
+        },
+        async ({ addLog }) => {
+          addLog(
+            "info",
+            `${t("mods.action_promote_install")}: ${group.packageName}@${version}`,
+          );
+          const err = await InstallLIPPackage(
+            name,
+            requestIdentifier,
+            version,
+          );
+          if (err) throw new Error(String(err));
+        },
+      );
+    } catch (error) {
+      showActionToast(
+        "error",
+        t("mods.action_promote_install"),
+        group.packageName,
+        parseErrorCode(error) || "ERR_LIP_PACKAGE_INSTALL_FAILED",
+      );
+      return;
+    }
+
+    await refreshAll();
+    toast(t("common.success"), {
+      variant: "success",
+      description: t("mods.action_promote_install_success", {
+        name: group.packageName,
+      }),
+      timeout: 2000,
+    });
+  };
+
+  const handlePromoteLipGroup = async (group: LipGroupItem) => {
+    const name = activeVersionName;
+    if (!name) {
+      toast(t("common.error"), {
+        variant: "danger",
+        description: t("launcherpage.currentVersion_none"),
+        timeout: 2000,
+      });
+      return;
+    }
+
+    const requestIdentifier = resolveLIPIdentifierForRequest(
+      group.identifier,
+      group.identifierKey,
+    );
+    if (!requestIdentifier) {
+      showActionToast(
+        "error",
+        t("mods.action_promote_install"),
+        group.packageName,
+        "ERR_LIP_PACKAGE_INVALID_IDENTIFIER",
+      );
+      return;
+    }
+
+    const installState = await queryLipGroupInstallState(group);
+    if (installState.error) {
+      showActionToast(
+        "error",
+        t("mods.action_promote_install"),
+        group.packageName,
+        installState.error,
+      );
+      return;
+    }
+    const version = resolvePromoteInstallVersion({
+      ...group,
+      installedVersion: installState.installedVersion || group.installedVersion,
+    });
+    if (!version) {
+      showActionToast(
+        "error",
+        t("mods.action_promote_install"),
+        group.packageName,
+        "mods.action_promote_install_failed_no_version",
+      );
+      return;
+    }
+
+    openInstallActionConfirm(
+      group.packageName,
+      version,
+      t("mods.action_promote_install"),
+      async () => {
+        await executePromoteLipGroup(group, requestIdentifier, version);
+      },
+    );
+  };
+
+  const handleDeleteMod = async () => {
+    if (!activeMod) return;
+    const name = activeVersionName;
+    if (!name) {
+      toast(t("common.error"), {
+        variant: "danger",
+        description: t("launcherpage.currentVersion_none"),
+        timeout: 2000,
+      });
+      return;
+    }
+
+    const pos = scrollRef.current?.scrollTop || 0;
+    setDeleting(true);
+    lastScrollTopRef.current = pos;
+    restorePendingRef.current = true;
+    let demotedToDependency = false;
+
+    try {
+      await runWithLipTask(
+        {
+          action: "uninstall",
+          target: name,
+          methods: ["Uninstall"],
+          feedbackMode: "on_error",
+        },
+        async ({ addLog }) => {
+          addLog("info", `${t("mods.action_uninstall")}: ${activeMod.name}`);
+          const err = await uninstallModWithFallback(activeMod, addLog);
+          if (err === ERR_LIP_PACKAGE_DEMOTED_TO_DEPENDENCY) {
+            demotedToDependency = true;
+            addLog("warning", `${activeMod.name}: ${err}`);
+            return;
+          }
+          if (err) throw new Error(err);
+        },
+      );
+    } catch (error) {
+      showActionToast(
+        "error",
+        t("mods.action_uninstall"),
+        activeMod.name,
+        parseErrorCode(error) || "ERR_LIP_PACKAGE_UNINSTALL_FAILED",
+      );
+      setDeleting(false);
+      return;
+    }
+
+    await refreshAll();
+    requestAnimationFrame(() => {
+      try {
+        if (scrollRef.current) scrollRef.current.scrollTop = pos;
+      } catch {}
+    });
+    if (demotedToDependency) {
+      openDemotedWarning([activeMod.name]);
+      infoOnClose();
+      setDeleting(false);
+      return;
+    }
+    showActionToast("success", t("mods.action_uninstall"), activeMod.name);
+    infoOnClose();
+    setDeleting(false);
+  };
+
+  const handleDeleteLipGroup = async () => {
+    if (!activeLipGroup) return;
+
+    const name = activeVersionName;
+    if (!name) {
+      toast(t("common.error"), {
+        variant: "danger",
+        description: t("launcherpage.currentVersion_none"),
+        timeout: 2000,
+      });
+      return;
+    }
+
+    const latestState = await queryLipGroupInstallState(activeLipGroup);
+    if (latestState.installed && !latestState.explicitInstalled) {
+      showActionToast(
+        "error",
+        t("mods.action_uninstall"),
+        activeLipGroup.packageName,
+        ERR_LIP_PACKAGE_REQUIRED_BY_DEPENDENTS,
+      );
+      return;
+    }
+
+    const pos = scrollRef.current?.scrollTop || 0;
+    setDeleting(true);
+    lastScrollTopRef.current = pos;
+    restorePendingRef.current = true;
+    let demotedToDependency = false;
+
+    try {
+      await runWithLipTask(
+        {
+          action: "uninstall",
+          target: name,
+          methods: ["Uninstall"],
+          feedbackMode: "on_error",
+        },
+        async ({ addLog }) => {
+          addLog(
+            "info",
+            `${t("mods.action_uninstall")}: ${activeLipGroup.packageName}`,
+          );
+          const err = await uninstallLipGroupWithFallback(
+            activeLipGroup,
+            addLog,
+          );
+          if (err === ERR_LIP_PACKAGE_DEMOTED_TO_DEPENDENCY) {
+            demotedToDependency = true;
+            addLog("warning", `${activeLipGroup.packageName}: ${err}`);
+            return;
+          }
+          if (err) throw new Error(err);
+        },
+      );
+    } catch (error) {
+      showActionToast(
+        "error",
+        t("mods.action_uninstall"),
+        activeLipGroup.packageName,
+        parseErrorCode(error) || "ERR_LIP_PACKAGE_UNINSTALL_FAILED",
+      );
+      setDeleting(false);
+      return;
+    }
+
+    await refreshAll();
+    requestAnimationFrame(() => {
+      try {
+        if (scrollRef.current) scrollRef.current.scrollTop = pos;
+      } catch {}
+    });
+    if (demotedToDependency) {
+      openDemotedWarning([activeLipGroup.packageName]);
+      setDeleting(false);
+      return;
+    }
+    showActionToast(
+      "success",
+      t("mods.action_uninstall"),
+      activeLipGroup.packageName,
+    );
+    setDeleting(false);
+  };
+
+  const handleDeleteCurrentTarget = async () => {
+    if (activeLipIdentifier) {
+      if (activeDeleteBlocked && activeLipGroup) {
+        showActionToast(
+          "error",
+          t("mods.action_uninstall"),
+          activeLipGroup.packageName,
+          ERR_LIP_PACKAGE_REQUIRED_BY_DEPENDENTS,
+        );
+        return;
+      }
+      await handleDeleteLipGroup();
+      return;
+    }
+    await handleDeleteMod();
+  };
+
+  const openFolder = () => {
+    const name = activeVersionName;
+    if (!name) {
+      navigate(ROUTES.instances);
+      return;
+    }
+    void openModsDirectory(name);
+  };
+
+  const openModFolder = async (mod: types.ModInfo) => {
+    const name = activeVersionName;
+    if (!name) return;
+
+    const folder = resolveModFolder(mod);
+    if (!folder) return;
+
+    let modPath: string;
+    try {
+      const versionsDir = await GetVersionsDir();
+      const sep = versionsDir.includes("\\") ? "\\" : "/";
+      modPath = `${versionsDir}${sep}${name}${sep}mods${sep}${folder}`;
+      await ListDir(modPath);
+    } catch {
+      await openModsDirectory(name);
+      return;
+    }
+    await openDirectory(modPath);
+  };
+
+  const toggleModEnabled = async (modFolder: string, val: boolean) => {
+    const name = activeVersionName;
+    if (!name || !modFolder) return;
+    try {
+      if (val) {
+        const err = await (EnableMod as any)?.(name, modFolder);
+        if (err) return;
+      } else {
+        const err = await (DisableMod as any)?.(name, modFolder);
+        if (err) return;
+      }
+      await refreshInstance(name, val ? "mods-enable" : "mods-disable");
+    } catch {}
+  };
+
+  const toggleLipGroupEnabled = async (group: LipGroupItem, val: boolean) => {
+    const name = activeVersionName;
+    if (!name) return;
+
+    for (const folder of group.folders) {
+      try {
+        if (val) {
+          await (EnableMod as any)?.(name, folder);
+        } else {
+          await (DisableMod as any)?.(name, folder);
+        }
+      } catch {}
+    }
+    await refreshInstance(
+      name,
+      val ? "mods-group-enable" : "mods-group-disable",
+    );
+  };
+
+  const getModLIPState = (mod: types.ModInfo): ModLIPState => {
+    const folder = resolveModFolder(mod);
+    if (!folder || !lipManagedFolderSet.has(folder)) {
+      return buildDefaultModLIPState();
+    }
+    return modLIPStateByFolder.get(folder) || buildDefaultModLIPState();
+  };
+
+  const activeDeleteName = activeLipGroup
+    ? activeLipGroup.packageName
+    : activeMod?.name || "";
+
+  const activeDeleteKind: "mod" | "lip" | "none" = activeLipGroup
+    ? "lip"
+    : activeMod
+      ? "mod"
+      : "none";
+
+  return {
+    currentVersionName,
+    modsInfo,
+    query,
+    setQuery,
+    loading,
+    importing,
+    errorMsg,
+    setErrorMsg,
+    errorFile,
+    setErrorFile,
+    resultSuccess,
+    setResultSuccess,
+    resultFailed,
+    setResultFailed,
+    currentFile,
+    activeMod,
+    setActiveMod,
+    editMod,
+    editName,
+    setEditName,
+    editVersion,
+    setEditVersion,
+    editType,
+    setEditType,
+    editEntry,
+    setEditEntry,
+    editAuthor,
+    setEditAuthor,
+    editSaving,
+    editFormValid,
+    activeLipIdentifier,
+    setActiveLipIdentifier,
+    activeLipGroup,
+    activeDeleteName,
+    activeDeleteKind,
+    activeDeleteBlocked,
+    activeDeleteWarning,
+    deleting,
+    batchUpdating,
+    batchUninstalling,
+    demotedWarningNames,
+    actionConfirmTitle,
+    actionConfirmBody,
+    actionConfirming,
+    enabledByFolder,
+    onlyEnabled,
+    setOnlyEnabled,
+    dllName,
+    setDllName,
+    dllType,
+    setDllType,
+    dllVersion,
+    setDllVersion,
+    selectedKeys,
+    sortConfig,
+    tabKey,
+    setTabKey,
+    gameVersion,
+    lipSourceLoaded,
+    lipSyncStatus,
+    lipSyncError,
+    lipInfoPending,
+    lipInfoWarning,
+    listHydrating,
+    selectedMods,
+    selectedItems,
+    selectedUpdatableCount,
+
+    dllResolveRef,
+    dllConfirmRef,
+    dupResolveRef,
+    dupNameRef,
+    lastScrollTopRef,
+    restorePendingRef,
+
+    errOpen,
+    errOnOpen,
+    errOnClose,
+    errOnOpenChange,
+    delOpen,
+    delOnOpen,
+    delOnClose,
+    delOnOpenChange,
+    dllOpen,
+    dllOnOpen,
+    dllOnClose,
+    dllOnOpenChange,
+    dupOpen,
+    dupOnOpen,
+    dupOnClose,
+    dupOnOpenChange,
+    delCfmOpen,
+    delCfmOnOpen,
+    delCfmOnClose,
+    delCfmOnOpenChange,
+    infoOpen,
+    infoOnOpen,
+    infoOnClose,
+    infoOnOpenChange,
+    editOpen,
+    editOnOpen,
+    editOnClose: closeEditModal,
+    editOnOpenChange,
+    batchUpdateOpen,
+    batchUpdateOnOpen,
+    batchUpdateOnClose,
+    batchUpdateOnOpenChange,
+    batchUninstallOpen,
+    batchUninstallOnOpen,
+    batchUninstallOnClose,
+    batchUninstallOnOpenChange,
+    demotedWarningOpen,
+    demotedWarningOnOpenChange,
+    closeDemotedWarning,
+    actionConfirmOpen,
+    actionConfirmOnClose: closeActionConfirm,
+    actionConfirmOnOpenChange: handleActionConfirmOpenChange,
+
+    ERR_LL_MANAGED_IN_VERSION_SETTINGS,
+    ERR_NO_UPDATE_SOURCE,
+    ERR_ALREADY_LATEST,
+
+    filtered,
+    sortedItems,
+    normalItems,
+    lipGroupItems,
+    visibleItems,
+    hasInstalledItems: baseNormalItems.length > 0 || allLipGroupItems.length > 0,
+    modsByFolder,
+
+    refreshAll,
+    refreshEnabledStates,
+    refreshModsAndStates,
+    doImportFromPaths,
+    handleSort,
+    onSelectionChange,
+    onSelectAll,
+    handleBatchEnable,
+    handleBatchDisable,
+    openBatchUpdateConfirm,
+    openBatchUninstallConfirm,
+    handleBatchUpdate,
+    handleBatchUninstall,
+    openDetails,
+    openEditForMod,
+    handleSaveModEdit,
+    openLIPPackageDetails,
+    openDeleteForMod,
+    openDeleteForLipGroup,
+    handleUpdateMod,
+    handleUpdateLipGroup,
+    handlePromoteLipGroup,
+    confirmPendingAction,
+    handleDeleteMod,
+    handleDeleteLipGroup,
+    handleDeleteCurrentTarget,
+    openFolder,
+    openModFolder,
+    toggleModEnabled,
+    toggleLipGroupEnabled,
+    getModLIPState,
+    resolveModFolder,
+    isLeviLaminaMod,
+    isLipGroupPromotable,
+
+    navigate,
+  };
+};
