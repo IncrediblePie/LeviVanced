@@ -22,3 +22,9 @@ The release note identifies the binaries as unsigned custom builds and includes 
 GitHub only evaluates scheduled workflows from a repository's default branch. As with all public GitHub repositories, GitHub may disable schedules after a prolonged period without repository activity; a manual workflow run re-enables/checks the mirror immediately.
 
 The encrypted `LEVIVANCED_WORKFLOW_TOKEN` repository secret is used only while copying the exact annotated upstream release tag. GitHub's built-in Actions token cannot introduce commits containing workflow changes. The workflow clears this token before checking out or executing any upstream release code.
+
+## Upstream test compatibility
+
+Upstream `v1.0.7` intentionally changed the LIP mirror from Tencent to Taobao/npmmirror, but `TestResolveLatestTarball` still expected the old Tencent success URL. The release patcher corrects only that exact stale test fixture when production code selects `registry.npmmirror.com`. Older releases that genuinely select Tencent and upstream releases with an already-fixed test are unchanged; an unrecognized stale fixture fails the exact-match guard for review.
+
+The production mirror selection and URL allowlist are unchanged. No tests are skipped: the complete tagged Go test suite and vet must still pass, and every failed command stops the builder before publication.

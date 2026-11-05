@@ -65,6 +65,35 @@ function Write-PolicyFile {
     Write-Host "Wrote: $RelativePath"
 }
 
+# Upstream v1.0.7 intentionally switched to npmmirror but retained the old
+# Tencent success fixture. Repair only that reviewed fixture, never the
+# production allowlist, and leave older/already-fixed upstream tests alone.
+$lipSourcePath = Join-Path $RepoRoot "internal\lip\install.go"
+$lipTestPath = Join-Path $RepoRoot "internal\lip\install_test.go"
+$lipSource = [IO.File]::ReadAllText($lipSourcePath)
+$lipTests = [IO.File]::ReadAllText($lipTestPath)
+$npmmirrorHost = '(?m)^\s*lipMirrorTarballHost\s*=\s*"registry\.npmmirror\.com"\s*$'
+if ([regex]::IsMatch($lipSource, $npmmirrorHost) -and
+    $lipTests.Contains('name: "tencent mirror source",') -and
+    $lipTests.Contains('expectedTarball: "https://mirrors.cloud.tencent.com/npm/@levimc/lip/-/')) {
+    $oldMirrorFixture = @'
+			name: "tencent mirror source",
+			source: lipPackageSource{
+				MetadataURL:       lipMirrorMetadataAPI,
+				TarballHost:       lipMirrorTarballHost,
+				TarballPathPrefix: lipMirrorTarballPathPrefix,
+			},
+			expectedTarball: "https://mirrors.cloud.tencent.com/npm/@levimc/lip/-/lip-0.34.4.tgz",
+'@.TrimEnd()
+    $newMirrorFixture = $oldMirrorFixture.Replace('"tencent mirror source"', '"npmmirror mirror source"').Replace(
+        'https://mirrors.cloud.tencent.com/npm/@levimc/lip/-/lip-0.34.4.tgz',
+        'https://registry.npmmirror.com/@levimc/lip/-/lip-0.34.4.tgz'
+    )
+    Update-ExactlyOnce -RelativePath "internal\lip\install_test.go" -Before $oldMirrorFixture -After $newMirrorFixture
+} else {
+    Write-Host "LIP mirror fixture compatibility correction is not needed."
+}
+
 Update-ExactlyOnce `
     -RelativePath "internal\mcservice\installer.go" `
     -Before 'RequireFullLicense: true,' `
