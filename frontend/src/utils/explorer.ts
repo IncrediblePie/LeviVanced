@@ -1,0 +1,33 @@
+import { notify } from "@/utils/activity";
+import i18n from "@/i18n";
+import { OpenPathDir } from "bindings/github.com/liteldev/LeviLauncher/internal/app/minecraft";
+import { OpenModsExplorer } from "bindings/github.com/liteldev/LeviLauncher/internal/app/modsservice";
+
+export function showDirectoryOpenError(error: unknown): void {
+  const message = error instanceof Error ? error.message : String(error ?? "");
+  notify({
+    variant: "danger",
+    title: i18n.t("common.open_folder_failed"),
+    description: message || undefined,
+    source: "explorer",
+  });
+}
+
+async function openWithFeedback(open: () => Promise<void>): Promise<boolean> {
+  try {
+    await open();
+    return true;
+  } catch (error) {
+    showDirectoryOpenError(error);
+    return false;
+  }
+}
+
+/** Resolves to false after reporting a failure, including for fire-and-forget buttons. */
+export function openDirectory(path: string): Promise<boolean> {
+  return openWithFeedback(() => OpenPathDir(path));
+}
+
+export function openModsDirectory(versionName: string): Promise<boolean> {
+  return openWithFeedback(() => OpenModsExplorer(versionName));
+}

@@ -1,0 +1,15 @@
+{
+	"fixed": {
+		"file_version": "0.0.0"
+	},
+	"info": {
+		"0000": {
+			"ProductVersion": "0.0.0",
+			"CompanyName": "LeviMC",
+			"FileDescription": "A Minecraft Launcher",
+			"LegalCopyright": "(c) 2024-2026, LeviMC",
+			"ProductName": "LeviLauncher",
+			"Comments": "Some Product Comments"
+		}
+	}
+}
