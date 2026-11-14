@@ -1,0 +1,525 @@
+@import "tailwindcss";
+@import "./heroui.css";
+@import "./personalization.css";
+@plugin "@tailwindcss/typography";
+
+@theme inline {
+  --color-surface-quaternary: var(--surface-quaternary);
+  --color-brand-heading: var(--brand-heading);
+  --color-brand-foreground: var(--brand-foreground);
+}
+
+@utility text-accent {
+  color: var(--brand-foreground);
+}
+
+@font-face {
+  font-family: "MiSans";
+  src: url("./assets/fonts/MiSans-Medium.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+}
+
+@theme {
+  --font-sans: "MiSans", sans-serif;
+  --font-mono:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+    "Courier New", "MiSans", sans-serif;
+
+  --color-brand-50: rgb(var(--theme-50, 236, 253, 245));
+  --color-brand-100: rgb(var(--theme-100, 209, 250, 229));
+  --color-brand-200: rgb(var(--theme-200, 167, 243, 208));
+  --color-brand-300: rgb(var(--theme-300, 110, 231, 183));
+  --color-brand-400: rgb(var(--theme-400, 52, 211, 153));
+  --color-brand-500: rgb(var(--theme-500, 16, 185, 129));
+  --color-brand-600: rgb(var(--theme-600, 5, 150, 105));
+  --color-brand-700: rgb(var(--theme-700, 4, 120, 87));
+  --color-brand-800: rgb(var(--theme-800, 6, 95, 70));
+  --color-brand-900: rgb(var(--theme-900, 6, 78, 59));
+  --color-brand-950: rgb(var(--theme-950, 2, 44, 34));
+  --color-brand: rgb(var(--theme-500, 16, 185, 129));
+
+  --animate-fadeInUp: fadeInUp 1s ease-out;
+  --animate-fadeInUp2: fadeInUp 1.5s ease-out;
+  --animate-fadeIn: fadeIn 1s ease-out;
+  --animate-expand: expand 1s ease-out;
+  --animate-bounceIn: bounceIn 1s ease-in-out;
+  --animate-slideIn: slideIn 0.5s ease-out;
+  --animate-fade-in: fadeIn 2s ease-in-out;
+  --animate-scale-up: scaleUp 2s ease-in-out;
+
+  @keyframes fadeInUp {
+    0% {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  @keyframes expand {
+    0% {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+  @keyframes fadeIn {
+    0% {
+      opacity: 0;
+    }
+    100% {
+      opacity: 1;
+    }
+  }
+  @keyframes bounceIn {
+    0%,
+    20%,
+    40%,
+    60%,
+    80%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+  @keyframes slideIn {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(0);
+    }
+  }
+  @keyframes progress-md-bar2 {
+    0% {
+      left: -200%;
+      right: 100%;
+    }
+    60% {
+      left: 40%;
+      right: -80%;
+    }
+    100% {
+      left: 100%;
+      right: -90%;
+    }
+  }
+
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+
+  @keyframes dropAndBounce {
+    0% {
+      transform: translateY(-1000px);
+    }
+    60% {
+      transform: translateY(0);
+    }
+    70% {
+      transform: translateY(-30px);
+    }
+    80% {
+      transform: translateY(0);
+    }
+    90% {
+      transform: translateY(-15px);
+    }
+    100% {
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fadeOut {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+
+  @keyframes fadeInMove {
+    0% {
+      opacity: 0;
+      transform: translateY(-6px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes progress-indeterminate {
+    0% {
+      transform: translateX(-30%);
+    }
+    100% {
+      transform: translateX(130%);
+    }
+  }
+
+  @keyframes progress-md-bar1 {
+    0% {
+      left: -35%;
+      right: 100%;
+    }
+    60% {
+      left: 100%;
+      right: -90%;
+    }
+    100% {
+      left: 100%;
+      right: -90%;
+    }
+  }
+
+  --animate-spin: spin 5s linear infinite;
+  --animate-drop-and-bounce: dropAndBounce 1.5s ease-in-out;
+  --animate-fade-out: fadeOut 1.25s forwards 1.25s;
+  --animate-fadeInMove: fadeInMove 0.6s ease-out both;
+  --animate-progress-indeterminate: progress-indeterminate 1.5s linear infinite;
+  --animate-indeterminate-bar1: progress-md-bar1 1.4s
+    cubic-bezier(0.65, 0, 0.35, 1) infinite;
+  --animate-indeterminate-bar2: progress-md-bar2 1.4s
+    cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+
+@variant dark (&:is(.dark *));
+
+/* Launcher palettes are application-owned; HeroUI consumes the semantic tokens. */
+:root,
+.light {
+  --background: rgba(250, 250, 250, 0.9);
+  --foreground: #27272a;
+  --muted: #52525b;
+  --surface: #ffffff;
+  --surface-quaternary: #d4d4d8;
+  --overlay: #ffffff;
+  --accent: var(--theme-solid, #10b981);
+  --accent-hover: var(--theme-solid-hover, #23bf8b);
+  --accent-foreground: var(--theme-solid-foreground, #18181b);
+  --brand-foreground: var(--theme-text-light, #047857);
+  --brand-heading: var(--theme-heading-light, #059669);
+  --accent-soft-foreground: var(--brand-foreground);
+  --focus: var(--brand-foreground);
+  --danger-foreground: #000000;
+  --warning-foreground: #27272a;
+  --action-foreground: #3f3f46;
+  --action-solid-foreground: #f4f4f5;
+  --action-accent: var(--accent);
+  --action-accent-hover: var(--accent-hover);
+  --action-danger: #c52f3b;
+  --action-danger-hover: color-mix(in srgb, var(--action-danger) 90%, #000);
+  --action-warning: #925f00;
+}
+
+.dark {
+  --action-foreground: #f4f4f5;
+  --background: #000000;
+  --foreground: #fafafa;
+  --muted: #a1a1aa;
+  --surface: #18181b;
+  --surface-quaternary: #52525b;
+  --overlay: #18181b;
+  --accent: var(--theme-solid, #10b981);
+  --accent-hover: var(--theme-solid-hover, #23bf8b);
+  --accent-foreground: var(--theme-solid-foreground, #18181b);
+  --brand-foreground: var(--theme-text-dark, #34d399);
+  --brand-heading: var(--theme-heading-dark, #10b981);
+  --accent-soft-foreground: var(--brand-foreground);
+  --focus: rgb(var(--theme-300, 110, 231, 183));
+  --danger-foreground: #000000;
+}
+
+/* Match the launcher's existing content layout while using v3 compound parts. */
+@layer components {
+  /* Ordinary actions use pill corners. Explicit utilities retain the shape of
+     launcher, navigation and window controls; grouped buttons keep joined edges. */
+  .button,
+  .pagination__link {
+    @apply rounded-full;
+  }
+  .card {
+    padding: 0;
+    gap: 0;
+  }
+  .card__content {
+    display: flex;
+    flex-direction: column;
+    padding: 0.75rem;
+  }
+  .card__header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 0.75rem;
+  }
+  .table__column {
+    background: var(--surface-secondary);
+    color: var(--muted);
+  }
+  .table__cell {
+    border-bottom: 1px solid var(--border);
+  }
+}
+
+body,
+html,
+button,
+input,
+textarea,
+select {
+  font-family: var(--font-sans);
+}
+
+/* Filled brand icon containers use the same white foreground as solid actions. */
+.brand-primary-foreground {
+  color: var(--action-solid-foreground);
+}
+
+/* Filled brand surfaces and their labels use the same selected color pair. */
+.brand-primary-foreground.bg-brand-500 {
+  background-color: var(--accent);
+}
+
+/* Ordinary action labels follow the theme in every interaction state. Keep this
+   outside Tailwind layers so page-level legacy color utilities cannot tint them.
+   Do not reset descendants: logos, badges and color previews retain their colors. */
+:is(button, [role="button"], .button, .pagination__link) {
+  --button-fg: var(--action-foreground);
+  color: var(--action-foreground);
+}
+
+/* Filled actions keep white labels and currentColor icons for every palette. */
+:is(.button--primary, .button--danger, .button.bg-brand-500, .pagination__link.bg-accent) {
+  --button-fg: var(--action-solid-foreground);
+  color: var(--action-solid-foreground);
+}
+
+.button--primary {
+  --button-bg: var(--action-accent);
+  --button-bg-hover: var(--action-accent-hover);
+  --button-bg-pressed: var(--action-accent-hover);
+}
+
+/* Control thumbs stay light on the selected track instead of inheriting the
+   adaptive text color that turns pastel themes' thumbs nearly black. */
+.switch,
+.slider__thumb {
+  --accent-foreground: var(--action-solid-foreground);
+}
+
+:is(.button.bg-brand-500, .pagination__link.bg-accent) {
+  background-color: var(--action-accent);
+  &:is(:hover, :active, [data-hovered="true"], [data-pressed="true"]) {
+    background-color: var(--action-accent-hover);
+  }
+}
+
+.button--danger {
+  --button-bg: var(--action-danger);
+  --button-bg-hover: var(--action-danger-hover);
+  --button-bg-pressed: var(--action-danger-hover);
+}
+
+/* Solid warning actions need a deeper amber behind soft white text. */
+.button.bg-warning {
+  color: var(--action-solid-foreground);
+  background-color: var(--action-warning);
+  &:is(:hover, :active, [data-hovered="true"], [data-pressed="true"]) {
+    background-color: color-mix(in srgb, var(--action-warning) 90%, #000);
+  }
+}
+
+body,
+html {
+  touch-action: manipulation;
+
+  -webkit-user-select: none;
+  /* Chrome, Safari, Opera */
+  -moz-user-select: none;
+  /* Firefox */
+  -ms-user-select: none;
+  /* Internet Explorer/Edge */
+  user-select: none;
+  /* Non-prefixed version, currently supported by Chrome, Edge, Opera and Firefox */
+}
+
+img {
+  -webkit-user-drag: none;
+  user-drag: none;
+}
+
+/* Keep the window chrome non-selectable, while supporting copy in information areas. */
+:is(main, [role="dialog"], [role="alertdialog"]) :is(p, pre, code, .prose),
+[role="alert"],
+[role="status"],
+.select-text {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* Make root fill viewport and disable window-level scroll; internal panes should manage their own scrolling */
+html,
+body,
+#root {
+  height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  /* reserve space for scrollbar to avoid layout shift during content height changes */
+  scrollbar-gutter: stable both-edges;
+  /* hide scrollbar while keeping scroll */
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+#root::-webkit-scrollbar {
+  display: none; /* Chrome, Safari */
+}
+
+#wails-draggable,
+.wails-draggable {
+  --wails-draggable: drag;
+}
+
+.wails-no-drag {
+  --wails-draggable: no-drag;
+}
+
+/* Loading placeholders and scroll edges use solid surfaces as well. */
+.skeleton--shimmer::before,
+.skeleton--shimmer::after {
+  background-image: none;
+  content: none;
+}
+
+.scroll-shadow {
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+
+/* Global Scrollbar overrides to match .pretty-scrollbar style */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-clip: padding-box;
+  background-color: rgba(113, 113, 122, 0.35); /* neutral-500/35 */
+  border: 3px solid transparent;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(113, 113, 122, 0.55);
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background-color: rgba(161, 161, 170, 0.25); /* zinc-400/25 */
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(161, 161, 170, 0.45);
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Custom scrollbar utility class (slimmer version) */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(113, 113, 122, 0.35) transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(113, 113, 122, 0.35);
+  border: 1.5px solid transparent;
+  background-clip: padding-box;
+  border-radius: 9999px;
+}
+
+.dark .custom-scrollbar {
+  scrollbar-color: rgba(161, 161, 170, 0.25) transparent;
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(161, 161, 170, 0.25);
+}
+
+/* Hide scrollbars but keep scrolling (for scrollable panes like version lists) */
+.no-scrollbar,
+.scrollbar-hide {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+.no-scrollbar::-webkit-scrollbar,
+.scrollbar-hide::-webkit-scrollbar {
+  display: none; /* Chrome, Safari */
+}
+
+/* Scrollbar thin utility */
+.scrollbar-thin {
+  scrollbar-width: thin;
+}
+
+/* Reserve stable space for the scrollbar so it won't be visually clipped */
+.gutter-stable {
+  scrollbar-gutter: stable both-edges;
+}
+
+/* Themed, minimal scrollbars for scrollable panes */
+.pretty-scrollbar {
+  /* Show thin themed scrollbar on Firefox */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(113, 113, 122, 0.5) transparent; /* thumb, track */
+}
+.pretty-scrollbar::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+.pretty-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.pretty-scrollbar::-webkit-scrollbar-thumb {
+  background-clip: padding-box;
+  background-color: rgba(113, 113, 122, 0.35); /* neutral-500/35 */
+  border: 3px solid transparent;
+  border-radius: 9999px;
+}
+.pretty-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(113, 113, 122, 0.55);
+}
+.pretty-scrollbar::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Material-style indeterminate linear progress (double bars) */
+.indeterminate-bar2 {
+  animation-delay: 0.7s;
+}
