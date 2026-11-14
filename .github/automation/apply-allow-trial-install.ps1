@@ -103,8 +103,63 @@ if ($betaMatches.Count -ne 1) {
 }
 $betaValue = $Prerelease.ToString().ToLowerInvariant()
 $configText = [regex]::Replace($configText, $betaPattern, { param($m) $m.Groups[1].Value + '"' + $betaValue + '"' })
+$versionMatches = [regex]::Matches($configText, '(?m)^\s*version:\s*"([0-9][^"]*)"') | ForEach-Object { $_.Groups[1].Value }
+$appVersion = $versionMatches | Select-Object -Last 1
+if ([string]::IsNullOrWhiteSpace($appVersion)) {
+    throw 'Cannot determine application version from build/config.yml.'
+}
 [IO.File]::WriteAllText($configPath, $configText, $utf8)
-Write-Host "Set build/config.yml beta to $betaValue."
+Write-Host "Set build/config.yml beta to $betaValue (version: $appVersion)."
+
+# The upstream v1.1.x tree no longer ships the PE resource files. Regenerate
+# them so this build embeds metadata matching the mirrored release tag.
+# Windows PE file_version must be four numeric components. Pre-release
+# segments are stripped; product strings keep the raw version.
+$numericParts = $appVersion.Trim() -split '[-._]+' | Where-Object { $_ -match '^\d+$' } | Select-Object -First 4
+$core = @($numericParts)
+while ($core.Count -lt 4) { $core += '0' }
+$fileVersion = ($core -join '.')
+$manifest = @"
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<assembly manifestVersion="1.0" xmlns="urn:schemas-microsoft-com:asm.v1" xmlns:asmv3="urn:schemas-microsoft-com:asm.v3">
+    <assemblyIdentity type="win32" name="org.levimc.launcher" version="$fileVersion" processorArchitecture="*"/>
+    <dependency>
+        <dependentAssembly>
+            <assemblyIdentity type="win32" name="Microsoft.Windows.Common-Controls" version="6.0.0.0" processorArchitecture="*" publicKeyToken="6595b64144ccf1df" language="*"/>
+        </dependentAssembly>
+    </dependency>
+    <asmv3:application>
+        <asmv3:windowsSettings>
+            <dpiAware xmlns="http://schemas.microsoft.com/SMI/2005/WindowsSettings">true/pm</dpiAware> <!-- fallback for Windows 7 and 8 -->
+            <dpiAwareness xmlns="http://schemas.microsoft.com/SMI/2016/WindowsSettings">permonitorv2,permonitor</dpiAwareness> <!-- falls back to per-monitor if per-monitor v2 is not supported -->
+        </asmv3:windowsSettings>
+    </asmv3:application>
+    <trustInfo xmlns="urn:schemas-microsoft-com:asm.v3">
+        <security>
+            <requestedPrivileges>
+                <requestedExecutionLevel level="asInvoker" uiAccess="false"/>
+            </requestedPrivileges>
+        </security>
+    </trustInfo>
+</assembly>
+"@
+[IO.File]::WriteAllText((Join-Path $RepoRoot 'build\windows\wails.exe.manifest'), $manifest, $utf8)
+Write-Host "Wrote: build\\windows\\wails.exe.manifest (version $fileVersion)"
+$info = @{
+    fixed = @{ file_version = $fileVersion }
+    info  = @{
+        '0409' = @{
+            ProductVersion = $appVersion.Trim()
+            CompanyName    = 'LeviMC'
+            FileDescription = 'A Minecraft Launcher'
+            LegalCopyright = '(c) 2024-2026, LeviMC'
+            ProductName    = 'LeviLauncher'
+            Comments       = 'Some Product Comments'
+        }
+    }
+} | ConvertTo-Json -Depth 6
+[IO.File]::WriteAllText((Join-Path $RepoRoot 'build\windows\info.json'), $info + "`n", $utf8)
+Write-Host "Wrote: build\\windows\\info.json (ProductVersion $appVersion)"
 
 # v1.1.0+ self-update retarget: keep upstream's own update logic and point it at
 # the fork. The updater ZIP must match upstream's canonical name (LeviLauncher.zip)
