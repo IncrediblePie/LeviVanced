@@ -79,7 +79,8 @@ jobs:
             $hasPortable = $existing.assets.name -contains $env:PORTABLE_ASSET
             $hasInstaller = $existing.assets.name -contains $env:INSTALLER_ASSET
             $hasUpdater = $existing.assets.name -contains $env:UPDATE_ASSET
-            if ($hasPortable -and $hasInstaller -and $hasUpdater) {
+            $hasUpdaterZip = $existing.assets.name -contains 'LeviLauncher.zip'
+            if ($hasPortable -and $hasInstaller -and $hasUpdater -and $hasUpdaterZip) {
               $shouldBuild = $false
             }
           }
@@ -242,7 +243,8 @@ jobs:
         run: |
           $ErrorActionPreference = "Stop"
           Compress-Archive -LiteralPath "bin/LeviLauncher.exe" -DestinationPath "bin/LeviLauncher_windows_amd64.zip" -CompressionLevel Optimal -Force
-          $expected = @("bin/LeviLauncher.exe", "bin/LeviLauncher-amd64-installer.exe", "bin/LeviLauncher_windows_amd64.zip")
+          Compress-Archive -LiteralPath "bin/LeviLauncher.exe" -DestinationPath "bin/LeviLauncher.zip" -CompressionLevel Optimal -Force
+          $expected = @("bin/LeviLauncher.exe", "bin/LeviLauncher-amd64-installer.exe", "bin/LeviLauncher_windows_amd64.zip", "bin/LeviLauncher.zip")
           $lines = foreach ($path in $expected) {
             if (-not (Test-Path $path -PathType Leaf)) { throw "Missing release asset: $path" }
             $item = Get-Item $path
@@ -292,11 +294,11 @@ jobs:
           if ($releaseExists) {
             gh release edit $env:RELEASE_TAG --title $title --notes-file $bodyPath "--prerelease=$($isPrerelease.ToString().ToLowerInvariant())" "--latest=$latestValue" --repo $env:GITHUB_REPOSITORY
             if ($LASTEXITCODE) { exit $LASTEXITCODE }
-            gh release upload $env:RELEASE_TAG "bin/LeviLauncher.exe" "bin/LeviLauncher-amd64-installer.exe" "bin/LeviLauncher_windows_amd64.zip" --clobber --repo $env:GITHUB_REPOSITORY
+            gh release upload $env:RELEASE_TAG "bin/LeviLauncher.exe" "bin/LeviLauncher-amd64-installer.exe" "bin/LeviLauncher_windows_amd64.zip" "bin/LeviLauncher.zip" --clobber --repo $env:GITHUB_REPOSITORY
           } else {
             $createArgs = @(
               "release", "create", $env:RELEASE_TAG,
-              "bin/LeviLauncher.exe", "bin/LeviLauncher-amd64-installer.exe", "bin/LeviLauncher_windows_amd64.zip",
+              "bin/LeviLauncher.exe", "bin/LeviLauncher-amd64-installer.exe", "bin/LeviLauncher_windows_amd64.zip", "bin/LeviLauncher.zip",
               "--verify-tag", "--title", $title, "--notes-file", $bodyPath,
               "--repo", $env:GITHUB_REPOSITORY
             )
@@ -318,5 +320,6 @@ jobs:
             bin/LeviLauncher.exe
             bin/LeviLauncher-amd64-installer.exe
             bin/LeviLauncher_windows_amd64.zip
+            bin/LeviLauncher.zip
             bin/SHA256SUMS.txt
           if-no-files-found: error

@@ -1,12 +1,11 @@
 name: LeviLauncher build
 
+# Disabled in LeviVanced: upstream's quality-gate build is preserved at
+# LiteLDev/LeviLauncher; this fork validates upstream releases through
+# .github/workflows/mirror-upstream-release.yml. Kept manual-only so it can
+# be run deliberately for comparison.
 on:
-  push:
-    tags:
-      - "v*"
-    branches:
-      - "**"
-  pull_request:
+  workflow_dispatch:
 
 jobs:
   quality:

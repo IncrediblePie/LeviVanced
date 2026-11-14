@@ -9,9 +9,9 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 $repoRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot ".."))
-$goVersion = "1.25.3"
-$goArchiveSha256 = "bc249a599c6fe9d0d4093c363856f6c6320dbbe05e5d5d8818b711fb4a14fc23"
-$wailsVersion = "v3.0.0-alpha.77"
+$goVersion = "1.27.3"
+$goArchiveSha256 = "f26081f438319757f8a1b46d7d0b2c5ec7583d4038e485e0aa725cfde7885fff"
+$wailsVersion = "v3.0.0"
 $toolRoot = Join-Path $env:LOCALAPPDATA "LeviLauncherBuildTools"
 $goRoot = Join-Path $toolRoot "go-$goVersion"
 $goExe = Join-Path $goRoot "go\bin\go.exe"

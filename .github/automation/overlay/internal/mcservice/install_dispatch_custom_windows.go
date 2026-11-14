@@ -39,7 +39,7 @@ func InstallExtractMsixvc(ctx context.Context, name, folderName string, isPrevie
 	if !utils.FileExists(in) {
 		return "ERR_MSIXVC_NOT_FOUND"
 	}
-	vdir, err := apppath.VersionsDir()
+	vdir, err := apppath.InstancesDir()
 	if err != nil || strings.TrimSpace(vdir) == "" {
 		return "ERR_ACCESS_VERSIONS_DIR"
 	}

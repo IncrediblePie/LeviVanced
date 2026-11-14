@@ -8,14 +8,14 @@ For each unmirrored release it:
 2. checks out the exact upstream release tag in detached mode;
 3. applies the reviewed `allowtrialinstall` policy patch and pinned legacy Preview extractor overlay with exact-match/collision guards;
 4. builds and tests `LeviLauncher.exe`;
-5. packages that exact executable as `LeviLauncher-amd64-installer.exe` using the upstream Inno Setup project and as `LeviLauncher_windows_amd64.zip` for in-app updates;
+5. packages that exact executable as `LeviLauncher-amd64-installer.exe` using the upstream Inno Setup project and as updater ZIPs for in-app updates (`LeviLauncher.zip` for release v1.1.0+ and the compatibility `LeviLauncher_windows_amd64.zip` for builds installed from earlier LeviVanced releases);
 6. copies the upstream release name and changelog;
 7. copies the selected upstream release tag only after its assets exist, then publishes a `LeviVanced` release with the same tag and prerelease status; stable releases become the fork's latest release; and
 8. uploads the portable and installer assets under the same names used upstream, plus the updater ZIP.
 
 Manual runs accept an optional upstream tag and a force-rebuild switch. Force rebuild replaces all three assets and refreshes release metadata. Rebuilding the same upstream tag does not increase the app version; users already on that version must download/reinstall it manually to obtain a custom-only change.
 
-Builds made with `allowtrialinstall` query `IncrediblePie/LeviVanced` for updates. Preview builds automatically accept mirrored preview updates; stable builds retain the normal stable-only default. The updater downloads `LeviLauncher_windows_amd64.zip` from the selected fork release and verifies GitHub's SHA-256 asset digest before installation. The installer metadata also points to the fork's Releases page. Ordinary builds without the custom tag continue using the upstream update source.
+Builds made with `allowtrialinstall` query `IncrediblePie/LeviVanced` for updates. Preview builds automatically accept mirrored preview updates; stable builds retain the normal stable-only default. On upstream v1.1.0+ the fork only retargets upstream's own updater (API base URL and asset URL) and additionally fails closed: it requires `LeviLauncher.zip` to carry a `sha256:` digest in the release metadata and verifies the downloaded file against it (cached updater files are re-verified), otherwise the update aborts before installation. The `LeviLauncher_windows_amd64.zip` asset is still published only so already-installed v1.0.x LeviVanced builds keep working — new builds use `LeviLauncher.zip`. The installer metadata also points to the fork's Releases page. Ordinary builds without the custom patch continue using the upstream update source unchanged.
 
 The release note identifies the binaries as unsigned custom builds and includes their SHA-256 values. Native Release installation retains Microsoft entitlement responses, device binding, key-wrap authentication, package integrity checks, and KeyID matching. Custom Preview MSIXVC installation uses upstream v0.3.13's closed-source extractor instead; the wrapper verifies the exact DLL hash, preserves current loader preparation, and stages output before committing it. The DLL's internal key and integrity behavior is unaudited. See [legacy Preview extractor](legacy-preview-extractor.md).
 
@@ -23,8 +23,8 @@ GitHub only evaluates scheduled workflows from a repository's default branch. As
 
 The encrypted `LEVIVANCED_WORKFLOW_TOKEN` repository secret is used only while copying the exact annotated upstream release tag. GitHub's built-in Actions token cannot introduce commits containing workflow changes. The workflow clears this token before checking out or executing any upstream release code.
 
-## Upstream test compatibility
+## Upstream layout compatibility
 
-Upstream `v1.0.7` intentionally changed the LIP mirror from Tencent to Taobao/npmmirror, but `TestResolveLatestTarball` still expected the old Tencent success URL. The release patcher corrects only that exact stale test fixture when production code selects `registry.npmmirror.com`. Older releases that genuinely select Tencent and upstream releases with an already-fixed test are unchanged; an unrecognized stale fixture fails the exact-match guard for review.
+Release mirroring is only supported for upstream releases whose source layout matches the patcher's reviewed guards (currently the v1.1.x series). The v1.1.0 series removed `internal/lip` (the LIP mirror test fixture in earlier releases is therefore no longer patched), pinned `go 1.27.3`, made `LeviLauncher.zip` the self-update asset, and removed the old self-update internals this fork used to rewrite. The release patcher now makes exactly two source-level changes to `internal/update/update.go` (the GitHub API base URL and the asset URL), injects a `Digest` field plus fail-closed verification helpers, and otherwise leaves upstream's updater untouched. Any upstream release whose files do not match the expected guards fails closed and stops the build; it is never published.
 
-The production mirror selection and URL allowlist are unchanged. No tests are skipped: the complete tagged Go test suite and vet must still pass, and every failed command stops the builder before publication.
+No tests are skipped: the complete tagged Go test suite and vet must still pass, and every failed command stops the builder before publication.

@@ -65,34 +65,9 @@ function Write-PolicyFile {
     Write-Host "Wrote: $RelativePath"
 }
 
-# Upstream v1.0.7 intentionally switched to npmmirror but retained the old
-# Tencent success fixture. Repair only that reviewed fixture, never the
-# production allowlist, and leave older/already-fixed upstream tests alone.
-$lipSourcePath = Join-Path $RepoRoot "internal\lip\install.go"
-$lipTestPath = Join-Path $RepoRoot "internal\lip\install_test.go"
-$lipSource = [IO.File]::ReadAllText($lipSourcePath)
-$lipTests = [IO.File]::ReadAllText($lipTestPath)
-$npmmirrorHost = '(?m)^\s*lipMirrorTarballHost\s*=\s*"registry\.npmmirror\.com"\s*$'
-if ([regex]::IsMatch($lipSource, $npmmirrorHost) -and
-    $lipTests.Contains('name: "tencent mirror source",') -and
-    $lipTests.Contains('expectedTarball: "https://mirrors.cloud.tencent.com/npm/@levimc/lip/-/')) {
-    $oldMirrorFixture = @'
-			name: "tencent mirror source",
-			source: lipPackageSource{
-				MetadataURL:       lipMirrorMetadataAPI,
-				TarballHost:       lipMirrorTarballHost,
-				TarballPathPrefix: lipMirrorTarballPathPrefix,
-			},
-			expectedTarball: "https://mirrors.cloud.tencent.com/npm/@levimc/lip/-/lip-0.34.4.tgz",
-'@.TrimEnd()
-    $newMirrorFixture = $oldMirrorFixture.Replace('"tencent mirror source"', '"npmmirror mirror source"').Replace(
-        'https://mirrors.cloud.tencent.com/npm/@levimc/lip/-/lip-0.34.4.tgz',
-        'https://registry.npmmirror.com/@levimc/lip/-/lip-0.34.4.tgz'
-    )
-    Update-ExactlyOnce -RelativePath "internal\lip\install_test.go" -Before $oldMirrorFixture -After $newMirrorFixture
-} else {
-    Write-Host "LIP mirror fixture compatibility correction is not needed."
-}
+# Upstream v1.1.0 removed the internal/lip package (now internal/lipcore).
+# No compatibility fixture is needed there anymore; older refactored files
+# are left untouched.
 
 Update-ExactlyOnce `
     -RelativePath "internal\mcservice\installer.go" `
@@ -131,113 +106,93 @@ $configText = [regex]::Replace($configText, $betaPattern, { param($m) $m.Groups[
 [IO.File]::WriteAllText($configPath, $configText, $utf8)
 Write-Host "Set build/config.yml beta to $betaValue."
 
-$releaseAPIFunction = @'
-func getReleaseAPIURLs() []string {
-	api := "https://api.github.com/repos/" + updateRepository + "/releases"
-	return []string{
-		api,
-		"https://cdn.gh-proxy.org/" + api,
-		"https://edgeone.gh-proxy.org/" + api,
-		"https://gh-proxy.org/" + api,
-		"https://hk.gh-proxy.org/" + api,
-		"https://ghproxy.vip/" + api,
-	}
+# v1.1.0+ self-update retarget: keep upstream's own update logic and point it at
+# the fork. The updater ZIP must match upstream's canonical name (LeviLauncher.zip)
+# and is verified against the GitHub release asset SHA-256 digest before install.
+$releaseStruct = @'
+type githubReleaseAsset struct {
+	Name               string `json:"name"`
+	BrowserDownloadURL string `json:"browser_download_url"`
+	Size               int64  `json:"size"`
 }
-'@.TrimEnd().Replace("`n", [Environment]::NewLine)
-$oldReleaseAPIFunction = @'
-func getReleaseAPIURLs() []string {
-	return []string{
-		"https://api.github.com/repos/LiteLDev/LeviLauncher/releases",
-		"https://cdn.gh-proxy.org/https://api.github.com/repos/LiteLDev/LeviLauncher/releases",
-		"https://edgeone.gh-proxy.org/https://api.github.com/repos/LiteLDev/LeviLauncher/releases",
-		"https://gh-proxy.org/https://api.github.com/repos/LiteLDev/LeviLauncher/releases",
-		"https://hk.gh-proxy.org/https://api.github.com/repos/LiteLDev/LeviLauncher/releases",
-		"https://ghproxy.vip/https://api.github.com/repos/LiteLDev/LeviLauncher/releases",
-	}
-}
-'@.TrimEnd().Replace("`n", [Environment]::NewLine)
-Update-ExactlyOnce -RelativePath "internal\update\update.go" -Before $oldReleaseAPIFunction -After $releaseAPIFunction
-
-$assetFields = @'
-Size               int64  `json:"size"`
+'@.TrimEnd().Replace("`r`n", "`n")
+$releaseStructPatched = @'
+type githubReleaseAsset struct {
+	Name               string `json:"name"`
+	BrowserDownloadURL string `json:"browser_download_url"`
+	Size               int64  `json:"size"`
 	Digest             string `json:"digest"`
-'@.TrimEnd().Replace("`n", [Environment]::NewLine)
+}
+
+// findForkReleaseAsset returns the asset with the given name, if present.
+func findForkReleaseAsset(release githubRelease, name string) *githubReleaseAsset {
+	for i := range release.Assets {
+		if strings.EqualFold(release.Assets[i].Name, name) {
+			return &release.Assets[i]
+		}
+	}
+	return nil
+}
+
+// verifyForkReleaseAssetDigest requires a sha256 digest on the named asset and
+// verifies the file against it. It fails closed when digest metadata is missing,
+// so a compromised or accidental proxy response cannot be installed silently.
+func verifyForkReleaseAssetDigest(release githubRelease, zipPath string) error {
+	const assetName = "LeviLauncher.zip"
+	asset := findForkReleaseAsset(release, assetName)
+	if asset == nil {
+		return fmt.Errorf("release asset %q not found", assetName)
+	}
+	digest := strings.ToLower(strings.TrimSpace(asset.Digest))
+	if !strings.HasPrefix(digest, "sha256:") || len(digest) != len("sha256:")+64 {
+		return fmt.Errorf("release asset %q has no SHA-256 digest", assetName)
+	}
+	if err := verifyFileSHA256(zipPath, strings.TrimSpace(digest[len("sha256:"):])); err != nil {
+		return err
+	}
+	return nil
+}
+'@.TrimEnd().Replace("`r`n", "`n")
+Update-ExactlyOnce -RelativePath "internal\update\update.go" -Before $releaseStruct -After $releaseStructPatched
+
 Update-ExactlyOnce `
     -RelativePath "internal\update\update.go" `
-    -Before 'Size               int64  `json:"size"`' `
-    -After $assetFields
+    -Before 'const oriUrl = "https://api.github.com/repos/LiteLDev/LeviLauncher/releases"' `
+    -After 'const oriUrl = "https://api.github.com/repos/IncrediblePie/LeviVanced/releases"'
 
-$oldUpdateCandidates = @'
-func buildSelfUpdateCandidateURLs(ver string) []string {
-	return []string{
-		"https://goproxy.io/github.com/dreamguxiang/!levi!launcher/@v/" + ver + ".zip",
-		"https://mirrors.aliyun.com/goproxy/github.com/dreamguxiang/levilauncher/@v/" + ver + ".zip",
-	}
-}
-'@.TrimEnd().Replace("`n", [Environment]::NewLine)
-$newUpdateCandidates = @'
-func buildSelfUpdateCandidateURLs(release githubRelease, ver string) ([]string, string, error) {
-	if useReleaseUpdateAsset {
-		asset := findAssetByName(release, expectedZipAssetName())
-		if asset == nil || strings.TrimSpace(asset.BrowserDownloadURL) == "" {
-			return nil, "", fmt.Errorf("release is missing %s", expectedZipAssetName())
-		}
-		digest := strings.TrimSpace(asset.Digest)
-		if !strings.HasPrefix(strings.ToLower(digest), "sha256:") {
-			return nil, "", fmt.Errorf("release asset has no SHA-256 digest")
-		}
-		hash, err := parseSHA256Checksum(strings.TrimSpace(digest[len("sha256:"):]))
-		if err != nil {
-			return nil, "", fmt.Errorf("invalid release asset digest: %w", err)
-		}
-		return buildAssetCandidateURLs(asset.BrowserDownloadURL), hash, nil
-	}
-	return []string{
-		"https://goproxy.io/github.com/dreamguxiang/!levi!launcher/@v/" + ver + ".zip",
-		"https://mirrors.aliyun.com/goproxy/github.com/dreamguxiang/levilauncher/@v/" + ver + ".zip",
-	}, "", nil
-}
-'@.TrimEnd().Replace("`n", [Environment]::NewLine)
-Update-ExactlyOnce -RelativePath "internal\update\update.go" -Before $oldUpdateCandidates -After $newUpdateCandidates
+Update-ExactlyOnce `
+    -RelativePath "internal\update\update.go" `
+    -Before '"https://github.com/LiteLDev/LeviLauncher/releases/download/" + ver + "/LeviLauncher.zip"' `
+    -After '"https://github.com/IncrediblePie/LeviVanced/releases/download/" + ver + "/LeviLauncher.zip"'
 
-$oldDownloadBlock = @'
+$oldZrestrictedDownload = @'
 	if fi, statErr := os.Stat(zipPath); statErr == nil && fi.Size() > 0 {
-		application.Get().Event.Emit(EventAppUpdateStatus, "downloaded")
-		application.Get().Event.Emit(EventAppUpdateProgress, AppUpdateProgress{Phase: "download", Downloaded: fi.Size(), Total: fi.Size()})
+		sink.Emit(EventAppUpdateStatus, "downloaded")
+		sink.Emit(EventAppUpdateProgress, AppUpdateProgress{Phase: "download", Downloaded: fi.Size(), Total: fi.Size()})
 	} else {
 		if err := downloadUpdateAsset(ctx, buildSelfUpdateCandidateURLs(ver), zipPath); err != nil {
-			return emitUpdateError("ERR_UPDATE_DOWNLOAD_FAILED", err)
+			return res, emitUpdateErrorTo(ctx, "ERR_UPDATE_DOWNLOAD_FAILED", err)
 		}
 	}
-'@.TrimEnd().Replace("`n", [Environment]::NewLine)
-$newDownloadBlock = @'
-	updateURLs, expectedHash, err := buildSelfUpdateCandidateURLs(release, ver)
-	if err != nil {
-		return emitUpdateError("ERR_UPDATE_RELEASE_UNAVAILABLE", err)
-	}
-	cacheValid := false
-	if fi, statErr := os.Stat(zipPath); statErr == nil && fi.Size() > 0 {
-		cacheValid = expectedHash == "" || verifyFileSHA256(zipPath, expectedHash) == nil
-		if cacheValid {
-			application.Get().Event.Emit(EventAppUpdateStatus, "downloaded")
-			application.Get().Event.Emit(EventAppUpdateProgress, AppUpdateProgress{Phase: "download", Downloaded: fi.Size(), Total: fi.Size()})
-		} else {
+'@.TrimEnd().Replace("`r`n", "`n")
+$verifiedDownload = @'
+	fi, statErr := os.Stat(zipPath)
+	cachedValid := statErr == nil && fi.Size() > 0 && verifyForkReleaseAssetDigest(release, zipPath) == nil
+	if cachedValid {
+		sink.Emit(EventAppUpdateStatus, "downloaded")
+		sink.Emit(EventAppUpdateProgress, AppUpdateProgress{Phase: "download", Downloaded: fi.Size(), Total: fi.Size()})
+	} else {
+		_ = os.Remove(zipPath)
+		if err := downloadUpdateAsset(ctx, buildSelfUpdateCandidateURLs(ver), zipPath); err != nil {
+			return res, emitUpdateErrorTo(ctx, "ERR_UPDATE_DOWNLOAD_FAILED", err)
+		}
+		if err := verifyForkReleaseAssetDigest(release, zipPath); err != nil {
 			_ = os.Remove(zipPath)
+			return res, emitUpdateErrorTo(ctx, "ERR_UPDATE_DOWNLOAD_FAILED", err)
 		}
 	}
-	if !cacheValid {
-		if err := downloadUpdateAsset(ctx, updateURLs, zipPath); err != nil {
-			return emitUpdateError("ERR_UPDATE_DOWNLOAD_FAILED", err)
-		}
-		if expectedHash != "" {
-			if err := verifyFileSHA256(zipPath, expectedHash); err != nil {
-				_ = os.Remove(zipPath)
-				return emitUpdateError("ERR_UPDATE_DOWNLOAD_FAILED", err)
-			}
-		}
-	}
-'@.TrimEnd().Replace("`n", [Environment]::NewLine)
-Update-ExactlyOnce -RelativePath "internal\update\update.go" -Before $oldDownloadBlock -After $newDownloadBlock
+'@.TrimEnd().Replace("`r`n", "`n")
+Update-ExactlyOnce -RelativePath "internal\update\update.go" -Before $oldZrestrictedDownload -After $verifiedDownload
 
 Write-PolicyFile "internal\nativeinstall\install_policy_default_windows.go" @'
 //go:build windows && !allowtrialinstall
@@ -286,82 +241,6 @@ import "testing"
 func TestAllowTrialInstallBuildPolicy(t *testing.T) {
 	if DefaultRequireFullLicense {
 		t.Fatal("allowtrialinstall build still requires a Full license")
-	}
-}
-'@
-
-Write-PolicyFile "internal\update\source_default.go" @'
-//go:build !allowtrialinstall
-
-package update
-
-const (
-	updateRepository     = "LiteLDev/LeviLauncher"
-	useReleaseUpdateAsset = false
-)
-'@
-
-Write-PolicyFile "internal\update\source_allow_trial.go" @'
-//go:build allowtrialinstall
-
-package update
-
-const (
-	updateRepository     = "IncrediblePie/LeviVanced"
-	useReleaseUpdateAsset = true
-)
-'@
-
-Write-PolicyFile "internal\update\source_default_test.go" @'
-//go:build !allowtrialinstall
-
-package update
-
-import "testing"
-
-func TestDefaultUpdateSource(t *testing.T) {
-	if updateRepository != "LiteLDev/LeviLauncher" || useReleaseUpdateAsset {
-		t.Fatal("official build update source changed unexpectedly")
-	}
-	urls, hash, err := buildSelfUpdateCandidateURLs(githubRelease{}, "v1.2.3")
-	if err != nil || hash != "" || len(urls) != 2 {
-		t.Fatalf("unexpected official update candidates: urls=%v hash=%q err=%v", urls, hash, err)
-	}
-}
-'@
-
-Write-PolicyFile "internal\update\source_allow_trial_test.go" @'
-//go:build allowtrialinstall
-
-package update
-
-import (
-	"strings"
-	"testing"
-)
-
-func TestAllowTrialUpdateSource(t *testing.T) {
-	if updateRepository != "IncrediblePie/LeviVanced" || !useReleaseUpdateAsset {
-		t.Fatal("allowtrialinstall build is not using the fork release source")
-	}
-	digest := strings.Repeat("a", 64)
-	target := "https://github.com/IncrediblePie/LeviVanced/releases/download/v1.2.3/LeviLauncher_windows_amd64.zip"
-	release := githubRelease{Assets: []githubReleaseAsset{{
-		Name: expectedZipAssetName(), BrowserDownloadURL: target, Digest: "sha256:" + digest,
-	}}}
-	urls, hash, err := buildSelfUpdateCandidateURLs(release, "v1.2.3")
-	if err != nil || hash != digest {
-		t.Fatalf("unexpected custom update candidate: hash=%q err=%v", hash, err)
-	}
-	found := false
-	for _, candidate := range urls {
-		found = found || candidate == target
-	}
-	if !found {
-		t.Fatalf("fork release URL missing from candidates: %v", urls)
-	}
-	if _, _, err := buildSelfUpdateCandidateURLs(githubRelease{}, "v1.2.3"); err == nil {
-		t.Fatal("custom updater accepted a release without its update ZIP")
 	}
 }
 '@
@@ -417,3 +296,4 @@ if (-not $notices.Contains($noticeMarker)) {
 }
 
 Write-Host "Custom policy and legacy Preview extractor patch applied successfully." -ForegroundColor Green
+
