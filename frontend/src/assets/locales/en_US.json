@@ -1,0 +1,2476 @@
+{
+  "app": {
+    "administrator": "Administrator",
+    "administrator_description": "Running as administrator. Sign-in uses Windows authentication directly; to choose an account, restart without administrator privileges.",
+    "settings": "Settings"
+  },
+  "nav": {
+    "versions": "Instances",
+    "more": "More",
+    "about": "About",
+    "back": "Back",
+    "forward": "Forward",
+    "breadcrumb": "Breadcrumb",
+    "home": "Home",
+    "local_install": "Local Install",
+    "mods": "Mods",
+    "mod_details": "Mod Details",
+    "package_details": "Package Details",
+    "updating": "Launcher Update"
+  },
+  "theme": {
+    "toggle": "Toggle Theme"
+  },
+  "launcherpage": {
+    "launch_button": "Launch",
+    "content_manage": "Content Management",
+    "go_version_settings": "Instance Settings",
+    "manage_versions": "Instances",
+    "search_versions": "Search by instance name or game version",
+    "open_exe_dir": "Open Game Installation Directory",
+    "register_system_button": "Register to System",
+    "registered_tip": "Registered",
+    "levilamina_update_available": "Update Available",
+    "register": {
+      "installing": {
+        "title": "Registering to System",
+        "body": "Registering to system. Please wait…"
+      },
+      "success": {
+        "title": "Registration Complete",
+        "body": "Instance has been registered. You can launch from system apps list."
+      },
+      "failed": {
+        "title": "Registration Failed",
+        "body": "An error occurred during registration. Please retry or check environment."
+      }
+    },
+    "delete": {
+      "complete": {
+        "title": "Delete Complete",
+        "content": "The selected instance has been deleted successfully!",
+        "close_button": "Close"
+      },
+      "confirm": {
+        "title": "Confirm Delete",
+        "content": "Are you sure you want to delete this instance? This operation cannot be undone."
+      }
+    },
+    "launch": {
+      "failed": {
+        "title": "Launch Error",
+        "content": "Check that the instance files and required runtimes are complete, and remove any incompatible mods, add-ons, or resource packs, then try again.",
+        "close_button": "Close"
+      },
+      "force_run_button": "Force Launch"
+    },
+    "currentVersion": "Current Instance",
+    "vcruntime": {
+      "completing": {
+        "title": "Repairing game files",
+        "body": "Downloading a missing runtime file. Please wait…"
+      },
+      "installing": {
+        "title": "Installing Visual C++ Runtime",
+        "body": "Downloading and installing Microsoft Visual C++ Runtime, please wait…",
+        "preparing": "Preparing download…"
+      },
+      "missing": {
+        "title": "Visual C++ Runtime Missing",
+        "body": "Microsoft Visual C++ 2015-2022 Redistributable (x64) is required to run the game. Install now?",
+        "install_now": "Install Now"
+      }
+    },
+    "loader_migration": {
+      "title": "Updating the loader",
+      "body": "Updating your installed instances to work with the new LeviLauncher loader. This runs only once. Please wait…",
+      "preparing": "Preparing update…",
+      "failed": "The one-time move of your instances to the new mod loader setup failed. Your instances were not changed."
+    },
+    "mclaunch": {
+      "preparing": {
+        "title": "Preparing Minecraft",
+        "vcruntime": "Installing the Visual C++ runtime…",
+        "gameinput": "Installing GameInput…",
+        "runtime": "Preparing Wine compatibility components…"
+      },
+      "loading": {
+        "title": "Launching Minecraft",
+        "body": "Waiting for the game window to appear, please wait…"
+      }
+    },
+    "shortcut": {
+      "create_button": "Create Desktop Shortcut",
+      "success": {
+        "title": "Shortcut Created",
+        "body": "A desktop shortcut for this instance has been created."
+      }
+    },
+    "gameinput": {
+      "installing": {
+        "title": "Installing GameInput",
+        "body": "Downloading and starting the installer. Follow system prompts to complete.",
+        "preparing": "Preparing download…"
+      },
+      "missing": {
+        "title": "GameInput Component Missing",
+        "body": "Microsoft GameInput is required to run the game. Install now?",
+        "install_now": "Install Now"
+      }
+    },
+    "gs": {
+      "missing": {
+        "title": "Microsoft Gaming Services Missing",
+        "body": "Microsoft Gaming Services was not detected. Minecraft requires this component to run.",
+        "open_store": "Open Store to Install",
+        "ignore_forever": "Ignore and don’t remind again"
+      }
+    },
+    "install_confirm": {
+      "title": "Installation Completed?",
+      "body": "Once the installer has finished, select \"Done, Recheck\". If it is still running, continue installing.",
+      "continue": "Continue Installing",
+      "done_and_check": "Done, Recheck"
+    },
+    "currentVersion_none": "None",
+    "version_select": {
+      "title": "Select Instance",
+      "unknown": "Unknown"
+    },
+    "tip": {
+      "version_selector": "Use the instance dropdown to switch the current instance quickly.",
+      "version_search": "Search by instance name or game version before selecting from the dropdown list.",
+      "manage_versions": "Select \"Instances\" in the dropdown panel to install, import, or organize instances.",
+      "quick_actions_menu": "The menu next to the launch button provides instance settings, desktop shortcut, game folder, and system registration actions.",
+      "launch_dependencies": "If GameInput, the Visual C++ Runtime, or Gaming Services are missing, LeviLauncher guides you through installing them before launch.",
+      "mods_card": "The Mods card shows enabled mods for the current instance and opens the full Mods page in one click.",
+      "content_counts_card": "The Content card shows world, resource pack, and behavior pack counts, and each row opens the matching page.",
+      "content_download_sources": "Use the download card to browse CurseForge or LeviMC Mods content sources without leaving the launcher.",
+      "settings_personalize": "Settings lets you adjust theme, color, background, and other appearance options to match your setup.",
+      "settings_storage_path": "You can change storage paths in Settings. Make sure the target directory is writable before moving content.",
+      "download_mirror": "If downloads are slow, try switching mirrors or related network options in Settings.",
+      "open_source": "LeviLauncher is open source. Use GitHub issues to report launcher problems or suggest improvements.",
+      "backup_worlds": "Back up important worlds regularly before testing new resource packs, behavior packs, or mods."
+    },
+    "edition": "Bedrock Edition"
+  },
+  "moddedcard": {
+    "title": "Mods",
+    "content": {
+      "none": "No mods installed"
+    },
+    "manage": "Manage Mods"
+  },
+  "download_manager": {
+    "install_prompt": {
+      "title": "Download complete",
+      "description": "“{{name}}” has finished downloading. Would you like to install it now?",
+      "confirm": "Install now",
+      "later": "Later"
+    },
+    "title": "Download Manager",
+    "description": "View and manage current download tasks",
+    "no_downloads": "No active download tasks",
+    "unknown_file": "Unknown File",
+    "actions": {
+      "retry": "Retry"
+    }
+  },
+  "updating": {
+    "title": "Updating LeviLauncher",
+    "body": "Requesting administrator permission and performing update. Do not close this window during update.",
+    "failed_title": "Update Failed",
+    "phase": {
+      "download": "Download Update Package",
+      "install": "Install Update"
+    },
+    "status": {
+      "checking": "Checking for updates",
+      "verifying": "Verifying package integrity",
+      "elevating": "Requesting administrator permission",
+      "restarting": "Restarting launcher"
+    },
+    "errors": {
+      "generic": "The update could not be completed. Please try again later.",
+      "update_admin_required": "Administrator permission is required to continue the update.",
+      "update_asset_missing": "The update package is missing or has an unexpected name.",
+      "update_release_unavailable": "Update information is currently unavailable. Please try again later.",
+      "update_verify_failed": "Update package verification failed.",
+      "update_download_failed": "Failed to download the update package.",
+      "update_install_failed": "Failed to install the update package.",
+      "update_restart_failed": "Updated launcher failed to restart automatically."
+    }
+  },
+  "downloadpage": {
+    "error": {
+      "already_downloading": "This file is already downloading"
+    },
+    "changelog": {
+      "title": "Latest Changelog"
+    },
+    "status": {
+      "downloaded": "Downloaded",
+      "not_downloaded": "Not downloaded",
+      "checking": "Checking…"
+    },
+    "table": {
+      "aria_label": "Versions Table",
+      "empty": "No data",
+      "header": {
+        "version": "VERSION",
+        "type": "TYPE",
+        "status": "STATUS",
+        "loader": "LOADER",
+        "actions": "ACTION"
+      },
+      "type": {
+        "release": "Release",
+        "preview": "Preview"
+      }
+    },
+    "topcontent": {
+      "types": "Types",
+      "types_all": "All",
+      "status": "Status",
+      "status_all": "All",
+      "status_downloaded": "Downloaded",
+      "status_not_downloaded": "Not downloaded",
+      "loader": "Loader",
+      "input": {
+        "placeholder": "Search by version…"
+      }
+    },
+    "actions": {
+      "delete_installer": "Delete installer"
+    },
+    "bottomcontent": {
+      "total": "Total {{count}} versions"
+    },
+    "install_folder": {
+      "confirm_title": "Install Instance",
+      "name_label": "Instance Name",
+      "default_name": "My {{version}} Instance",
+      "placeholder_name": "Enter an instance name",
+      "enable_isolation": "Instance isolation",
+      "enable_isolation_desc": "Keep this instance's game data (worlds, settings, and caches) in its own folder instead of sharing the system-wide Minecraft data.",
+      "inherit_label": "Inherit From",
+      "inherit_hint": "Copy data from another isolated instance of the same type",
+      "inherit_none": "No Inheritance",
+      "inherit_gdk": "Inherit from the shared game data"
+    },
+    "mirror": {
+      "no_recommended": "No recommended mirror",
+      "download_started": "Download started…",
+      "title": "Select Download Mirror",
+      "target": "Download target",
+      "testing": "Testing…",
+      "unselected": "Unselected",
+      "copy_link": "Copy Link",
+      "recommended": "Recommended Mirror",
+      "auto_testing": "Auto testing…",
+      "others": "Other Mirrors",
+      "no_mirrors": "No mirrors available for this version.",
+      "filename_fallback": "(file)",
+      "retest": "Retest",
+      "download_selected": "Download from Selected Mirror",
+      "install_button": "Install",
+      "install_selected": "Install from Selected Mirror"
+    },
+    "progress": {
+      "unknown_error": "Unknown error"
+    },
+    "download": {
+      "success_body": "File downloaded: "
+    },
+    "delete": {
+      "title": "Delete installer?",
+      "body": "This will delete installer: ",
+      "warning": "This action cannot be undone.",
+      "success_body": "Installer deleted: "
+    },
+    "install": {
+      "levilamina_label": "Install LeviLamina",
+      "levilamina_desc": "Automatically install LeviLamina loader",
+      "version_label": "Version",
+      "ll_version_label": "LeviLamina Version",
+      "ll_version_placeholder": "Select a LeviLamina version",
+      "estimated_size": "Installed size (estimated)",
+      "target": "Install Target",
+      "success_title": "Install Complete",
+      "success": "Installation completed successfully.",
+      "progress": "Installation Progress",
+      "custom_installer": {
+        "label": "Choose local installer (.msixvc)",
+        "hint": "By default, LeviLauncher uses the files already in your installers folder"
+      },
+      "levilamina_unsupported": "LeviLamina is not supported for this game version",
+      "title": "Install"
+    },
+    "customappx": {
+      "modal": {
+        "1": {
+          "header": "Version Information",
+          "body": {
+            "select": {
+              "item1": "Release",
+              "item2": "Preview"
+            }
+          },
+          "footer": {
+            "install_button": "Install"
+          }
+        }
+      }
+    }
+  },
+  "onboarding": {
+    "title": "First Launch Setup",
+    "subtitle": "Please set content path and language first",
+    "unsaved": {
+      "title": "Unsaved Changes",
+      "body": "You have unsaved changes to the content path. Do you want to save before finishing?",
+      "save": "Save and Finish"
+    }
+  },
+  "settings": {
+    "wine": {
+      "managed": {
+        "install": "Install Wine automatically",
+        "retry": "Retry Wine setup",
+        "failed": "Wine setup failed",
+        "ready": "Wine is ready and selected",
+        "progress": "Preparing Wine",
+        "required": "Set up Wine before installing Minecraft.",
+        "open_settings": "Open Wine settings",
+        "mirror_desc": "Use a GitHub mirror for Wine downloads. If it fails, LeviLauncher tries GitHub directly.",
+        "rosetta_title": "Install Rosetta",
+        "rosetta_body": "Wine needs Rosetta to run the Windows game on Apple Silicon. By choosing Agree and install, you agree to Apple’s Rosetta software license. LeviLauncher continues automatically after installation.",
+        "rosetta_info": "Read Apple’s Rosetta installation information",
+        "rosetta_confirm": "Agree and install",
+        "stage": {
+          "rosetta": "Check Rosetta",
+          "template": "Download and check the Wine template",
+          "engine": "Download and check the Wine engine",
+          "container": "Create the Wine container",
+          "initialize": "Initialize Windows in Wine",
+          "select": "Verify and select Wine"
+        },
+        "status": {
+          "working": "In progress",
+          "installing": "Installing Rosetta. Confirm in macOS if asked.",
+          "downloading": "Downloading",
+          "verifying": "Checking SHA-256",
+          "fallback": "The mirror failed. Trying GitHub directly.",
+          "done": "Complete"
+        }
+      },
+      "errors": {
+        "ERR_WINE_DOWNLOAD_STALLED": "The download stopped making progress. Retry to resume it.",
+      "ERR_WINE_INVALID_GITHUB_PROXY": "Enter a valid HTTP or HTTPS proxy URL.",
+        "ERR_WINE_ROSETTA_INSTALL": "Rosetta could not be installed. Check your network or macOS permissions and retry.",
+        "ERR_WINE_INSTALL_BUSY": "Wine setup is already running.",
+        "ERR_WINE_ASSET_CHECKSUM": "The downloaded file failed validation. Retry the download.",
+        "ERR_WINE_CONTAINER_INIT": "Wine did not finish initializing. Retry the setup."
+      },
+      "setup": {
+        "next": "Next",
+        "back_to_list": "Back to Wine list",
+        "title": "Set up Wine",
+        "ready": "Wine is ready",
+        "change": "Change Wine",
+        "keep_current": "Keep current Wine",
+        "choose_or_install": "Select a Wine environment or install Wine to run Minecraft.",
+        "rescan": "Scan again",
+        "manual": "Choose paths…",
+        "needs_prefix": "Prefix not initialized",
+        "use": "Use this Wine",
+        "install_help": "Install Sikarugir Creator to set up Wine.",
+        "install_next": "In Sikarugir Creator, install a template and a Wine engine. Create a wrapper, run it once to initialize it, then scan again here.",
+        "terminal_started": "Finish the installation in Terminal, set up your wrapper in Sikarugir Creator, then scan again.",
+        "skip": "Set up later",
+        "save_next": "Save and Continue"
+      },
+      "scan": "Scan this Mac / PC",
+      "install": "Install Wine…",
+      "found": "Found {{count}} Wine installation(s)",
+      "empty": "No Wine installation found.",
+      "use": "Select",
+      "install_terminal": "Install in Terminal",
+      "install_instructions": "Official installation instructions",
+      "install_help": "Installs Sikarugir in Terminal.",
+      "install_manual": "Open the official installation instructions.",
+      "installer_started": "Installer opened in Terminal.",
+      "title": "Wine",
+      "app": "Wine app bundle (optional)",
+      "executable": "Wine executable",
+      "prefix": "Wine prefix",
+      "choose": "Choose…",
+      "choose_path": "Choose {{field}}",
+      "graphics": "Graphics backend",
+      "graphics_auto": "Runtime default",
+      "graphics_d3dmetal": "D3DMetal",
+      "graphics_wined3d": "WineD3D (OpenGL)",
+      "sync": "Synchronization",
+      "sync_auto": "Runtime default",
+      "sync_msync": "MSync",
+      "sync_esync": "ESync",
+      "sync_none": "Disabled",
+      "left_command_is_ctrl": "Map Left Command to Ctrl",
+      "left_command_is_ctrl_desc": "Map Left Command to Ctrl in-game (enables Cmd+C/V, sprinting, and Cmd+Q stack drop without quitting; maps Left Option to Alt).",
+      "save": "Save",
+      "check": "Check version",
+      "reload": "Reload",
+      "working": "Checking Wine settings",
+      "saved": "Saved.",
+      "checked": "{{version}}"
+    },
+    "layout": {
+      "title_navbar": "Use Top Navigation Bar",
+      "desc_navbar": "Enable to use the top navigation bar instead of the default vertical sidebar"
+    },
+    "tabs": {
+      "wine": "Wine",
+      "general": "Basic Settings",
+      "personalization": "Personalization",
+      "components": "Package Management",
+      "others": "Others",
+      "updates": "Updates",
+      "about": "About",
+      "privacy": "Privacy"
+    },
+    "unsaved": {
+      "title": "Unsaved Changes",
+      "body": "You changed the content path but haven't saved it. Save and leave?",
+      "cancel": "Cancel",
+      "save": "Save and Leave"
+    },
+    "lang": {
+      "changed": "Language changed"
+    },
+    "discord_rpc": {
+      "title": "Discord Rich Presence",
+      "desc": "Show your game status on Discord"
+    },
+    "beta_updates": {
+      "title": "Receive Beta Updates",
+      "desc": "Enable to receive prerelease updates"
+    },
+    "experimental": {
+      "title": "Experimental Features",
+      "desc": "Try unfinished capabilities here. These features may change, break, or disappear without notice.",
+      "instance_backup": {
+        "title": "Instance backup (Experimental)",
+        "desc": "Enable backup and restore actions in instance settings. This feature is still experimental.",
+        "warning": {
+          "title": "Enable experimental instance backup?",
+          "body_1": "This feature is intended for developers and testers. Do not use it with data you cannot afford to lose.",
+          "body_2": "Backup format, included scope, and restore compatibility may change in future builds, and forward compatibility is not guaranteed.",
+          "body_3": "Read this warning in full before deciding. The confirm button becomes available after 10 seconds.",
+          "confirm": "I understand the risks"
+        }
+      }
+    },
+    "reset": {
+      "confirm": {
+        "title": "Restore default path?",
+        "body": "This will reset the content path to the default location. Are you sure?"
+      }
+    },
+    "lip": {
+      "title": "Clear cache",
+      "desc": "Clear the package manager's cache if package downloads fail.",
+      "cache_clean_button": "Clean Cache",
+      "cache_cleaning": "Cleaning Cache…",
+      "cache_clean_success": "Cache cleaned",
+      "github_proxy": {
+        "title": "GitHub proxy",
+        "desc": "GitHub proxy used when downloading packages. Leave empty to restore the default.",
+        "preset_custom": "Custom",
+        "save_success": "GitHub proxy saved",
+        "save_failed": "Failed to save the GitHub proxy"
+      }
+    },
+    "mirror_source": {
+      "title": "Use mirror sources",
+      "desc": "Use mirrors hosted in mainland China for launcher updates, packages and version catalogs. Enabled by default for users in mainland China."
+    },
+    "header": {
+      "title": "Settings",
+      "content": "Configure common launcher options"
+    },
+    "body": {
+      "version": {
+        "name": "Current Version",
+        "hasnew": "New version available! ",
+        "button": "Check Update",
+        "ignore": "Ignore this version"
+      },
+      "paths": {
+        "title": "Content Paths",
+        "subtitle": "Manage game data storage location",
+        "base_root": "Base Root",
+        "apply": "Apply",
+        "reset": "Reset",
+        "installer": "Installers",
+        "versions": "Versions",
+        "unsaved": "Changes not saved",
+        "not_writable": "Directory not writable"
+      },
+      "language": {
+        "name": "Language",
+        "button": "Change"
+      }
+    },
+    "process": {
+      "title": "Process Manager",
+      "desc": "Manage running Minecraft processes",
+      "scan": "Scan Processes",
+      "kill_all": "End All Processes",
+      "kill": "End Task",
+      "no_process": "No running Minecraft processes found"
+    },
+    "modal": {
+      "2": {
+        "footer": {
+          "download_button": "Update"
+        }
+      }
+    },
+    "appearance": {
+      "mode_config": "Per-Mode Settings",
+      "edit_mode_desc": "Personalization settings (colors, opacity, etc.) are saved independently for Light and Dark modes. Switch tabs on the right to configure each mode.",
+      "theme_mode": "Theme Mode",
+      "theme_mode_desc": "Choose the application theme",
+      "theme_system": "Follow System",
+      "theme_light": "Light Mode",
+      "theme_dark": "Dark Mode",
+      "theme_schedule": "Manual Schedule",
+      "theme_auto": "Sunrise/Sunset",
+      "theme_start_time": "Dark Mode Start Time",
+      "theme_end_time": "Dark Mode End Time",
+      "theme_schedule_desc": "Automatically switch to dark mode during the specified time period",
+      "theme_auto_desc": "Automatically switch theme based on local sunrise and sunset times",
+      "theme_system_desc": "Follow Windows system settings",
+      "theme_color": "Theme Color",
+      "theme_color_desc": "The primary accent color of the application",
+      "theme_standard": "Preset Colors",
+      "theme_generated": "More Colors",
+      "custom_color": "Custom Color",
+      "background_image": "Background Image",
+      "background_image_desc": "Select a folder to pick images from as background",
+      "background_play_order": "Play Order",
+      "background_play_random": "Random",
+      "background_play_sequential": "Sequential",
+      "background_fit_mode": "Fit Mode",
+      "background_fit_smart": "Smart",
+      "background_fit_center": "Center",
+      "background_fit_fit": "Fit",
+      "background_fit_stretch": "Stretch",
+      "background_fit_tile": "Tile",
+      "background_fit_top_left": "Top Left",
+      "background_fit_top_right": "Top Right",
+      "no_image_selected": "No folder selected",
+      "select_image": "Select Folder",
+      "clear_image": "Clear Folder",
+      "background_blur": "Background Blur",
+      "background_brightness": "Background Brightness",
+      "background_opacity": "Background Opacity",
+      "background_base_mode": "Base Mode",
+      "background_base_mode_desc": "Add a solid color mask under the background image to enhance contrast",
+      "background_base_none": "None",
+      "background_base_theme": "Follow Theme Color",
+      "background_base_color": "Custom Color",
+      "background_base_color_pick": "Base Color",
+      "background_base_opacity": "Base Opacity",
+      "disable_animations": "Disable Animations",
+      "disable_animations_desc": "Turn off interface transition animations to improve performance",
+      "calculating": "Calculating…",
+      "sunrise_time": "Sunrise Today",
+      "sunset_time": "Sunset Today",
+      "sun_fetch_failed": "Failed to fetch sunrise/sunset times",
+      "material": {
+        "title": "Interface material",
+        "description": "One material system for navigation, cards, tabs, controls, and popups. Light and dark profiles are saved separately and follow the theme.",
+        "edit_mode": "Edit material for theme",
+        "preview": "Live preview",
+        "preview_label": "Wallpaper, text and card material preview for the selected theme",
+        "preview_action": "Launch",
+        "preview_text": "Text and controls stay in front; your wallpaper sets the atmosphere.",
+        "no_image": "Choose an image folder and set image opacity above 0 to see the effect. Your material settings are kept either way.",
+        "presets": "Material presets",
+        "balanced": "Balanced",
+        "balanced_desc": "Soft glass, readable content",
+        "clear": "Clear",
+        "clear_desc": "More wallpaper, less text protection",
+        "solid": "Solid",
+        "solid_desc": "Opaque panels, no blur",
+        "opacity": "Interface opacity",
+        "blur": "Interface blur",
+        "overlay": "Wallpaper overlay",
+        "readability": "Readability protection",
+        "readability_desc": "Keeps text legible by setting a minimum surface tint and strengthening secondary text, based on the theme, image brightness, and blur. Controls and popups follow the same material.",
+        "protected_opacity": "Protection is active: effective interface opacity is {{value}}%.",
+        "protected": "Readability protection is on.",
+        "unprotected": "Protection is off. Busy images may make text harder to read.",
+        "reset": "Reset this theme",
+        "next_image": "Next image"
+      }
+    },
+    "privacy": {
+      "analytics": {
+        "title": "Usage Analytics (Google Analytics)",
+        "desc": "When enabled, this helps us improve features and UI. You can turn it off at any time."
+      },
+      "links": {
+        "google_analytics_terms": "Google Analytics Terms",
+        "google_privacy": "Google Privacy Policy"
+      }
+    },
+    "game_behavior": {
+      "on_launch_title": "On Game Launch",
+      "on_launch_desc": "Action to perform with the launcher when Minecraft starts",
+      "on_launch_minimize": "Minimize launcher",
+      "on_launch_hide": "Hide to system tray",
+      "on_launch_close": "Close launcher",
+      "on_launch_keep": "Keep launcher open",
+      "on_exit_title": "On Game Exit",
+      "on_exit_desc": "Action to perform with the launcher when Minecraft closes",
+      "on_exit_reopen": "Re-open launcher",
+      "on_exit_keep": "Do nothing",
+      "on_exit_close": "Close launcher",
+      "minimize_to_tray": "Hide to tray on close",
+      "minimize_to_tray_desc": "Clicking the close button hides the launcher to the system tray instead of exiting; the minimize button still minimizes to the taskbar"
+    },
+    "troubleshoot": {
+      "title": "Troubleshooting",
+      "desc": "Check the runtimes, Windows settings, network, proxy and account licenses the launcher depends on. Takes up to a minute and changes nothing.",
+      "mac_desc": "Check Wine, Rosetta, game runtimes, network access and account licenses. This runs without changing your settings.",
+      "run": "Run diagnostics"
+    }
+  },
+  "downloadmodal": {
+    "download_button": "Download",
+    "installing": {
+      "title": "Installing"
+    },
+    "open_folder": "Open Folder"
+  },
+  "aboutcard": {
+    "title": "About",
+    "description": "© 2024-2026 {{name}} All rights reserved",
+    "font": "This software uses the {{name}} font"
+  },
+  "sponsor_prompt": {
+    "title": "Thanks for being here",
+    "body": "You've launched LeviLauncher {{count}} times! If it makes your Minecraft time a little easier, would you like to sponsor its continued development?",
+    "dismiss": "Not now",
+    "open_error": "Couldn't open the sponsorship link. Please try again."
+  },
+  "about": {
+    "description": "LeviLauncher - A Modern Minecraft Bedrock Launcher",
+    "authors": "Authors & Maintainers",
+    "author": "Author",
+    "ll_authors": "LeviLauncher Authors",
+    "source": "Source Code & Open Source",
+    "thanks": "Special Thanks",
+    "thanks.desc": "Special thanks to individuals and projects supporting LeviLauncher.",
+    "sponsors": "Supporters (Sponsors)",
+    "sponsors.desc": "Thanks to all sponsors and supporters for the project's development!",
+    "contribute": "Contribute",
+    "contribute.desc": "Contributions via Issues or Pull Requests are welcome to improve LeviLauncher.",
+    "afdian": "Afdian",
+    "patreon": "Patreon",
+    "github_repo": "GitHub · LeviLauncher",
+    "github_org": "LiteLDev Organization",
+    "license.tip": "LeviLauncher is licensed under GPL-3.0-only. See COPYING in the repository for the full text.",
+    "third_party": "This software uses the MiSans font and bundles third-party components under their own licenses; see THIRD_PARTY_NOTICES.",
+    "website": "Website",
+    "issue": "Issue",
+    "star_fork": "Star / Fork",
+    "rhymc_name": "RhyMC"
+  },
+  "common": {
+    "retry": "Retry",
+    "completed": "Completed",
+    "downloading": "Downloading",
+    "ok": "OK",
+    "continue": "Continue",
+    "cancel": "Cancel",
+    "cancelled": "Cancelled",
+    "error": "Error",
+    "refresh": "Refresh",
+    "quit_launcher": "Quit Launcher",
+    "show_launcher": "Show Launcher",
+    "confirm": "Confirm",
+    "success": "Success",
+    "delete": "Delete",
+    "search": "Search",
+    "search_placeholder": "Search…",
+    "open": "Open",
+    "select_mode": "Select mode",
+    "select_all": "Select all",
+    "selected_count": "{{count}} selected",
+    "preview": "Preview",
+    "release": "Release",
+    "back": "Back",
+    "loading": "Loading",
+    "yes": "Yes",
+    "no": "No",
+    "close": "Close",
+    "empty": "No data",
+    "browse": "Browse…",
+    "processing": "Processing…",
+    "done": "Done",
+    "wait": "Please wait…",
+    "updating": "Updating",
+    "expand": "Expand",
+    "collapse": "Collapse",
+    "save": "Save",
+    "add": "Add",
+    "save_failed": "Save failed",
+    "load_failed": "Load failed",
+    "view_all": "View All",
+    "confirm_delete": "Confirm Delete",
+    "no_results": "No results found",
+    "edit": "Edit",
+    "backup": "Backup",
+    "date": "Date",
+    "version": "Version",
+    "details": "Details",
+    "disable": "Disable",
+    "enable": "Enable",
+    "open_folder": "Open Folder",
+    "open_folder_failed": "Could not open the folder",
+    "remove": "Remove",
+    "tip": "Tip",
+    "feature_unavailable": "This feature is temporarily unavailable",
+    "unknown": "Unknown"
+  },
+  "useravatar": {
+    "xbox_live": "Xbox Live",
+    "refresh_session_aria": "Refresh Xbox Session",
+    "xuid": "XUID: {{xuid}}",
+    "authorization": {
+      "title": "Game licenses",
+      "checking": "Checking",
+      "authorized": "Authorized",
+      "trial": "Trial only",
+      "not_entitled": "Not authorized",
+      "error": "Check failed",
+      "description": "Release and Preview licenses are checked after you sign in. Select refresh to check again."
+    },
+    "sign_out": "Sign out",
+    "signout_failed": "Could not sign out",
+    "sign_in": "Sign in with Microsoft",
+    "switch_account": "Switch account",
+    "signin_failed": "Microsoft sign-in failed"
+  },
+  "content": {
+    "count": {
+      "worlds": "Worlds",
+      "resource_packs": "Resource Packs",
+      "behavior_packs": "Behavior Packs"
+    }
+  },
+  "contentpage": {
+    "current_version": "Current Instance",
+    "none": "None",
+    "isolation": "Instance Isolation",
+    "worlds": "Worlds",
+    "worlds_list": "Worlds List",
+    "select_player": "Select Player",
+    "no_players": "No players",
+    "backup_success": "Backup succeeded",
+    "backup_failed": "Backup failed",
+    "resource_packs": "Resource Packs",
+    "no_resource_packs": "No resource packs",
+    "behavior_packs": "Behavior Packs",
+    "no_behavior_packs": "No behavior packs",
+    "skin_packs": "Skin Packs",
+    "no_skin_packs": "No skin packs",
+    "servers": "Servers",
+    "error_resolve_paths": "Could not locate the content folders.",
+    "open_users_dir": "Open Storage Directory",
+    "players_aria": "Players",
+    "sort_time": "Time",
+    "sort_asc": "Ascending",
+    "sort_desc": "Descending",
+    "drop_hint": "Drag .mcworld/.mcpack/.mcaddon to import",
+    "import_button": "Import",
+    "transfer_resources_button": "Transfer Content",
+    "transfer_resources_title": "Transfer Content to Another Instance",
+    "transfer_resources_body_overview": "All resource packs, behavior packs, skin packs, and worlds from the current instance will be copied to the target instance. Choose a target instance.",
+    "transfer_resources_body_simple": "Please select a target instance to transfer to.",
+    "transfer_no_targets": "No other isolated instances available",
+    "transfer_target_placeholder": "Select target instance",
+    "transfer_progress_title": "Transferring content…",
+    "transfer_progress_body": "Please wait while your content is transferred to the selected instance.",
+    "require_player_for_world_import": "Select a player before importing a world (.mcworld)",
+    "no_player_selected": "No player selected",
+    "world_leveldat_editor": "World properties",
+    "version": "Version",
+    "add_field": "Add Field",
+    "field_name": "Name",
+    "initial_value": "Initial Value",
+    "select_player_title": "Select Player",
+    "select_player_for_import": "Please select the player to import to",
+    "no_items": "No items found",
+    "delete_pack_confirm": "Are you sure you want to delete {{name}}?",
+    "delete_warning": "This action cannot be undone!",
+    "delete_selected_confirm": "Are you sure you want to delete the selected {{count}} items?",
+    "deleted_name": "Deleted {{name}}",
+    "delete_world_confirm": "Are you sure you want to delete world {{name}}?",
+    "basic_info": "Basic Info",
+    "level_name": "Level Name",
+    "screenshots": "Screenshots",
+    "no_screenshots": "No screenshots",
+    "delete_screenshot_confirm": "Are you sure you want to delete screenshot {{name}}?",
+    "preview_screenshot": "View larger",
+    "screenshot_viewer_hint": "Large preview",
+    "screenshot_viewer_nav_hint": "Use ← / → keys or buttons to switch screenshots",
+    "editor_unsaved": "Unsaved changes",
+    "editor_unsaved_body": "Save your changes before continuing, or discard them to use the saved world data.",
+    "editor_continue": "Continue editing",
+    "editor_discard": "Discard changes",
+    "editor_save_refresh": "Save and refresh",
+    "editor_save_leave": "Save and leave",
+    "selected_outside_filter": "Includes {{count}} outside this filter",
+    "delete_result": "Deleted {{success}}; failed {{failed}}",
+    "delete_retry_failed": "Failed items remain selected. Review the reasons below and retry.",
+    "delete_scope": "Instance: {{instance}} · Player: {{player}}",
+    "screenshot_load_failed": "Unable to load screenshots",
+    "screenshot_image_failed": "Unable to read {{name}}",
+    "screenshot_select_player": "Choose a player in Content before viewing screenshots.",
+    "screenshot_no_instance": "Choose an instance before viewing screenshots.",
+    "select_item": "Select {{name}}",
+    "servers_read_only": "Servers added in the game are shown here.",
+    "sort_old_new": "Oldest first",
+    "sort_new_old": "Newest first",
+    "previous_screenshot": "Previous screenshot",
+    "next_screenshot": "Next screenshot"
+  },
+  "versions": {
+    "info": {
+      "name": "Name"
+    },
+    "edit": {
+      "tabs": {
+        "general": "General",
+        "launch": "Launch Options",
+        "features": "Features",
+        "manage": "Management",
+        "loader": "Loader"
+      },
+      "title": "Instance Settings",
+      "mc_version": "Game Version",
+      "new_name": "New Name",
+      "placeholder": "Enter new name",
+      "hint": "Renames the instance folder only. The game version and type are unchanged.",
+      "enable_isolation": "Enable Isolation",
+      "enable_console": "Enable Console",
+      "enable_editor_mode": "Enable Editor Mode",
+      "editor_min_version": "Requires {{version}} or later for this channel. Unrecognized versions cannot enable Editor mode.",
+      "launch_args": "Launch Arguments",
+      "launch_args_placeholder": "Launch arguments (e.g. -Editor true)",
+      "launch_args_hint": "Set game launch arguments.",
+      "env_vars": "Environment Variables",
+      "env_vars_placeholder": "Environment Variables (KEY=VALUE), one per line",
+      "env_vars_hint": "Set launch environment variables.",
+      "delete_hint": "Permanently deletes this instance from your device, including worlds, configs, and installed content. This action cannot be undone.",
+      "danger_title": "Danger Zone",
+      "danger_hint": "These actions affect the instance registration or local files. Double-check before continuing.",
+      "backup": {
+        "title": "Instance Backup",
+        "hint": "Create a backup for this instance before changing settings, installing mods, or trying something new",
+        "section_body": "Only the game content and mods you select are included in the backup",
+        "experimental_badge": "Experimental",
+        "experimental_disabled": "Enable this in {{settingsPath}} before using instance backup and restore.",
+        "button": "Back up instance",
+        "dialog_title": "Choose what to back up",
+        "dialog_body": "Select what you want to keep in this backup",
+        "path_label": "Location",
+        "size_label": "Approx. size",
+        "shared_tag": "Shared content",
+        "missing_tag": "Not found",
+        "empty_tag": "Currently empty",
+        "shared_warning": "This instance does not use isolation, so including game data will also back up the shared system-wide game data",
+        "no_scope_selected": "Please choose at least one item to back up",
+        "confirm": "Start backup",
+        "progress_title": "Backing up instance",
+        "progress_body": "Packaging the selected scopes. Please wait…",
+        "progress_scanning": "Measuring the files to back up…",
+        "progress_files_bytes": "{{files}} / {{totalFiles}} files · {{bytes}} / {{totalBytes}}",
+        "progress_bytes": "{{current}} / {{total}} processed",
+        "progress_files": "{{current}} / {{total}} files",
+        "progress_packages": "{{current}} / {{total}} packages",
+        "success_title": "Instance backup complete",
+        "success_body": "Your backup file is ready",
+        "archive_label": "Backup file",
+        "location_label": "Saved in",
+        "open_dir": "Open folder",
+        "lip_summary": "{{count}} managed packages detected: {{summary}}",
+        "mode": {
+          "safe": {
+            "label": "Safe mode"
+          },
+          "full": {
+            "label": "Full mode",
+            "warning": "A full backup includes content outside the Users whitelist and may contain account caches, privacy-sensitive data, or other files that should not be shared."
+          }
+        },
+        "restore": {
+          "button": "Restore backup",
+          "file_picker_title": "Choose an instance backup archive",
+          "dialog_title": "Confirm instance backup restore",
+          "dialog_body": "Choose what to restore from this backup. If conflicts are found, they will be listed before restoring so you can choose each resolution.",
+          "confirm": "Start restore",
+          "scope_section_title": "Restore scopes",
+          "created_at": "Created at",
+          "lip_summary": "Detected {{count}} managed packages. Restore will try to reinstall them automatically.",
+          "conflict_loading": "Scanning restore conflicts. Please wait…",
+          "conflict_summary": "{{count}} conflicts were found with the current instance. Choose whether to keep the backup version or the current version for each item.",
+          "conflict_empty": "No conflicts were found for the selected scopes. You can restore directly.",
+          "conflict_choice_placeholder": "Choose how to resolve this conflict",
+          "conflict_choice_backup": "Use backup version",
+          "conflict_choice_current": "Keep current version",
+          "conflict_choice_pending": "Choice required",
+          "conflict_group_count": "{{count}} conflicts",
+          "conflict_group_unresolved": "{{count}} pending choices",
+          "conflict_group_resolved": "Choices completed",
+          "conflict_group_apply_backup": "Use backup for group",
+          "conflict_group_apply_current": "Keep current for group",
+          "conflict_unresolved": "Please choose how to resolve every conflict before restoring.",
+          "conflict_details_toggle": "View paths and detailed differences",
+          "conflict_item_fallback": "Unnamed content",
+          "identity_key_label": "Matched by",
+          "backup_side_label": "Backup version",
+          "current_side_label": "Current version",
+          "backup_path_label": "Backup path",
+          "current_path_label": "Current path",
+          "conflict_category": {
+            "mods": "Mods",
+            "skin_packs": "Skin packs",
+            "behavior_packs": "Behavior packs",
+            "resource_packs": "Resource packs",
+            "worlds": "Worlds",
+            "dev_behavior_packs": "Development behavior packs",
+            "dev_resource_packs": "Development resource packs",
+            "templates": "World templates",
+            "files": "Other files",
+            "other": "Other content"
+          },
+          "identity_kind": {
+            "pack_uuid": "Pack",
+            "world_folder": "World folder",
+            "mod_folder": "Mod folder",
+            "file_path": "File path"
+          },
+          "conflict_type": {
+            "file": "File",
+            "dir": "Directory"
+          },
+          "diff_field": {
+            "folder": "Folder",
+            "uuid": "UUID",
+            "name": "Name",
+            "version": "Version",
+            "min_engine_version": "Min engine version",
+            "level_name": "World name",
+            "entry": "Entry",
+            "type": "Type"
+          },
+          "progress_title": "Restoring instance backup",
+          "progress_body": "Applying backup contents. Please wait…",
+          "progress_preparing": "Preparing restore content…",
+          "progress_extracting": "Extracting backup contents…",
+          "progress_scope": "Restoring {{scope}}…",
+          "progress_finalizing": "Finalizing restore results…",
+          "progress_step": "Step {{current}} / {{total}}",
+          "success_title": "Instance restore complete",
+          "partial_title": "Instance restore partially complete",
+          "failed_title": "Instance restore failed",
+          "success_body": "The selected content has been restored.",
+          "partial_body": "Some content was restored, but a few items still need manual attention.",
+          "failed_body": "This restore did not complete. Check the results below.",
+          "status": {
+            "success": "Success",
+            "partial": "Partial",
+            "failed": "Failed"
+          }
+        }
+      },
+      "unregister_button": "Unregister",
+      "unregister_hint": "Unregister this instance from the system so it no longer appears in the system app list. This will not delete any files.",
+      "unregister_progress": {
+        "title": "Unregistering",
+        "body": "Performing system unregister. Please wait…"
+      },
+      "unregister_success": {
+        "title": "Unregister Successful",
+        "body": "Successfully unregistered. You can now delete this version."
+      },
+      "loader": {
+        "ll_not_installed": "Not installed",
+        "ll_select_version": "LeviLamina Version",
+        "ll_select_placeholder": "Select a LeviLamina version",
+        "ll_select_guidance": "Choose the LeviLamina version you want to install, upgrade, downgrade, or reinstall.",
+        "ll_remove_confirm_title": "Confirm Remove LeviLamina",
+        "ll_remove_confirm_body": "LeviLamina will be removed from this instance.",
+        "ll_remove_confirm_warning": "This action cannot be undone."
+      }
+    },
+    "logo": {
+      "title": "Custom Icon (must be square)",
+      "change": "Click to change",
+      "clear": "Clear",
+      "hint": "Saved in the instance folder. Select the icon to change it."
+    },
+    "unsaved": {
+      "body": "You have unsaved changes to instance settings. Do you want to save before leaving?"
+    },
+    "sort": {
+      "name": "Name (A-Z)",
+      "name_za": "Name (Z-A)",
+      "version": "Version (Newest)",
+      "version_old_new": "Version (Oldest)"
+    },
+    "tab": {
+      "all": "All",
+      "preview": "Preview",
+      "release": "Release"
+    }
+  },
+  "mirror": {
+    "target": "Target Instance"
+  },
+  "errorDetail": {
+    "causes_title": "What this probably means",
+    "technical_title": "Technical details",
+    "copy": "Copy details",
+    "copied": "Details copied",
+    "copy_failed": "Could not copy the details",
+    "open_logs": "Open logs folder",
+    "log_hint": "The full log is saved in the launcher logs folder."
+  },
+  "errors": {
+    "explain": {
+      "game_exited_early": "The game process started but closed again right away. A broken mod, add-on or resource pack, or damaged game files are the usual cause.",
+      "game_no_window": "The game process is running but never opened a window. It may be stuck loading a mod, or waiting on a missing runtime or graphics driver.",
+      "loader_activation": "The mod loader could not be prepared for this instance. Check that the instance folder is complete and writable, then reinstall LeviLamina from the instance settings.",
+      "bad_executable": "The game executable does not match this system or is damaged. Reinstall the instance or pick a build for your platform.",
+      "access_denied": "Windows denied access to a file or folder. Close programs that may be using it (including antivirus), make sure the instance folder is writable, or run the launcher as administrator.",
+      "file_in_use": "A file is being used by another program, usually the game itself or an antivirus scanner. Close the game and any program touching the instance folder, then try again.",
+      "disk_full": "The disk does not have enough free space. Free some space or move the instance to another drive.",
+      "path_too_long": "A file path is too long for Windows. Move the instance to a shorter folder path, or shorten the instance name.",
+      "not_found": "A required file or folder is missing. The instance may have been moved, deleted or only partly installed; try repairing or reinstalling it.",
+      "developer_mode": "Windows needs Developer Mode turned on for this action. Enable it under Settings > System > For developers, then try again.",
+      "dns": "The server name could not be resolved. Check your internet connection, DNS or proxy settings.",
+      "tls": "A secure connection could not be set up. Check that your system date and time are correct and that no proxy or security software is intercepting the connection.",
+      "timeout": "The server took too long to answer. Check your connection, or try again later or with a mirror/proxy enabled in settings.",
+      "connection": "The connection to the server was refused or dropped. Check your network, firewall and proxy settings and try again.",
+      "http_403": "The server refused the request (HTTP 403). The service may block your network region; try enabling a mirror or proxy in settings.",
+      "http_404": "The file was not found on the server (HTTP 404). It may have been removed or renamed; refresh the list and try again.",
+      "http_429": "The server is limiting requests (HTTP 429). Wait a few minutes before trying again.",
+      "http_5xx": "The server reported an internal error. This is on the server side; try again later.",
+      "lip_no_package": "No package matches this version for your platform. The mod may not support this game version yet.",
+      "lip_already_installed": "This package is already installed. Use Update instead of Install.",
+      "lip_conflict": "The packages cannot be installed together because their version requirements conflict. Remove or update the conflicting mod and try again.",
+      "corrupt_download": "The downloaded file is damaged or incomplete. Clear the download cache in settings and try again."
+    },
+    "ERR_GAME_ALREADY_RUNNING": "Detected the current instance of Minecraft is already running. Please close it before launching or switch to another instance.",
+    "ERR_TARGET_DIR_NOT_SPECIFIED": "Target directory not specified",
+    "ERR_CREATE_TARGET_DIR": "Failed to create target directory",
+    "ERR_NOT_FOUND_GAME_DIR": "Game files not found",
+    "ERR_NOT_FOUND_EXE": "The game executable was not found",
+    "ERR_WRITE_TARGET": "Could not write to the instance folder",
+    "ERR_LAUNCH_GAME": "The game did not start correctly",
+    "ERR_GAME_CRASH_DURING_LAUNCH": "Game crashed during launch",
+    "ERR_WAIT_KERNEL_TIMEOUT": "Timed out waiting for the game to start",
+    "ERR_COPY_WALK": "Could not read the files to copy",
+    "ERR_COPY_FAILED": "Copy failed",
+    "ERR_NAME_REQUIRED": "Name is required",
+    "ERR_NAME_TOO_LONG": "Name is too long",
+    "ERR_NAME_TRAILING_DOT_SPACE": "Name cannot end with a dot or space",
+    "ERR_NAME_INVALID_CHAR": "Name contains invalid characters: <>:\"/\\|?*",
+    "ERR_NAME_CONTROL_CHAR": "Name contains control characters",
+    "ERR_NAME_RESERVED": "This name is reserved by Windows (for example CON, PRN, or NUL). Choose another name.",
+    "ERR_ACCESS_VERSIONS_DIR": "Cannot access the instances folder",
+    "ERR_ACCESS_INSTALLERS_DIR": "Cannot access the installers folder",
+    "ERR_READ_VERSIONS_DIR": "Could not read the instances folder",
+    "ERR_LL_VERSION_UNSUPPORTED": "Selected LeviLamina version is not supported for this game version",
+    "ERR_LL_NOT_SUPPORTED": "LeviLamina is not supported for this game version",
+    "ERR_FETCH_LL_DB": "Failed to fetch LeviLamina version database",
+    "ERR_INVALID_VERSION_FORMAT": "Invalid game version format",
+    "ERR_LIP_INSTALL_FAILED": "Failed to install LeviLamina",
+    "ERR_NAME_EXISTS": "Name already exists",
+    "ERR_INVALID_NAME": "Invalid name",
+    "ERR_ICON_DECODE": "Icon decode failed",
+    "ERR_ICON_NOT_SQUARE": "Icon must be square",
+    "ERR_NOT_FOUND_OLD": "Original directory not found",
+    "ERR_RENAME_FAILED": "Rename failed, possibly in use or no permission",
+    "ERR_MSIXVC_NOT_SPECIFIED": "Installer package not specified",
+    "ERR_MSIXVC_NOT_FOUND": "Installer package not found",
+    "ERR_APPX_UNINSTALL_FAILED": "Failed to uninstall existing game",
+    "ERR_APPX_INSTALL_FAILED": "Install failed. Please retry.",
+    "ERR_MC_NOT_AUTHORIZED": "This account does not own {{typeLabel}} Minecraft. Sign in with an account that owns it, or buy the game, then try again.",
+    "ERR_INHERIT_SOURCE_NOT_FOUND": "The instance to inherit from was not found",
+    "ERR_DELETE_FAILED": "Delete failed, possibly in use or permission denied",
+    "ERR_INHERIT_TARGET_NOT_FOUND": "The target instance was not found",
+    "ERR_INHERIT_TYPE_MISMATCH": "The instances are different types, so data cannot be inherited",
+    "ERR_INHERIT_COPY_FAILED": "Failed to copy inherited data",
+    "ERR_NO_GAME_DATA": "No game data found for the selected source",
+    "ERR_GAMEINPUT_INSTALL": "GameInput could not be installed in the selected Wine environment.",
+    "ERR_VCRUNTIME_MISSING": "A required runtime is missing. Install the Microsoft Visual C++ Runtime, then try again.",
+    "ERR_SHORTCUT_CREATE_FAILED": "Failed to create desktop shortcut",
+    "ERR_UNREGISTER_FAILED": "Unregister failed",
+    "ERR_NOT_REGISTERED_THIS_VERSION": "This instance is not registered with the system",
+    "ERR_DEV_MODE_REQUIRED": "Developer Mode is not enabled, and auto-enable failed. Please enable Developer Mode manually and retry.",
+    "ERR_LIP_PACKAGE_INVALID_IDENTIFIER": "Invalid package identifier",
+    "ERR_LIP_PACKAGE_VERSION_REQUIRED": "Package version is required",
+    "ERR_LIP_PACKAGE_INSTALL_FAILED": "Failed to install package",
+    "ERR_LIP_PACKAGE_UNINSTALL_FAILED": "Failed to uninstall package",
+    "ERR_LIP_PACKAGE_QUERY_FAILED": "Failed to query package state",
+    "ERR_LIP_CACHE_CLEAN_FAILED": "Failed to clean cache",
+    "ERR_LIP_PACKAGE_REQUIRED_BY_DEPENDENTS": "This package is required by other installed mods and cannot be uninstalled now",
+    "ERR_LIP_PACKAGE_DEMOTED_TO_DEPENDENCY": "This package is still required by other installed mods, so it cannot be fully uninstalled. It is now kept only as a dependency and will be removed once nothing needs it.",
+    "ERR_LL_MANAGED_IN_VERSION_SETTINGS": "LeviLamina can only be managed in Instance Settings",
+    "ERR_INSTANCE_BACKUP_INSTANCE_NOT_FOUND": "The instance to back up was not found",
+    "ERR_INSTANCE_BACKUP_NO_SCOPE": "Please select at least one backup scope",
+    "ERR_INSTANCE_BACKUP_INVALID_SCOPE": "The request includes an invalid backup scope",
+    "ERR_INSTANCE_BACKUP_INVALID_SCOPE_MODE": "The selected backup mode is invalid",
+    "ERR_INSTANCE_BACKUP_GAME_DATA_NOT_FOUND": "The Minecraft Bedrock data directory was not found",
+    "ERR_INSTANCE_BACKUP_CREATE_DIR": "Failed to create the instance backup directory",
+    "ERR_INSTANCE_BACKUP_CREATE_ARCHIVE": "Failed to create the instance backup archive",
+    "ERR_INSTANCE_BACKUP_READ_SOURCE": "Failed to read the backup source directory",
+    "ERR_INSTANCE_BACKUP_WRITE_ARCHIVE": "Failed to write the instance backup archive",
+    "ERR_INSTANCE_BACKUP_ARCHIVE_OPEN": "Failed to open the instance backup archive",
+    "ERR_INSTANCE_BACKUP_INVALID_ARCHIVE": "The instance backup archive format is invalid",
+    "ERR_INSTANCE_BACKUP_MODS_STATE_UNAVAILABLE": "The mod list could not be verified. Refresh the instance and try backing up again.",
+    "ERR_INSTANCE_BACKUP_RESTORE_EXTRACT_ARCHIVE": "Failed to extract the instance backup archive",
+    "ERR_INSTANCE_BACKUP_RESTORE_WRITE_TARGET": "Failed to restore backup contents into the target instance",
+    "ERR_INSTANCE_BACKUP_RESTORE_CONFLICT_UNRESOLVED": "Some restore conflicts are still unresolved. Finish choosing a resolution for each conflict first.",
+    "ERR_INSTANCE_BACKUP_RESTORE_INVALID_CONFLICT_RESOLUTION": "The selected restore conflict resolution is invalid. Please review your choices.",
+    "ERR_INSTANCE_BACKUP_RESTORE_FULL_REQUIRES_EMPTY_TARGET": "Full Minecraft Bedrock backups can only be restored into an empty target directory",
+    "ERR_INSTANCE_BACKUP_RESTORE_LIP_INSTALL_FAILED": "Some managed packages failed to install",
+    "ERR_INSTANCE_BACKUP_RESTORE_LIP_MISSING": "Some managed packages were not restored",
+    "ERR_INSTANCE_BACKUP_RESTORE_LIP_VERSION_MISMATCH": "Some managed package versions do not match the backup",
+    "ERR_AUTH_FAILED": "Microsoft sign-in or authorization failed. Check your connection and retry.",
+    "ERR_AUTH_BROWSER_STORE_UNAVAILABLE": "Microsoft Store installation authorization is unavailable. Sign in again with the Microsoft account that owns the game, then retry.",
+    "ERR_AUTH_TIMEOUT": "Sign-in timed out. Please try again.",
+    "ERR_AUTH_DEVICE_CACHE": "The device authorization cache could not be read. Check the Windows user and file permissions.",
+    "ERR_AUTH_DEVICE_BUSY": "The account is in use by another operation. Please try again later.",
+    "ERR_AUTH_DEVICE_PROVISION": "Device authorization failed. Check your connection and try again.",
+    "ERR_AUTH_DEVICE_TOKEN": "Microsoft did not issue a device licence token. Turn off any proxy or network accelerator, make sure the system clock is correct, and try again.",
+    "ERR_AUTH_ACCOUNT_CHANGED": "The Microsoft account has changed. Refresh your account using the launcher avatar, then retry.",
+    "ERR_AUTH_INTERACTION_REQUIRED": "Sign in to the Microsoft account that owns this game using the launcher avatar, then retry.",
+    "ERR_LICENSE_NOT_ENTITLED": "This account does not own this version.",
+    "ERR_LICENSE_FULL_REQUIRED": "Microsoft returned only a trial license. Select an account that owns the game using the launcher avatar and retry.",
+    "ERR_LICENSE_HTTP": "Could not obtain a Microsoft content license. Check your connection and try again.",
+    "ERR_LICENSE_MISSING_KEY": "The license from Microsoft does not cover this package.",
+    "ERR_LICENSE_UNSUPPORTED": "Microsoft returned an unsupported license type.",
+    "ERR_MSIXVC_UNSUPPORTED_FORMAT": "Unsupported package format. Use a complete Windows x64 package.",
+    "ERR_NATIVE_MSIXVC": "Package validation or extraction failed.",
+    "ERR_TARGET_EXISTS": "An instance folder with this name already exists. Choose a different name.",
+    "ERR_INVALID_FOLDER_NAME": "Invalid instance folder name.",
+    "ERR_CANCELED": "Operation canceled.",
+    "ERR_AUTH_ACCOUNT_SELECTION": "The selected Microsoft account could not be restored. Check the current Windows user and access to the account preference file.",
+    "ERR_UWP_NOT_SPECIFIED": "Choose a UWP installer or download this version first.",
+    "ERR_INSTANCE_BACKUP_PACKAGE_TYPE_MISMATCH": "The backup and target instance use incompatible package types. Choose an instance with the same package type.",
+    "ERR_UWP_UNSUPPORTED_FEATURE": "This feature is unavailable for Microsoft Store (UWP) instances.",
+    "ERR_UWP_INVALID_VERSION": "The UWP version information is invalid. Refresh the version list and retry.",
+    "ERR_UWP_DOWNLOAD_URL": "Unable to obtain a UWP download URL from Windows Update. Check your connection and retry.",
+    "ERR_UWP_QUERY": "Unable to read Windows app registrations. Review the error details and retry.",
+    "ERR_UWP_DEPENDENCY": "A Windows framework package required by this installer is missing. Install the matching version of dependencies such as Microsoft.VCLibs for your system, then try again. The desktop Visual C++ runtime is a different component and does not replace it.",
+    "ERR_UWP_SYSTEM_VERSION": "This UWP package requires a newer Windows version. Update Windows or choose a compatible game version.",
+    "ERR_UWP_DEVELOPER_MODE": "Windows blocked development package registration. Enable Developer Mode in Windows Settings and retry.",
+    "ERR_UWP_PACKAGE_CONFLICT": "A conflicting Minecraft app registration already exists. The launcher preserves Store and externally installed registrations. Back up your game content, resolve the conflict through Windows Settings, then retry.",
+    "ERR_UWP_REGISTER": "UWP game package registration failed. Review the Windows error details and retry.",
+    "ERR_UWP_UNREGISTER": "UWP game package unregistration failed. Review the Windows error details and retry.",
+    "ERR_UWP_REGISTER_ROLLBACK": "Registration failed and the previous registration could not be restored. Game files remain in place. Review the error details and repair the registration through Windows Settings.",
+    "ERR_UWP_LAUNCH": "Windows app activation could not launch the UWP game. Check its package registration and the error details.",
+    "ERR_UWP_MANIFEST": "The UWP package manifest is missing or invalid. Choose a complete Minecraft installer.",
+    "ERR_UWP_UNSAFE_ARCHIVE": "The UWP archive contains unsafe or conflicting file paths. Installation was stopped.",
+    "ERR_UWP_ARCHITECTURE": "This UWP installer does not contain an application compatible with the current system architecture.",
+    "ERR_UWP_ARCHIVE": "The UWP archive is damaged or exceeds extraction limits. Download a complete installer again.",
+    "ERR_UWP_INSTALL": "UWP installation failed. Review the error details and retry.",
+    "ERR_UWP_NOT_MINECRAFT": "The application identity or publisher does not match a supported Minecraft UWP package.",
+    "ERR_UWP_PACKAGE_NOT_FOUND": "The UWP installer was not found. Refresh the version list or download it again.",
+    "ERR_UWP_PACKAGE_NOT_SPECIFIED": "Choose a UWP installer or download this version first.",
+    "ERR_UWP_CHANNEL": "The UWP package does not match the selected channel. Choose the matching channel or import the local installer again.",
+    "ERR_UWP_RESOURCE_BUNDLE": "This installer bundles separate resource packages, which are not supported. Choose a standalone installer instead.",
+    "ERR_UWP_INTEGRITY": "The installer failed its integrity check. Download it again.",
+    "ERR_UWP_NOT_REGISTERED": "This instance is not registered with Windows. Select Register first, then launch it once registration succeeds.",
+    "ERR_UWP_PREPARE": "Could not prepare this instance for registration with Windows. Check the instance folder permissions, then try again.",
+    "ERR_LIP_INVALID_GITHUB_PROXY": "Enter a valid HTTP(S) URL"
+  },
+  "filemanager": {
+    "sort": {
+      "name": "Name"
+    }
+  },
+  "file": {
+    "types": {
+      "folder": "Folder",
+      "executable": "Executable",
+      "library": "Library",
+      "archive": "Archive",
+      "image": "Image",
+      "text": "Text",
+      "json": "JSON",
+      "jar": "JAR",
+      "mcpack": "MC Pack",
+      "mcaddon": "MC Addon",
+      "file": "File"
+    }
+  },
+  "mods": {
+    "import_button": "Import .mcmod",
+    "file_filter_mcmod": "LeviLauncher mod (*.mcmod)",
+    "file_filter_all": "All files (*.*)",
+    "importing_title": "Importing…",
+    "importing_body": "Please wait while processing selected files.",
+    "importing_count": "{{done}} of {{total}} files processed",
+    "summary_title_done": "Import Completed",
+    "summary_title_partial": "Import Completed (Partial Failures)",
+    "summary_success": "Succeeded",
+    "summary_failed": "Failed",
+    "details_title": "Mod Details",
+    "field_name": "Name",
+    "field_version": "Version",
+    "field_type": "Type",
+    "field_entry": "Entry",
+    "field_author": "Author",
+    "confirm_delete_body": "Are you sure you want to delete this {{type}}? This action cannot be undone.",
+    "dll_modal_title": "Import DLL Mod",
+    "dll_name": "Mod Name",
+    "dll_type": "Type",
+    "dll_version": "Version",
+    "err_invalid_name": "Invalid instance or mod name",
+    "err_access_versions_dir": "Cannot access the instances folder",
+    "err_create_target_dir": "Failed to create target directory",
+    "err_open_zip": "Cannot open ZIP file",
+    "err_open_package": "Cannot open the mod package. Choose a valid .mcmod file",
+    "err_unsupported_file": "Unsupported file type. Choose a .mcmod file",
+    "err_manifest_not_found": "This archive has no manifest.json, so it is not a valid mod package",
+    "err_invalid_manifest": "The manifest.json in this archive is invalid or missing required fields",
+    "err_manifest_entry_not_found": "The entry file declared by manifest.json was not found",
+    "err_invalid_package": "This archive is not a valid mod package",
+    "err_duplicate_folder": "A mod folder with this name already exists",
+    "err_read_zip_entry": "Could not read a file inside the archive",
+    "err_write_file": "Failed to write file",
+    "err_unknown": "Unknown error",
+    "overwrite_modal_title": "Duplicate Detected",
+    "overwrite_modal_body": "A mod with this name is already installed. Overwrite it?",
+    "toggle_label": "Enable Mod",
+    "toggle_on": "Enabled",
+    "toggle_off": "Disabled",
+    "toggle_desc_on": "Mod is enabled and will load when the game starts.",
+    "toggle_desc_off": "Mod is disabled and will not load when the game starts.",
+    "only_enabled": "Only show enabled mods",
+    "drop_hint": "Drop .mcmod files here to import mods",
+    "err_lip_install_failed_suggestion": "Installation failed. Check that the instance and LeviLamina are installed correctly, then try again.",
+    "rc_warning": {
+      "title": "Experimental Version Warning",
+      "body_1": "The LeviLamina version ({{version}}) you are about to install is a Release Candidate (RC).",
+      "body_2": "This is an experimental version that may be unstable. It is recommended for developers or advanced users only.",
+      "body_3": "Do you want to continue?"
+    },
+    "action_update": "Update",
+    "action_uninstall": "Uninstall",
+    "action_promote_install": "Mark as manually installed",
+    "action_promote_install_success": "{{name}} is now marked as manually installed and will not be removed automatically",
+    "action_promote_install_failed_no_version": "No installed version was found for this package",
+    "batch_update_title": "Batch Update Mods",
+    "batch_update_body": "{{selected}} mods selected, {{updatable}} of which can be updated. Continue?",
+    "batch_uninstall_title": "Batch Uninstall Mods",
+    "batch_uninstall_body": "You are about to uninstall {{count}} mod(s). Continue?",
+    "update_available": "Update to {{version}}",
+    "update_latest": "Already latest",
+    "no_update_source": "No update source",
+    "err_ll_managed_in_version_settings": "LeviLamina can only be managed in Instance Settings",
+    "action_result_title_done": "Operation Completed",
+    "action_result_title_partial": "Operation Completed (Partial Failures)",
+    "action_result_title_failed": "Operation Failed",
+    "tab_all": "All",
+    "tab_normal": "Normal Mods",
+    "tab_lip": "Package Mods",
+    "lip_children_summary": "Includes: {{children}} (+{{count}})",
+    "lip_open_package": "Open Package",
+    "lip_sync_loading": "Local mods are ready. Loading online details…",
+    "lip_sync_error": "Online details are temporarily unavailable. Showing local mods only.",
+    "overwrite_and_import": "Overwrite and import"
+  },
+  "terms": {
+    "title": "LeviLauncher License Agreement",
+    "body": "Welcome to LeviLauncher\n\nBy using this software, you agree that:\n• This is an unofficial Minecraft launcher\n• You must own a legally licensed copy of Minecraft; otherwise the game runs in trial mode\n• Any form of piracy or cheating is prohibited\n• Use of mods and resource packs is at your own risk\n• LeviLauncher is not affiliated with Mojang or Microsoft\n\nContinuing to use this software indicates acceptance of these terms",
+    "agree": "Agree and Continue",
+    "decline": "Decline and Exit"
+  },
+  "contentdownload": {
+    "title": "Content Download"
+  },
+  "curseforge": {
+    "title": "CurseForge",
+    "search_placeholder": "Search game resources…",
+    "search": "Search",
+    "minecraft_version": "Minecraft Version",
+    "select_version": "Select version",
+    "all_versions": "All Versions",
+    "load_error": "Could not load data. Please try again.",
+    "search_error": "Search failed. Please try again.",
+    "class": "Class",
+    "select_class": "Select class",
+    "all_classes": "All classes",
+    "category": "Category",
+    "select_category": "Select category",
+    "sort_by": "Sort by",
+    "select_sort": "Select sort",
+    "no_results": "No results found",
+    "by_author": "By {{author}}",
+    "no_description": "No description available.",
+    "downloads": "Downloads",
+    "updated": "Updated",
+    "created": "Created",
+    "size": "Size",
+    "game_version": "Minecraft Version",
+    "mod_not_found": "Mod not found",
+    "go_back": "Go Back",
+    "by": "By",
+    "updated_date": "Updated {{date}}",
+    "download_count": "{{count}} Downloads",
+    "install_action": "Install",
+    "website": "Website",
+    "source": "Source",
+    "issues": "Issues",
+    "no_download_url": "No download link available",
+    "no_files_found": "No files found",
+    "sort": {
+      "featured": "Featured",
+      "popularity": "Popularity",
+      "last_updated": "Last Updated",
+      "creation_date": "Creation Date",
+      "total_downloads": "Total Downloads"
+    },
+    "install": {
+      "downloading_title": "Downloading Content",
+      "select_version_title": "Select Game Instance",
+      "select_player_title": "Select Player",
+      "importing_title": "Importing Content",
+      "success_title": "Success",
+      "error_title": "Error",
+      "downloading_body": "Downloading file…",
+      "select_version_body": "Please select the game instance to import to:",
+      "local_installation": "Local Instance",
+      "select_version_placeholder": "Select an instance",
+      "registered": "Registered",
+      "select_player_body": "This content requires selecting a player:",
+      "player_label": "Player",
+      "select_player_placeholder": "Select a player",
+      "importing_body": "Importing content…",
+      "success_msg": "Import Successful",
+      "success_desc": "The content has been successfully imported to the selected instance.",
+      "failed_msg": "Import Failed",
+      "next": "Next",
+      "close": "Close"
+    },
+    "mod_details_aria_label": "Mod Details",
+    "loading_description": "Loading description…",
+    "mod_tabs": {
+      "description": "Description",
+      "files": "Files"
+    },
+    "mod_files": {
+      "title": "All Files",
+      "table_aria_label": "Mod files table",
+      "columns": {
+        "type": "Type",
+        "name": "Name",
+        "uploaded": "Uploaded",
+        "size": "Size",
+        "downloads": "Downloads",
+        "actions": "Actions"
+      }
+    }
+  },
+  "lip": {
+    "search_placeholder": "Search mods…",
+    "sort_by": "Sort by",
+    "select_sort": "Select sort",
+    "no_description": "No description available",
+    "ll_version_label": "LeviLamina version",
+    "ll_version_placeholder": "Select LeviLamina version",
+    "ll_all_versions": "All LeviLamina versions",
+    "game_version_label": "Game version",
+    "game_version_placeholder": "Select game version",
+    "game_all_versions": "All game versions",
+    "mapping_unavailable_hint": "LeviLamina version information is unavailable, so the LeviLamina version filter is turned off to avoid incorrect matches.",
+    "files": {
+      "game_versions_unknown": "No matching game version",
+      "version_count": "{{count}} versions",
+      "game_versions_label": "Game Versions",
+      "game_versions_unrestricted": "No game version restriction",
+      "game_versions_unavailable": "Compatibility unknown",
+      "dependencies_count": "{{count}} dependencies",
+      "install": "Install",
+      "upgrade": "Upgrade",
+      "downgrade": "Downgrade",
+      "reinstall": "Reinstall",
+      "redirect": "Go to Loader",
+      "instance_game_version_label": "Game version",
+      "select_instance_title": "Select Target Instance",
+      "installing_version_label": "Installing package version",
+      "variant_label": "Variant",
+      "variant_hint_keep_default": "Most packages have only one variant. Keep the default unless the author says otherwise.",
+      "variant_placeholder": "Select a variant",
+      "select_version_incompatible_hint": "Version {{version}} is not compatible with game version {{gameVersion}}.",
+      "checking_ll_state": "Checking LeviLamina status…",
+      "mapping_unavailable_blocked_hint": "Compatibility information for LeviLamina and this game version is unavailable, so installation is blocked to avoid installing the wrong package.",
+      "ll_missing_redirect_hint": "LeviLamina is not installed for this instance. Clicking Go to Loader will open the Loader tab in Instance Settings so you can install it manually first.",
+      "ll_missing_redirect_to_loader": "LeviLamina is not installed. Redirecting to the Loader tab in Instance Settings.",
+      "ll_installed_incompatible_hint": "Installed LeviLamina version {{installedVersion}} is incompatible with this package. Please adjust LeviLamina manually first.",
+      "action_failed": "Operation failed: {{error}}",
+      "tab_label": "Versions",
+      "table_aria_label": "Package files table",
+      "install_success": "Installation completed successfully",
+      "upgrade_success": "Upgrade completed successfully",
+      "downgrade_success": "Downgrade completed successfully",
+      "reinstall_success": "Reinstallation completed successfully",
+      "current_installed_version_label": "Current installed version",
+      "checking_current_installed_version": "Checking currently installed version…",
+      "prerelease": "Pre-release",
+      "no_client_variant": "This mod has no variant for the client on {{platform}}, so LeviLauncher cannot install it."
+    },
+    "guide": {
+      "open_button": "Developer Guide",
+      "title": "LeviMC Mods Developer Guide",
+      "description": "If you want your mod to appear on LeviLauncher's LeviMC Mods page, publish it with a lip.toml as described in the documentation.",
+      "manifest_hint": "LeviLauncher lists a mod when the lip.toml of its latest version has an entry with side = \"client\" and platform = \"win-x64\", and installs the variant chosen for them: \"client\" first, then the default variant \"\", then the others by name.",
+      "variant_hint": "Add one entry for each side and platform the mod supports, e.g. a [[variants.\"\"]] entry with side = \"client\" and platform = \"win-x64\" next to the server's entry. With recommended tags such as \"library\" or \"economy\" in [info] tags, the mod shows up under those filters.",
+      "docs_button": "View Full Spec",
+      "close_button": "Close"
+    },
+    "title": "LeviMC Mods",
+    "sort_options": {
+      "relevance": "Relevance",
+      "stars": "Stars",
+      "updated": "Updated",
+      "newest": "Newest"
+    },
+    "filters": {
+      "title": "Filters",
+      "title_count": "Filters ({{count}})",
+      "clear": "Clear all filters",
+      "active": "Active filters",
+      "tags": "Tags",
+      "other_tags": "Other tags",
+      "license": "License",
+      "dependencies": "Dependencies",
+      "exclude": "Exclude {{label}}",
+      "not_label": "not {{label}}",
+      "remove": "Remove filter: {{label}}",
+      "show_more": "Show {{count}} more",
+      "show_fewer": "Show fewer",
+      "search_tags": "Search tags…",
+      "license_ids": "{{family}} licenses",
+      "depends_on": "Depends on {{name}}",
+      "more_by_owner": "More by {{owner}}",
+      "more_tags": "{{count}} more"
+    },
+    "tags": {
+      "library": "Library / API",
+      "utility": "Utility",
+      "management": "Server management",
+      "game-mechanics": "Game mechanics",
+      "adventure": "Content & adventure",
+      "visual": "Visual & HUD",
+      "economy": "Economy",
+      "teleport": "Teleport",
+      "anticheat": "Anti-cheat",
+      "optimization": "Optimization",
+      "bugfix": "Bug fixes",
+      "technology": "Technical & redstone",
+      "protocol": "Protocol & multi-version"
+    },
+    "license": {
+      "permissive": "Permissive",
+      "weak-copyleft": "Weak copyleft",
+      "copyleft": "Copyleft",
+      "other": "Other",
+      "none": "No license"
+    },
+    "variant_default": "Default",
+    "mod_id": "Mod ID",
+    "by_author_inline": "by {{author}}",
+    "package_details_aria_label": "Package Details",
+    "task_console": {
+      "title_install": "Installing",
+      "title_upgrade": "Upgrading",
+      "title_downgrade": "Downgrading",
+      "title_reinstall": "Reinstalling",
+      "title_update": "Updating",
+      "title_uninstall": "Uninstalling",
+      "title_generic": "Package Task",
+      "status_running": "Running",
+      "status_success": "Success",
+      "status_failed": "Failed",
+      "target_label": "Target",
+      "progress_label": "Progress",
+      "log_title": "Log Output",
+      "no_output": "No output yet",
+      "waiting_start": "Waiting for the package manager…",
+      "copy_logs": "Copy Logs",
+      "copy_success": "Logs copied",
+      "close": "Close",
+      "stage_install_pkg": "Installing target package",
+      "stage_fallback_delete": "Package uninstall is unavailable; removing the folder instead"
+    },
+    "task_progress": {
+      "stage_task": "Applying packages",
+      "stage_resolve": "Resolving packages",
+      "stage_solve": "Resolving dependencies",
+      "stage_git_fetch": "Fetching from Git",
+      "stage_download": "Downloading",
+      "stage_extract": "Extracting",
+      "stage_place": "Copying files",
+      "stage_scripts": "Running scripts",
+      "stage_remove": "Removing files",
+      "stage_cache_clean": "Deleting cache",
+      "stage_generic": "Working",
+      "unit_files": "Files",
+      "unit_objects": "Objects",
+      "unit_blobs": "Blobs",
+      "unit_packages": "Packages",
+      "unit_commands": "Commands",
+      "unit_manifests": "Manifests read",
+      "amount": "{{unit}}: {{current}} / {{total}}",
+      "amount_unknown": "{{unit}}: {{current}}",
+      "outer": "Item {{current}} of {{total}}",
+      "show_log": "Show log",
+      "hide_log": "Hide log"
+    },
+    "package": {
+      "confirm_install_title": "Confirm Installation",
+      "confirm_install_body": "Are you sure you want to {{action}} {{package}} {{version}} for {{instance}}?"
+    }
+  },
+  "server": {
+    "offline": "Offline or unreachable",
+    "players": "Online Players",
+    "delay": "Latency",
+    "online": "Online",
+    "version": "Version"
+  },
+  "installpage": {
+    "error": {
+      "dll_dependency_missing": "Visual C++ Runtime missing",
+      "name_required": "Name is required",
+      "msixvc_not_specified": "Installer package not specified",
+      "unknown": "Unknown error",
+      "nh_err_unknown": "Unknown error",
+      "nh_err_exception": "The installer stopped unexpectedly. Please try again.",
+      "nh_err_invalid_params": "The installer received invalid settings. Please try again.",
+      "nh_err_key_not_found": "Game installer package validation failed. Please delete the installer and retry.",
+      "nh_err_unauthorized_caller": "Please make sure the launcher exe name has not been changed (LeviLauncher.exe)",
+      "nh_err_pipe_open_failed": "Could not track installation progress. Please try again.",
+      "nh_err_input_not_found": "The installer file was not found. Download it again.",
+      "nh_err_output_dir_invalid": "The install location cannot be used. Choose another folder.",
+      "nh_err_parse_failed": "The installer file could not be read. Download it again.",
+      "nh_err_extract_failed": "The installer file could not be extracted. Download it again."
+    }
+  },
+  "analytics": {
+    "prompt": {
+      "title": "Help improve LeviLauncher?",
+      "body": "With your permission, LeviLauncher uses Google Analytics to measure launcher page visits and basic device information to improve features and UI. Google Analytics uses cookies to recognize visits. We do not send account details, game data, or local file paths. You can turn this off anytime in Settings > Privacy.",
+      "enable": "Allow and Enable",
+      "disable": "Not Now",
+      "google_analytics_terms": "Google Analytics Terms",
+      "google_privacy": "Google Privacy Policy"
+    }
+  },
+  "audit": {
+    "primary": {
+      "local_install": "Local install",
+      "download_minecraft": "Download Minecraft",
+      "select_instance_first": "Select an instance to use these actions.",
+      "clear_filters": "Clear search and filters",
+      "download": {
+        "verifying": "Verifying package integrity",
+        "cancel": "Cancel download",
+        "remove": "Remove record",
+        "remove_hint": "Remove record; the downloaded file is kept",
+        "progress": "Download progress for {{name}}",
+        "failed": "Could not load versions. Check your connection and try again.",
+        "stale": "Could not refresh versions. Showing the saved list.",
+        "no_matches": "No versions match your search or filters."
+      },
+      "instances": {
+        "failed": "Could not load instances. Try again.",
+        "empty": "No instances installed yet",
+        "empty_description": "Download Minecraft or import a local installer to create your first instance.",
+        "no_matches": "No instances match your search or filters.",
+        "settings": "Settings for {{name}}"
+      },
+      "install": {
+        "failed": "Installation failed",
+        "copy_details": "Copy error details",
+        "copied": "Error details copied",
+        "copy_failed": "Could not copy. Select and copy the error text above.",
+        "go_launch": "Select and go to launch"
+      },
+      "onboarding": {
+        "keep_current": "Continue with current directory"
+      },
+      "clear_search": "Clear search"
+    },
+    "mods": {
+      "name_required": "Enter a mod name before importing.",
+      "clear_search": "Clear search",
+      "clear_filters": "Clear filters",
+      "no_filtered_results": "No installed mods match the current search or filters.",
+      "more_actions": "More actions for {{name}}",
+      "view_details": "View details for {{name}}",
+      "copy_project_link": "Copy project link",
+      "link_copied": "Project link copied",
+      "copy_failed": "Could not copy the link. Please try again.",
+      "project_page": "Open project page",
+      "detail_load_failed": "Could not load this project. Check your connection and try again.",
+      "description_load_failed": "Could not load the description. The project and files are still available.",
+      "files_load_failed": "Could not load the files. Please try again.",
+      "catalog_load_failed": "Could not load the package list. Check your connection and try again.",
+      "install_file": "Install {{name}}",
+      "path_save_success": "Storage path saved",
+      "path_reset_success": "Default storage path restored",
+      "path_save_failed": "Could not update the storage path: {{message}}",
+      "close_update_window": "Close update window",
+      "update_recovery": "Close this update window, then reopen LeviLauncher and check for updates again. If the problem persists, download the latest installer from the official project page.",
+      "theme_color": "{{name}} ({{hex}})",
+      "custom_color": "Custom theme color",
+      "github": "Open LiteLDev on GitHub",
+      "discord": "Join the Discord community",
+      "colors": {
+        "emerald": "Emerald",
+        "blue": "Blue",
+        "violet": "Violet",
+        "amber": "Amber",
+        "pink": "Pink",
+        "cyan": "Cyan",
+        "win_yellow": "Windows yellow",
+        "win_orange": "Windows orange",
+        "win_red": "Windows red",
+        "win_blue": "Windows blue",
+        "win_green": "Windows green",
+        "win_purple": "Windows purple",
+        "win_teal": "Windows teal",
+        "win_pink_red": "Windows pink red",
+        "win_light_orange": "Light orange",
+        "win_orange_red": "Orange red",
+        "win_red_orange": "Red orange",
+        "win_light_red": "Light red",
+        "win_bright_red": "Bright red",
+        "win_deep_red": "Deep red",
+        "win_rose": "Rose",
+        "win_dark_rose": "Dark rose",
+        "win_magenta": "Magenta",
+        "win_dark_magenta": "Dark magenta",
+        "win_orchid": "Orchid",
+        "win_dark_orchid": "Dark orchid",
+        "win_dark_blue": "Dark blue",
+        "win_light_purple": "Light purple",
+        "win_medium_purple": "Medium purple",
+        "win_dark_purple": "Dark purple",
+        "win_light_magenta": "Light magenta",
+        "win_deep_purple": "Deep purple",
+        "win_dark_teal": "Dark teal",
+        "win_cyan": "Windows cyan",
+        "win_dark_cyan": "Dark cyan",
+        "win_green_blue": "Green blue",
+        "win_dark_green_blue": "Dark green blue",
+        "win_light_green": "Light green",
+        "win_gray": "Gray",
+        "win_dark_gray": "Dark gray",
+        "win_blue_gray": "Blue gray",
+        "win_dark_blue_gray": "Dark blue gray",
+        "win_green_gray": "Green gray",
+        "win_dark_green_gray": "Dark green gray",
+        "win_olive": "Olive",
+        "win_dark_green": "Dark green",
+        "win_medium_gray": "Medium gray",
+        "win_darker_gray": "Charcoal gray",
+        "win_slate_gray": "Slate gray"
+      },
+      "color_preview": "Color preview: {{hex}}",
+      "invalid_hex": "Enter six hexadecimal digits, for example #10B981.",
+      "invalid_rgb": "Enter a whole number from 0 to 255.",
+      "rgb_red": "Red (R)",
+      "rgb_green": "Green (G)",
+      "rgb_blue": "Blue (B)"
+    },
+    "usability": {
+      "process_all": "all {{count}} Minecraft processes",
+      "process_confirm": "End Minecraft processes?",
+      "process_warning": "This will forcibly end {{target}}. Unsaved game progress may be lost. Continue?",
+      "process_success": "Minecraft processes ended.",
+      "process_failed": "The process operation could not be completed: {{message}}",
+      "continue_editing": "Continue editing",
+      "discard_leave": "Discard and leave",
+      "start_using": "Start using LeviLauncher",
+      "root_load_failed": "The current content folder could not be verified. Retry, or choose a writable folder and apply it before continuing.",
+      "content_load_failed": "Could not load this content. Please try again.",
+      "worlds_partial": "Information for {{count}} worlds could not be read. These folders are missing from the list:",
+      "choose_player": "Select a player first. If none are available, create or sign in to a player profile in the game.",
+      "appearance_theme": "Theme and colors",
+      "appearance_layout": "Layout and motion",
+      "appearance_wallpaper": "Wallpaper",
+      "appearance_material": "Materials and readability",
+      "search_settings": "Search settings",
+      "search_count": "{{count}} settings sections found",
+      "browse_downloads": "Browse downloads",
+      "download_filters": "Filter download tasks",
+      "download_all": "All tasks",
+      "download_active": "In progress",
+      "download_done": "Completed",
+      "download_failed": "Failed / cancelled",
+      "install_download": "Install this version",
+      "main_nav": "Main navigation",
+      "browse_content": "Browse content"
+    }
+  },
+  "uwp": {
+    "register_button": "Register",
+    "registering": "Registering…",
+    "unregistering": "Unregistering…",
+    "launching": "Launching…",
+    "local_installer": "Choose a local installer",
+    "package_type": "Game package type",
+    "beta": "Beta",
+    "install_description": "Installs a Microsoft Store (UWP) game package and launches it through Windows app registration. Instance isolation, the console, and compatible native DLL mods are supported.",
+    "isolation_min_version": "UWP instance isolation requires version {{version}} or later.",
+    "launch_options_description": "UWP x64 supports instance isolation and a console. Isolation stores local game data in the instance folder; existing shared data is not copied automatically. Games still launch through Windows app activation; launch arguments and environment variables are unavailable.",
+    "loader_description": "UWP x64 can load preload-native DLL mods compatible with the selected game version. Import them in mod management or place them in the instance's mods folder. Automatic LeviLamina installation is currently available only for supported GDK versions.",
+    "shared_content": "Non-isolated UWP instances share game content for the same Windows app",
+    "open_content_dir": "Open UWP content folder",
+    "not_specified": "Choose a UWP installer or download this version first.",
+    "resolving_download": "Resolving…"
+  },
+  "troubleshoot": {
+    "causes_title": "Possible causes",
+    "steps_title": "How to fix it",
+    "open_faq": "Read more in the FAQ",
+    "open_faq_index": "Browse the FAQ",
+    "learn_more": "Learn more",
+    "how_to_fix": "Possible causes and fixes",
+    "action_failed": "Could not open it",
+    "action_failed_body": "Windows could not open the link or settings page.",
+    "installer_started": "Installer started",
+    "installer_started_body": "Follow the Windows prompts. Run diagnostics again when it finishes.",
+    "developer_mode_enabled": "Developer Mode is on",
+    "developer_mode_failed": "Developer Mode was not turned on",
+    "developer_mode_failed_body": "The administrator prompt was declined or blocked. Turn it on in Settings > System > For developers.",
+    "download_failed_title": "Download failed",
+    "download_start_failed_title": "Could not start the download",
+    "download_failed_hint": "The Download manager shows possible causes and a diagnostics button.",
+    "version_list_failed_hint": "The version list comes from GitHub. If this keeps failing, turn on “Use mirror sources” in Settings or run diagnostics.",
+    "action": {
+      "diagnose": "Run diagnostics",
+      "install_vcruntime": "Install Visual C++ runtime",
+      "install_gameinput": "Install GameInput",
+      "open_gaming_services": "Get Gaming Services",
+      "open_minecraft_store": "Open Minecraft in the Store",
+      "open_preview_store": "Get Minecraft Preview",
+      "open_buy": "Buy Minecraft",
+      "open_devices": "Manage devices",
+      "open_orders": "Order history",
+      "enable_developer_mode": "Turn on Developer Mode",
+      "open_developer_settings": "Open developer settings",
+      "open_proxy_settings": "Open proxy settings",
+      "open_date_settings": "Open date & time settings",
+      "open_region_settings": "Open region settings",
+      "open_apps_settings": "Open installed apps",
+      "open_storage_settings": "Open storage settings",
+      "open_mirror_settings": "Open package management settings",
+      "open_wine_settings": "Open Wine settings",
+      "open_data_settings": "Open data folder settings",
+      "open_process_settings": "Open running processes",
+      "open_update_settings": "Open update settings",
+      "open_download_page": "Go to the Download page",
+      "open_account": "Open account menu",
+      "open_logs": "Open logs folder",
+      "open_releases": "Open GitHub Releases"
+    },
+    "license": {
+      "preview_only": {
+        "title": "Release is not available on this account, but Preview is",
+        "body": "Microsoft refused this account's Release license while Preview is licensed. Usually the game was bought on another Microsoft account, the purchase was refunded or came from a Game Pass subscription that ended, or the account reached its limit of 10 devices. Check your Microsoft Store library and order history, remove devices you no longer use, then refresh.",
+        "banner": "Release versions will fail to download or install with this account; Preview versions work."
+      },
+      "release_only": {
+        "title": "Preview is not available on this account",
+        "body": "Release is licensed, but Preview needs its own license: get “Minecraft Preview” once from the Microsoft Store or Xbox app with this account. In mainland China, first set Windows' region to another country, because the Store does not offer Preview there.",
+        "banner": "Release versions can be installed; Preview versions will fail until this account gets the Preview license."
+      },
+      "trial": {
+        "title": "Only a trial license",
+        "body": "Microsoft granted only a trial license. Usually the account does not own the full game, the full game is on another account, or the account reached its limit of 10 devices.",
+        "banner": "Installing game versions will fail until this account has a full license."
+      },
+      "none": {
+        "title": "This account does not own Minecraft for Windows",
+        "body": "Neither Release nor Preview is licensed. Sign in with the Microsoft account that bought Minecraft for Windows (signing in to Xbox inside the game is not enough), or buy it.",
+        "banner": "Downloading and installing game versions needs an account that owns Minecraft for Windows."
+      },
+      "error": {
+        "title": "Licenses could not be checked",
+        "body": "The launcher could not reach Microsoft to check the licenses. A proxy, VPN, “network accelerator” or a wrong system clock is the usual cause. Run diagnostics to find out."
+      },
+      "partial_error": {
+        "title": "One license could not be checked",
+        "body": "The license check for one channel failed (network or Microsoft service). Refresh to try again, and run diagnostics if it keeps failing."
+      },
+      "signed_out": {
+        "title": "Not signed in",
+        "banner": "Sign in with the Microsoft account that owns Minecraft to download and install game versions."
+      },
+      "unreachable": {
+        "title": "Cannot reach Xbox Live",
+        "body": "Your account is still selected, but the launcher could not reach Xbox Live to confirm it, so downloads and license checks will fail. This is usually caused by a proxy, VPN, firewall or “network accelerator”, or a wrong system clock. Run diagnostics to find out which.",
+        "banner": "Your account is still selected, but Xbox Live cannot be reached, so game versions cannot be downloaded right now. Run diagnostics to find out why.",
+        "other_account": "Using a different account?"
+      }
+    },
+    "guide": {
+      "launch_game": {
+        "cause": {
+          "components": "A component the game needs is missing or damaged: the Visual C++ runtime, or for the GDK edition GameInput and Microsoft Gaming Services.",
+          "first_run": "Minecraft has never been installed and started from the Microsoft Store or Xbox app on this PC (common after reinstalling Windows), so the system components it relies on were never set up.",
+          "stale_login": "After a long break, the Xbox sign-in data the game keeps has expired; starting the official game once refreshes it.",
+          "mods": "A mod, add-on, resource pack or shader does not work with this game version (if it only happens with mods).",
+          "graphics": "The graphics driver is outdated or damaged, or an overlay or frame-generation tool interferes with the game.",
+          "outdated": "The launcher itself is outdated."
+        },
+        "step": {
+          "diagnose": "Run diagnostics to check the runtimes, Gaming Services and this instance's files.",
+          "components": "Install whatever diagnostics reports missing. Gaming Services must come from the Microsoft Store.",
+          "official_once": "Install Minecraft from the Microsoft Store or Xbox app once and start it successfully, then try again. This is the most common fix; you can uninstall the Store copy afterwards.",
+          "proxy": "If you use a proxy, turn it off (or set microsoft.com and xboxlive.com to direct) while the Store installs components.",
+          "clean_instance": "Try an instance without mods or LeviLamina. If that starts, turn your mods back on one at a time to find the one that fails.",
+          "graphics": "Update or reinstall the graphics driver, and turn off overlays and frame generation.",
+          "report": "Still failing? Update the launcher, reinstall the instance, and report the problem on GitHub with the launcher log."
+        }
+      },
+      "game_running": {
+        "cause": {
+          "still_running": "This instance is still running, possibly minimized or in the background.",
+          "stuck": "A previous game process did not exit properly and still holds the instance."
+        },
+        "step": {
+          "close": "Close the running game and try again, or use “Force Launch” to start another copy (GDK only).",
+          "end_process": "End leftover game processes in Settings > Others > Process Manager."
+        }
+      },
+      "game_files": {
+        "cause": {
+          "moved": "The instance folder was moved, renamed or deleted, or the data folder location changed.",
+          "antivirus": "Antivirus software quarantined the game executable.",
+          "incomplete": "The installation did not finish."
+        },
+        "step": {
+          "diagnose": "Run diagnostics to see which file is missing.",
+          "antivirus": "Look in your antivirus quarantine, restore the game files, and add the launcher's data folder to its exclusions.",
+          "reinstall": "Reinstall the instance: download the same version again and install it."
+        }
+      },
+      "launch_window": {
+        "cause": {
+          "loading": "The game is still loading; the first start after installing, or with many mods, can take a while.",
+          "mods": "A mod is stuck while loading.",
+          "graphics": "The graphics driver cannot create the game window.",
+          "components": "A runtime or Gaming Services is missing."
+        },
+        "step": {
+          "wait": "Wait a minute and check whether the game window appears.",
+          "diagnose": "Run diagnostics to check the runtimes and this instance.",
+          "clean_instance": "Try without mods to see whether one of them hangs.",
+          "graphics": "Update the graphics driver.",
+          "logs": "Check the game logs: crash logs are in logs/crash inside the instance folder."
+        }
+      },
+      "write_access": {
+        "cause": {
+          "in_use": "A file is in use by the running game or another program.",
+          "protected": "The folder is protected: Program Files, a system folder, or a folder guarded by Controlled folder access.",
+          "antivirus": "Antivirus software is scanning or blocking the files.",
+          "disk": "The disk is full.",
+          "path": "The path contains non-English characters or is too long."
+        },
+        "step": {
+          "close_game": "Close the game and any program using the instance folder; end leftover game processes in Settings > Others.",
+          "data_folder": "Use a data folder outside Program Files with an English-only path (Settings > Basic Settings).",
+          "antivirus": "Allow the launcher in your antivirus and in Windows Security > Ransomware protection (Controlled folder access).",
+          "disk": "Free some disk space.",
+          "diagnose": "Run diagnostics to check the data folder, disk space and paths."
+        }
+      },
+      "license_not_entitled": {
+        "cause": {
+          "not_owned": "The signed-in Microsoft account does not own Minecraft for Windows ({{channel}}).",
+          "other_account": "The game was bought on a different Microsoft account than the one signed in to the launcher.",
+          "xbox_only": "Signing in to Xbox inside the game is not owning the PC version: Minecraft for Windows must be bought for this account.",
+          "preview_separate": "Preview needs its own license: get “Minecraft Preview” once from the Microsoft Store or Xbox app with this account.",
+          "region": "The Store does not offer Preview when Windows' region is mainland China; it then shows only the Education Edition.",
+          "device_limit": "A Microsoft account can use Store games on at most 10 devices, and the launcher counts as one. Over the limit, licenses are refused.",
+          "refund": "The purchase was refunded, or it came from a Game Pass subscription that has ended."
+        },
+        "step": {
+          "check_account": "Open the account menu (top right) to see which channels this account owns, and switch to the account that bought the game.",
+          "diagnose": "Run the account diagnostics to check both licenses again online.",
+          "buy": "If this account does not own the game, buy Minecraft for Windows.",
+          "preview": "For Preview: get Minecraft Preview from the Microsoft Store once.",
+          "region": "For Preview in mainland China: set Windows' Country or region to another region (Settings > Time & language > Language & region). Your account does not change.",
+          "devices": "Remove devices you no longer use from your Microsoft account, then try again."
+        }
+      },
+      "license_trial": {
+        "cause": {
+          "not_owned": "This account owns only the trial of the game.",
+          "other_account": "The full game was bought on a different Microsoft account.",
+          "device_limit": "The account reached its limit of 10 devices for Store games, so only a trial license was issued.",
+          "game_pass": "A Game Pass subscription that included the game has ended."
+        },
+        "step": {
+          "check_account": "Open the account menu and sign in with the account that owns the full game.",
+          "devices": "Remove unused devices from your Microsoft account.",
+          "official_once": "Start the game once from the Microsoft Store or Xbox app to refresh the license.",
+          "diagnose": "Run the account diagnostics to check the licenses again."
+        }
+      },
+      "license_network": {
+        "cause": {
+          "network": "Microsoft's sign-in or licensing servers cannot be reached from this network.",
+          "proxy": "A proxy, VPN or “network accelerator” blocks or alters the connection to Microsoft.",
+          "clock": "The system clock is wrong, so Microsoft rejects the request.",
+          "service": "Microsoft's service is temporarily unavailable."
+        },
+        "step": {
+          "diagnose": "Run diagnostics to test the connection to Microsoft and the system clock.",
+          "proxy": "Turn off the proxy or accelerator, or set microsoft.com, live.com and xboxlive.com to direct.",
+          "clock": "Turn on “Set time automatically” in Windows Settings > Time & language.",
+          "retry": "Wait a few minutes and try again."
+        }
+      },
+      "license_package": {
+        "cause": {
+          "mismatch": "The installer package does not match the license Microsoft issued (for example another channel or an unusual build).",
+          "catalog": "The Microsoft Store catalog returned an unexpected product."
+        },
+        "step": {
+          "refresh": "Refresh the version list and download a standard Release or Preview version.",
+          "check_account": "Check that the signed-in account owns this channel."
+        }
+      },
+      "account": {
+        "cause": {
+          "changed": "The Microsoft account changed since the launcher last checked it.",
+          "elevated": "The launcher runs as administrator, so Windows skips the account picker and keeps the previous account.",
+          "cache": "The account data the launcher saved cannot be read."
+        },
+        "step": {
+          "sign_in": "Open the account menu and sign in again, or switch account.",
+          "not_admin": "If the launcher runs as administrator, restart it normally.",
+          "retry": "Then try again."
+        }
+      },
+      "download_network": {
+        "cause": {
+          "blocked": "The download server cannot be reached reliably from this network.",
+          "proxy": "Your proxy app runs but is not set as the Windows system proxy, so the launcher does not use it.",
+          "stale_proxy": "A proxy app was closed without restoring the Windows proxy settings, so connections go to a proxy that no longer exists.",
+          "mirror": "“Use mirror sources” is off and GitHub is slow or blocked on this network (common in mainland China).",
+          "disk": "The disk ran out of space during the download."
+        },
+        "step": {
+          "diagnose": "Run diagnostics to test each server, the proxy and disk space.",
+          "mirror": "Turn on “Use mirror sources” in Settings > Package Management.",
+          "source": "On the Download page, run the speed test and switch to another download source.",
+          "proxy": "If you use a proxy, turn on its system proxy (or TUN) mode; if you don't, make sure the Windows proxy is off.",
+          "local": "You can also download the installer elsewhere and import it as a local package."
+        }
+      },
+      "version_list": {
+        "cause": {
+          "github": "The version list is hosted on GitHub, which is slow or blocked on this network.",
+          "mirror": "“Use mirror sources” is off.",
+          "proxy": "The Windows proxy points to a proxy that does not answer."
+        },
+        "step": {
+          "diagnose": "Run diagnostics to test GitHub, the mirrors and the proxy.",
+          "mirror": "Turn on “Use mirror sources” in Settings > Package Management.",
+          "retry": "Retry; once the list loads it is cached."
+        }
+      },
+      "lip_install": {
+        "cause": {
+          "github": "GitHub, where LeviLamina and mods are downloaded from, cannot be reached reliably.",
+          "proxy_down": "The GitHub proxy set in Settings > Package Management is down or entered incorrectly.",
+          "stale_proxy": "The Windows proxy points to a proxy app that is no longer running (the log then shows 127.0.0.1).",
+          "cache": "A damaged file in the download cache.",
+          "timeout": "The connection is too slow, so the download timed out (“context deadline exceeded”)."
+        },
+        "step": {
+          "diagnose": "Run diagnostics to test GitHub, the GitHub proxy and the Windows proxy.",
+          "mirror": "In Settings > Package Management, turn on “Use mirror sources” and try another GitHub proxy preset.",
+          "clear_cache": "Use “Clean Cache” there and retry. Installing LeviLamina takes about a minute.",
+          "system_proxy": "If diagnostics reports an unreachable proxy, turn the proxy off in Windows Settings > Network & internet > Proxy.",
+          "dns": "Retry a few times, or switch to another DNS server.",
+          "later": "To play now, install the game without LeviLamina and add it later from the instance settings."
+        }
+      },
+      "lip_package": {
+        "cause": {
+          "unsupported": "The mod does not support this game version or platform.",
+          "conflict": "Its dependencies conflict with mods already installed.",
+          "network": "The download failed."
+        },
+        "step": {
+          "version": "Pick a mod version made for your game version, or use an instance with a supported game version.",
+          "conflict": "Update or remove the conflicting mods.",
+          "diagnose": "Run diagnostics if the download itself fails."
+        }
+      },
+      "ll_unsupported": {
+        "cause": {
+          "new_version": "This game version is newer than LeviLamina's version list; support is added after LeviLamina is released for it.",
+          "preview": "LeviLamina usually supports Release versions only.",
+          "uwp": "LeviLamina is installed automatically only into GDK instances."
+        },
+        "step": {
+          "wait": "Wait for the version list to be updated (no launcher update is needed), then refresh.",
+          "supported_version": "Or install a game version that LeviLamina supports.",
+          "manual": "Advanced: install a matching LeviLamina manually with lip."
+        }
+      },
+      "vcruntime": {
+        "cause": {
+          "missing": "The Microsoft Visual C++ 2015–2022 runtime (x64) is not installed.",
+          "damaged": "It is installed but damaged, or only leftovers in the registry remain.",
+          "system": "Windows itself lacks system libraries (some stripped-down Windows builds)."
+        },
+        "step": {
+          "install": "Install the Visual C++ runtime (needs administrator approval).",
+          "official_once": "If that is not enough, install Minecraft from the Microsoft Store once; it installs the system libraries the game needs.",
+          "repair": "If even the Store version does not run, repair Windows (sfc /scannow) or reinstall it."
+        }
+      },
+      "developer_mode": {
+        "cause": {
+          "off": "Windows Developer Mode is off. Windows only registers UWP instances (and “Register to system”) with it on.",
+          "policy": "On a work or school PC, a policy set by the administrator may block Developer Mode."
+        },
+        "step": {
+          "enable": "Turn on Developer Mode (needs administrator approval).",
+          "settings": "Or turn it on yourself in Settings > System > For developers.",
+          "policy": "If the switch is greyed out, ask the PC's administrator."
+        }
+      },
+      "uwp_conflict": {
+        "cause": {
+          "store": "Minecraft from the Microsoft Store is installed and holds the app registration.",
+          "other_launcher": "Another launcher registered its own copy of Minecraft."
+        },
+        "step": {
+          "backup": "Back up your worlds first (the com.mojang folder).",
+          "uninstall": "Uninstall the other copy in Settings > Apps, or unregister it in the launcher that registered it.",
+          "retry": "Then register or launch this instance again."
+        }
+      },
+      "uwp_register": {
+        "cause": {
+          "developer_mode": "Developer Mode is off.",
+          "conflict": "Another Minecraft registration conflicts with this one.",
+          "dependency": "A framework package the game needs (such as Microsoft.VCLibs) is missing.",
+          "folder": "The instance folder is not writable, or its path has non-English characters.",
+          "deployment": "Windows' app deployment service failed; a restart often fixes it."
+        },
+        "step": {
+          "diagnose": "Run diagnostics to check Developer Mode, the current registration and the instance.",
+          "developer_mode": "Make sure Developer Mode is on.",
+          "conflict": "Remove conflicting Minecraft installations in Settings > Apps (back up worlds first).",
+          "restart": "Restart Windows and try again.",
+          "logs": "If it still fails, send the launcher log with the error details."
+        }
+      },
+      "uwp_dependency": {
+        "cause": {
+          "framework": "A Windows framework package this game version requires (for example Microsoft.VCLibs or Microsoft.NET.Native) is missing.",
+          "old_windows": "Windows is too old for that framework version."
+        },
+        "step": {
+          "store": "Install Minecraft from the Microsoft Store once; it installs these frameworks.",
+          "windows_update": "Install Windows updates.",
+          "other_version": "Or choose another game version."
+        }
+      },
+      "uwp_system_version": {
+        "cause": {
+          "old_windows": "This game version needs a newer Windows version than this PC has.",
+          "locked": "Windows cannot be updated here (for example on a rented cloud PC)."
+        },
+        "step": {
+          "other_version": "Choose a game version that works with this Windows version.",
+          "windows_update": "Or update Windows."
+        }
+      },
+      "package_corrupt": {
+        "cause": {
+          "incomplete": "The download was interrupted or is incomplete.",
+          "disk": "Disk errors or too little free space while writing.",
+          "antivirus": "Antivirus software changed or locked the file.",
+          "format": "The file is not a complete Windows x64 Minecraft package."
+        },
+        "step": {
+          "redownload": "Delete the downloaded package on the Download page and download it again.",
+          "disk": "Free some disk space.",
+          "antivirus": "Pause antivirus scanning of the launcher's data folder while installing."
+        }
+      },
+      "install_failed": {
+        "cause": {
+          "vcruntime": "The Visual C++ runtime is missing or damaged (installing then crashes or leaves an empty folder).",
+          "disk": "Not enough free disk space.",
+          "path": "The data folder path contains non-English characters or is protected.",
+          "antivirus": "Antivirus software blocks the extraction.",
+          "license": "The account does not own this version."
+        },
+        "step": {
+          "diagnose": "Run diagnostics to check the account license, runtimes, disk space and network.",
+          "vcruntime": "Install the Visual C++ runtime.",
+          "path": "Use a data folder with an English-only path outside Program Files.",
+          "antivirus": "Allow the launcher in your antivirus.",
+          "report": "If it still fails, report it on GitHub with the launcher log."
+        }
+      },
+      "gaming_services": {
+        "cause": {
+          "missing": "Gaming Services is not installed. The GDK edition of Minecraft needs it.",
+          "ltsc": "LTSC and stripped-down Windows builds have no Microsoft Store, so it cannot be installed the usual way, and their Xbox services are often disabled.",
+          "broken": "It is installed but damaged, or its Windows service is disabled.",
+          "proxy": "A proxy can make the Microsoft Store hang while installing it."
+        },
+        "step": {
+          "store": "Install it from the Microsoft Store (button below), then come back and check again.",
+          "official_once": "Installing and starting Minecraft from the Store or Xbox app once also installs it.",
+          "ltsc": "On LTSC, see the FAQ for installing Gaming Services without the Store, and set the Xbox services to Automatic in services.msc.",
+          "diagnose": "Run diagnostics to see whether it is installed and its service enabled.",
+          "repair": "If it is installed but still reported missing, uninstall it, restart Windows and install it again from the Store.",
+          "ignore": "If you only use UWP instances, you can ignore this message."
+        }
+      },
+      "update_failed": {
+        "cause": {
+          "network": "The update could not be downloaded (GitHub or the mirror is unreachable).",
+          "permission": "The launcher's folder is not writable (for example under Program Files without administrator rights).",
+          "asset": "The release has no update package for this launcher (old versions must be updated by hand).",
+          "antivirus": "Antivirus software blocked replacing the launcher."
+        },
+        "step": {
+          "retry": "Close the launcher and start it again to retry.",
+          "mirror": "Turn on “Use mirror sources” in Settings > Package Management.",
+          "manual": "Download the latest version from GitHub Releases (or the official mirror) and install it over this one.",
+          "admin": "If the launcher is installed under Program Files, allow the administrator prompt when updating."
+        }
+      },
+      "migration": {
+        "cause": {
+          "running": "Minecraft is running and holds the game files.",
+          "locked": "Antivirus software or another program locks a game executable.",
+          "permission": "An instance folder is not writable."
+        },
+        "step": {
+          "close": "Close Minecraft (end leftover processes in Settings > Others).",
+          "retry": "Restart the launcher; it tries the migration again while it is still needed.",
+          "logs": "If it fails again, send the launcher log."
+        }
+      }
+    }
+  },
+  "diagnostics": {
+    "title_running": "Running diagnostics…",
+    "title_failed": "Diagnostics could not run",
+    "title_problems_one": "Found {{count}} problem",
+    "title_problems_other": "Found {{count}} problems",
+    "title_ok": "No problems found",
+    "scope_instance": "{{topic}} · {{instance}}",
+    "running_label": "Running checks",
+    "running_body": "Checking runtimes, Windows settings, network and account. This takes up to a minute and changes nothing on your PC.",
+    "running_body_mac": "Checking Wine, game runtimes, network access and account licenses. This takes up to a minute.",
+    "elapsed": "{{seconds}} s elapsed",
+    "failed_body": "The diagnostics could not run. Restart the launcher and try again.",
+    "no_problems_body": "Everything checked looks fine. If the problem continues, the FAQ covers more cases, and the launcher log helps when you report it.",
+    "no_problems_body_mac": "Diagnostics are complete. If the problem continues, you can open the launcher logs.",
+    "problems_heading": "Problems",
+    "notes_heading": "Worth knowing",
+    "passed_heading_one": "{{count}} check passed",
+    "passed_heading_other": "{{count}} checks passed",
+    "other_checks": "Other checks ({{count}})",
+    "caused_by_one": "Because of this, 1 more check did not pass:",
+    "caused_by_other": "Because of this, {{count}} more checks did not pass:",
+    "duration": "Finished in {{seconds}} s.",
+    "copy_report": "Copy report",
+    "copied": "Report copied",
+    "run_again": "Run again",
+    "clock_ahead": "ahead",
+    "clock_behind": "behind",
+    "status": {
+      "ok": "passed",
+      "info": "note",
+      "skip": "skipped",
+      "warn": "warning",
+      "fail": "problem"
+    },
+    "channel": {
+      "release": "Release",
+      "preview": "Preview",
+      "this": "this version"
+    },
+    "topic": {
+      "launch": "Launching a game",
+      "install": "Installing a game version",
+      "download": "Downloads",
+      "lip": "LeviLamina and mods",
+      "license": "Account and licenses",
+      "uwp": "UWP registration",
+      "full": "Full check"
+    },
+    "reason": {
+      "timeout": "The check did not finish in time."
+    },
+    "endpoint": {
+      "ok": "Reachable ({{latency}} s).",
+      "slow": "Reachable but slow ({{latency}} s); downloads from here may time out.",
+      "dns": "The server name could not be resolved (DNS). Check the network or DNS settings, or try another DNS server.",
+      "tls": "A secure connection could not be set up. Check the system clock, and turn off any proxy, “network accelerator” or security software that intercepts HTTPS.",
+      "timeout": "No answer within 8 seconds. The network or a firewall may be blocking it.",
+      "proxy": "The proxy failed the connection. Check the proxy app, or turn the system proxy off.",
+      "refused": "The connection was refused.",
+      "reset": "The connection was dropped. A firewall, proxy or unstable network may be interfering.",
+      "other": "Could not connect.",
+      "rate_limited": "The server is limiting requests (HTTP 429). Wait a few minutes.",
+      "server_error": "The server reported an error (HTTP {{http}}). This is on the server side; try again later.",
+      "http_error": "The server answered HTTP {{http}}; the file may have moved."
+    },
+    "check": {
+      "wine_rosetta": {
+        "title": "Rosetta 2",
+        "ok": "Rosetta 2 is available.",
+        "fail": "Rosetta 2 is unavailable. Run automatic installation in Wine settings."
+      },
+      "wine_runtime": {
+        "title": "Wine runtime",
+        "ok": "Found {{version}}. The selected container is initialized.",
+        "missing": "No executable Wine engine was found at the configured path.",
+        "prefix": "The selected Wine container is not initialized. Create or select an initialized container in Wine settings.",
+        "graphics": "The selected Wine runtime lacks D3DMetal. Select a compatible container or graphics backend in Wine settings.",
+        "invalid": "The Wine configuration is invalid. Check the engine and container in Wine settings.",
+        "unavailable": "The selected Wine engine did not report its version. Check the path or select a different engine.",
+        "skip_rosetta": "The engine check requires Rosetta 2.",
+        "fail": "The Wine check could not finish."
+      },
+      "wine_graphics": {
+        "title": "Wine graphics backend",
+        "info": "Configured backend: {{backend}}.",
+        "skip": "A valid Wine configuration is required to check the graphics backend."
+      },
+      "wine_vcruntime": {
+        "title": "Visual C++ runtime in Wine",
+        "ok": "Found in the selected container.",
+        "info": "Missing from the selected container. The launcher will install it when starting Minecraft.",
+        "skip": "A valid Wine configuration is required to check this dependency."
+      },
+      "wine_gameinput": {
+        "title": "GameInput in Wine",
+        "ok": "Found in the selected container.",
+        "info": "Missing from the selected container. The launcher will install it when starting Minecraft.",
+        "skip": "A valid Wine configuration is required to check this dependency."
+      },
+      "vcruntime": {
+        "title": "Visual C++ runtime",
+        "ok": "Installed.",
+        "missing": "The Microsoft Visual C++ 2015–2022 runtime (x64) is not installed. The game, LeviLamina and native mods need it, and installing a game version can crash without it."
+      },
+      "gameinput": {
+        "title": "GameInput",
+        "ok": "Installed.",
+        "missing": "Microsoft GameInput is not installed. The GDK edition of Minecraft needs it for input devices.",
+        "uwp": "Not needed by UWP instances."
+      },
+      "gaming_services": {
+        "title": "Microsoft Gaming Services",
+        "ok": "Installed and enabled.",
+        "missing": "Gaming Services is not installed. The GDK edition of Minecraft cannot start without it. Install it from the Microsoft Store; on LTSC or stripped-down Windows, see the FAQ for the manual installer.",
+        "disabled": "Gaming Services is installed but its Windows service is disabled. Open Services (services.msc), set “Gaming Services” to Automatic and restart Windows.",
+        "uwp": "Not needed by UWP instances."
+      },
+      "xbox_services": {
+        "title": "Xbox services",
+        "ok": "Not disabled.",
+        "disabled": "These Xbox services are disabled: {{services}}. LTSC and “optimized” Windows builds often disable them, which breaks Xbox sign-in and Gaming Services. In Services (services.msc), set them to Manual or Automatic.",
+        "uwp": "Not needed by UWP instances."
+      },
+      "developer_mode": {
+        "title": "Windows Developer Mode",
+        "ok": "On.",
+        "fail_off": "Developer Mode is off. Windows only registers UWP instances when it is on, so this instance cannot be launched or registered.",
+        "info_off": "Off. It is needed only for UWP instances and “Register to system”.",
+        "gdk": "Not needed to launch GDK instances."
+      },
+      "webview2": {
+        "title": "WebView2 runtime",
+        "ok": "Installed.",
+        "missing": "Missing; the launcher window installs it when it starts."
+      },
+      "data_root": {
+        "title": "Data folder",
+        "ok": "{{path}} is writable.",
+        "not_writable": "The launcher cannot write to {{path}}. Choose a data folder outside protected locations (such as Program Files) in Settings > Basic Settings, or check its permissions and Controlled folder access.",
+        "non_ascii": "The data folder {{path}} contains non-English characters. Some game components and mods fail on such paths; a path with only English letters and digits is safest.",
+        "unknown": "The data folder is not set."
+      },
+      "disk_space": {
+        "title": "Free disk space",
+        "ok": "{{free}} GB free on the drive of {{path}}.",
+        "low": "Only {{free}} GB is free on the drive of {{path}}. Installing a game version needs about 10 GB (the package plus the extracted game).",
+        "unknown": "Could not read the free space."
+      },
+      "appdata_link": {
+        "title": "Minecraft data folders",
+        "ok": "No links made by other tools were found.",
+        "link": "{{path}} is a symbolic link or junction, usually made by BedrockBoot or a similar tool. It conflicts with version isolation and can make worlds and mods seem lost or report insufficient storage. Turn off that tool's version isolation or remove the link (back up your worlds first)."
+      },
+      "elevation": {
+        "title": "Administrator rights",
+        "ok": "The launcher is not running as administrator.",
+        "warn_elevated": "The launcher is running as administrator. Windows then signs in without showing the account picker, so switching accounts seems to go back to the old one. Restart the launcher without administrator rights.",
+        "info_elevated": "The launcher is running as administrator."
+      },
+      "account": {
+        "title": "Microsoft account",
+        "ok": "Signed in.",
+        "signed_out": "No Microsoft account is signed in. Downloading and installing game versions needs the account that owns Minecraft.",
+        "unreachable": "An account is selected, but Xbox Live could not be reached to confirm it. This is a connection problem, not a sign-out: signing in again will not help until the connection works."
+      },
+      "license": {
+        "title": "Game licenses",
+        "summary": "Release: {{release_state}}; Preview: {{preview_state}}.",
+        "ok": "Both channels are licensed.",
+        "channel_authorized": "This account owns {{channel}}.",
+        "channel_not_entitled": "This account does not own {{channel}}.",
+        "channel_trial": "Microsoft granted only a trial license for {{channel}}.",
+        "channel_error": "The {{channel}} license could not be checked.",
+        "signed_out": "Sign in first.",
+        "unreachable": "Xbox Live could not be reached, so the licenses were not checked."
+      },
+      "proxy": {
+        "title": "Proxy",
+        "ok_none": "No proxy is set; the launcher connects directly.",
+        "info_manual": "Connections go through the Windows system proxy {{address}}, which answers. If downloads still fail, make sure the proxy app allows the launcher, or use its TUN mode.",
+        "info_env": "Connections go through the proxy from environment variables ({{address}}), which answers.",
+        "info_pac": "Windows uses a proxy setup script ({{pac}}); connections follow it.",
+        "info_auto": "Windows detects proxy settings automatically; connections follow them.",
+        "unreachable": "The proxy {{address}} set in Windows does not answer. This usually means a proxy app was closed without restoring the settings, so every connection fails (“connection to 127.0.0.1 failed”). Turn the proxy off in Windows Settings > Network & internet > Proxy, or start the proxy app.",
+        "unreachable_env": "The proxy {{address}} from the HTTP_PROXY / HTTPS_PROXY environment variables does not answer, so every connection fails. Start the proxy app, or delete those variables (search Windows for “Edit environment variables for your account”) and restart the launcher.",
+        "unknown": "Could not read the proxy settings."
+      },
+      "mirror": {
+        "title": "Mirror source",
+        "info_on": "“Use mirror sources” is on: GitHub downloads go through mirrors.",
+        "info_off": "“Use mirror sources” is off: GitHub is reached directly, which works on this network.",
+        "github_unreachable": "“Use mirror sources” is off, and GitHub cannot be reached quickly on this network. Turn it on in Settings > Package Management; version lists, LeviLamina and updates then go through mirrors."
+      },
+      "clock": {
+        "title": "System clock",
+        "ok": "The system clock is correct.",
+        "skew": "The system clock is {{skew}} min {{direction}}. A wrong clock breaks secure connections, Microsoft sign-in and license checks. Turn on “Set time automatically” in Windows Settings > Time & language.",
+        "no_server": "No server answered, so the clock could not be compared."
+      },
+      "ep_microsoft_auth": {
+        "title": "Microsoft sign-in (login.live.com)"
+      },
+      "ep_xbox_store": {
+        "title": "Microsoft Store catalog (licenses)"
+      },
+      "ep_xbox_packages": {
+        "title": "Xbox download service (game packages)"
+      },
+      "ep_version_db": {
+        "title": "Game version list (GitHub)"
+      },
+      "ep_github": {
+        "title": "GitHub (LeviLamina and mods)"
+      },
+      "ep_levimc": {
+        "title": "levimc.org (mod catalogue)"
+      },
+      "ep_github_proxy": {
+        "title": "GitHub proxy ({{proxy}})",
+        "inactive_ok": "Not in use (mirrors are off), but reachable: turning on “Use mirror sources” would work on this network.",
+        "inactive_fail": "Not in use, and not reachable on this network either."
+      },
+      "ep_ll_db": {
+        "title": "LeviLamina version list",
+        "ok": "Loaded ({{count}} game versions listed)."
+      },
+      "ll_support": {
+        "title": "LeviLamina support for this version",
+        "ok": "Game version {{version}} is supported (latest LeviLamina {{latest}}).",
+        "unsupported": "Game version {{version}} is not in LeviLamina's version list yet. Support for a new game version is added after LeviLamina is released for it; wait, or use a supported version.",
+        "uwp": "LeviLamina is installed automatically only into GDK instances.",
+        "db_unavailable": "The LeviLamina version list could not be loaded.",
+        "unknown_version": "The instance's game version is unknown."
+      },
+      "instance_files": {
+        "title": "Instance files",
+        "ok": "Found ({{type}} {{version}}).",
+        "dir_missing": "The instance folder {{path}} does not exist. It may have been moved or deleted, or the data folder changed.",
+        "manifest_missing": "AppxManifest.xml is missing from {{path}}; the instance is incomplete. Reinstall it.",
+        "exe_missing": "The game executable is missing ({{path}}). Antivirus software may have quarantined it, or the installation did not finish. Restore it from quarantine or reinstall the instance."
+      },
+      "instance_path": {
+        "title": "Instance path",
+        "ok": "The path is fine.",
+        "non_ascii": "The instance path {{path}} contains non-English characters. Some components and mods fail on such paths; rename the instance or move the data folder to an English-only path.",
+        "long": "The instance path is very long ({{path}}). Shorten the instance name or move the data folder closer to the drive root."
+      },
+      "instance_running": {
+        "title": "Running game",
+        "ok": "This instance is not running.",
+        "running": "This instance is running. Close the game (or end it in Settings > Others > Process Manager) before launching it again or changing its files."
+      },
+      "registration": {
+        "title": "Registration with Windows",
+        "ok_this": "This instance is the {{channel}} Minecraft app registered with Windows.",
+        "info_none": "No {{channel}} Minecraft app is registered with Windows. UWP instances are registered automatically when launched.",
+        "warn_other": "Windows has another {{channel}} Minecraft registered ({{path}}), such as the Microsoft Store version or one registered by another launcher. It can block this instance: back up your worlds, then uninstall it in Settings > Apps.",
+        "info_other": "Windows has another {{channel}} Minecraft registered ({{path}}). This only matters if you use “Register to system”."
+      }
+    }
+  },
+  "gameaccount": {
+    "title": "Minecraft sign-in",
+    "success": "Signed in to Minecraft",
+    "failed": "Game sign-in was not completed",
+    "expired": "Sign-in code expired",
+    "closed": "Game sign-in ended",
+    "waiting": "The Microsoft verification page is open. Confirm your account in the browser.",
+    "browser_error": "The browser could not be opened. Try the button below.",
+    "copy_error": "Could not copy the code. Select and copy it manually.",
+    "code": "Microsoft sign-in code",
+    "collapse": "Collapse sign-in notice",
+    "open": "Open verification",
+    "copy": "Copy code",
+    "copied": "Copied",
+    "keep_game_open": "Keep the game open while verifying",
+    "expires": "Code time remaining",
+    "return_to_game": "Verification is complete. Return to your game.",
+    "retry_in_game": "Return to the game and choose sign-in again."
+  }
+}
