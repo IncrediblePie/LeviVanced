@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Package
+  xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+  xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+  xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+  xmlns:desktop="http://schemas.microsoft.com/appx/manifest/desktop/windows10"
+  xmlns:desktop6="http://schemas.microsoft.com/appx/manifest/desktop/windows10/6"
+  IgnorableNamespaces="desktop6">
+  
+  <Identity 
+    Name="com.wails.myfirstapp3"
+    Publisher="CN=My Company"
+    Version="0.1.0.0" 
+    ProcessorArchitecture="x64" />
+  
+  <Properties>
+    <DisplayName>My Product</DisplayName>
+    <PublisherDisplayName>My Company</PublisherDisplayName>
+    <Description>My Product Description</Description>
+    <Logo>Assets\StoreLogo.png</Logo>
+    <!-- Write %APPDATA% and %LOCALAPPDATA% for real, not into the package's
+         private copy: instances, backups and accounts must survive an
+         uninstall and be visible to Explorer, lip and the game's
+         registration (internal/apppath/README.md). -->
+    <desktop6:FileSystemWriteVirtualization>disabled</desktop6:FileSystemWriteVirtualization>
+  </Properties>
+  
+  <Dependencies>
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.17763.0" MaxVersionTested="10.0.19041.0" />
+  </Dependencies>
+  
+  <Resources>
+    <Resource Language="en-us" />
+  </Resources>
+  
+  <Applications>
+    <Application Id="com.wails.myfirstapp3" Executable="myfirstapp3.exe" EntryPoint="Windows.FullTrustApplication">
+      <uap:VisualElements
+        DisplayName="My Product"
+        Description="My Product Description"
+        BackgroundColor="transparent"
+        Square150x150Logo="Assets\Square150x150Logo.png"
+        Square44x44Logo="Assets\Square44x44Logo.png">
+        <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" />
+        <uap:SplashScreen Image="Assets\SplashScreen.png" />
+      </uap:VisualElements>
+      
+      <Extensions>
+        <desktop:Extension Category="windows.fullTrustProcess" Executable="myfirstapp3.exe" />
+        <!-- levilauncher:// links; a full-trust app gets the link as its command-line argument. -->
+        <uap:Extension Category="windows.protocol">
+          <uap:Protocol Name="levilauncher">
+            <uap:DisplayName>LeviLauncher</uap:DisplayName>
+          </uap:Protocol>
+        </uap:Extension>
+        
+      </Extensions>
+    </Application>
+  </Applications>
+  
+  <Capabilities>
+    <rescap:Capability Name="runFullTrust" />
+    <rescap:Capability Name="unvirtualizedResources" />
+    
+  </Capabilities>
+</Package>

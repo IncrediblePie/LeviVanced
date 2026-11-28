@@ -1,0 +1,2613 @@
+{
+  "app": {
+    "administrator": "管理员",
+    "administrator_description": "当前以管理员权限运行，登录将直接使用 Windows 身份验证；如需选择账户，请以普通权限重新启动。",
+    "settings": "设置"
+  },
+  "nav": {
+    "versions": "实例列表",
+    "more": "更多",
+    "about": "关于",
+    "back": "返回",
+    "forward": "前进",
+    "breadcrumb": "面包屑导航",
+    "home": "首页",
+    "local_install": "本地安装",
+    "mods": "模组",
+    "mod_details": "模组详情",
+    "package_details": "包详情",
+    "updating": "启动器更新"
+  },
+  "theme": {
+    "toggle": "切换主题"
+  },
+  "launcherpage": {
+    "launch_button": "启动",
+    "content_manage": "内容管理",
+    "go_version_settings": "实例设置",
+    "manage_versions": "实例列表",
+    "search_versions": "搜索实例名称或游戏版本",
+    "open_exe_dir": "打开游戏安装目录",
+    "register_system_button": "注册到系统",
+    "registered_tip": "已注册",
+    "levilamina_update_available": "可更新",
+    "register": {
+      "installing": {
+        "title": "正在注册到系统",
+        "body": "正在进行系统注册，请稍候…"
+      },
+      "success": {
+        "title": "注册完成",
+        "body": "已成功注册到系统，你可以通过系统应用列表启动。"
+      },
+      "failed": {
+        "title": "注册失败",
+        "body": "注册过程中发生错误，请重试或检查环境。"
+      }
+    },
+    "delete": {
+      "complete": {
+        "title": "删除完成",
+        "content": "所选实例已成功删除！",
+        "close_button": "关闭"
+      },
+      "confirm": {
+        "title": "确认删除",
+        "content": "你确定要删除此实例吗？此操作无法撤销。"
+      }
+    },
+    "launch": {
+      "failed": {
+        "title": "启动错误",
+        "content": "请检查实例文件与依赖环境是否完整，并确认没有安装不兼容的模组、资源包或行为包后重试。",
+        "close_button": "关闭"
+      },
+      "force_run_button": "强制启动"
+    },
+    "currentVersion": "当前实例",
+    "vcruntime": {
+      "completing": {
+        "title": "正在修复游戏文件",
+        "body": "正在下载缺失的运行库文件，请稍候…"
+      },
+      "installing": {
+        "title": "正在安装 Visual C++ 运行库",
+        "body": "正在下载并安装 Microsoft Visual C++ 运行库，请稍候…",
+        "preparing": "正在准备下载…"
+      },
+      "missing": {
+        "title": "缺少 Visual C++ 运行库",
+        "body": "运行游戏需要 Microsoft Visual C++ 2015-2022 Redistributable (x64) 运行库。是否现在下载安装？",
+        "install_now": "立即安装"
+      }
+    },
+    "loader_migration": {
+      "title": "正在更新加载器",
+      "body": "正在将已安装的实例适配到新版 LeviLauncher 加载器。此操作只会执行一次，请稍候…",
+      "preparing": "正在准备更新…",
+      "failed": "将实例迁移到新模组加载方式的一次性操作失败了。实例本身未被改动。"
+    },
+    "mclaunch": {
+      "preparing": {
+        "title": "正在准备 Minecraft",
+        "vcruntime": "正在安装 Visual C++ 运行库…",
+        "gameinput": "正在安装 GameInput…",
+        "runtime": "正在准备 Wine 兼容组件…"
+      },
+      "loading": {
+        "title": "正在启动 Minecraft",
+        "body": "正在等待游戏窗口出现，请稍候…"
+      }
+    },
+    "shortcut": {
+      "create_button": "创建桌面快捷方式",
+      "success": {
+        "title": "快捷方式已创建",
+        "body": "已在桌面创建该实例的快捷方式。"
+      }
+    },
+    "gameinput": {
+      "installing": {
+        "title": "正在安装 GameInput",
+        "body": "正在下载并启动安装程序，请根据系统提示完成安装。",
+        "preparing": "正在准备下载…"
+      },
+      "missing": {
+        "title": "缺少 GameInput 组件",
+        "body": "运行游戏需要 Microsoft GameInput 组件。是否现在下载安装？",
+        "install_now": "立即安装"
+      }
+    },
+    "gs": {
+      "missing": {
+        "title": "缺少 Microsoft Gaming Services",
+        "body": "未检测到 Microsoft Gaming Services。运行 Minecraft 需要该组件。",
+        "open_store": "打开商店进行安装",
+        "ignore_forever": "忽略并不再提醒"
+      }
+    },
+    "install_confirm": {
+      "title": "是否已完成安装？",
+      "body": "安装完成后请点击“已完成，重新检测”。如果尚未完成，请继续安装。",
+      "continue": "继续安装",
+      "done_and_check": "已完成，重新检测"
+    },
+    "currentVersion_none": "无",
+    "version_select": {
+      "title": "选择实例",
+      "unknown": "未知"
+    },
+    "tip": {
+      "version_selector": "使用实例下拉菜单可快速切换当前实例。",
+      "version_search": "在下拉列表中选择前，可先按实例名或游戏版本搜索。",
+      "manage_versions": "点击下拉面板里的“实例列表”，即可安装、导入或整理实例。",
+      "quick_actions_menu": "启动按钮旁的菜单提供实例设置、桌面快捷方式、游戏目录和系统注册等操作。",
+      "launch_dependencies": "若缺少 GameInput、Visual C++ 运行库或 Gaming Services，LeviLauncher 会在启动前引导你完成安装。",
+      "mods_card": "模组卡片会显示当前实例已启用的模组，点击即可进入完整的模组页面。",
+      "content_counts_card": "内容管理卡片会显示世界、资源包和行为包数量，点击对应行可直接进入页面。",
+      "content_download_sources": "下载卡片可直接进入 CurseForge 和 LeviMC 模组，方便在启动器内获取内容。",
+      "settings_personalize": "可在设置中调整主题、配色、背景等外观选项，让启动器更符合你的使用习惯。",
+      "settings_storage_path": "你可以在设置中修改存储路径；迁移或保存内容前，请先确认目标目录可写。",
+      "download_mirror": "如果下载速度较慢，可在设置中切换镜像源或检查相关网络选项。",
+      "open_source": "LeviLauncher 是开源项目；遇到启动器问题或有改进建议时，可前往 GitHub 提交反馈。",
+      "backup_worlds": "在尝试新的资源包、行为包或模组前，建议先备份重要世界。"
+    },
+    "edition": "基岩版"
+  },
+  "moddedcard": {
+    "title": "模组",
+    "content": {
+      "none": "尚未安装模组"
+    },
+    "manage": "管理模组"
+  },
+  "download_manager": {
+    "install_prompt": {
+      "title": "下载完成",
+      "description": "“{{name}}”已下载完成，是否立即安装？",
+      "confirm": "立即安装",
+      "later": "稍后再说"
+    },
+    "title": "下载管理",
+    "description": "查看和管理当前的下载任务",
+    "no_downloads": "当前没有活动的下载任务",
+    "unknown_file": "未知文件",
+    "actions": {
+      "retry": "重试"
+    }
+  },
+  "updating": {
+    "title": "正在更新 LeviLauncher",
+    "body": "正在请求管理员权限并执行更新。更新期间请勿关闭窗口。",
+    "body_mac": "正在下载 macOS 安装镜像。打开后请退出启动器并将新版本拖入“应用程序”文件夹。",
+    "mac_installer_opened": "已在访达中打开安装镜像。请退出 LeviLauncher 并将新版应用拖入“应用程序”以完成更新。",
+    "failed_title": "更新失败",
+    "phase": {
+      "download": "下载更新包",
+      "install": "安装更新"
+    },
+    "status": {
+      "checking": "正在检查更新",
+      "verifying": "正在校验安装包完整性",
+      "elevating": "正在请求管理员权限",
+      "restarting": "正在重新启动启动器"
+    },
+    "errors": {
+      "generic": "更新时发生未知错误，请稍后重试。",
+      "update_admin_required": "继续更新需要管理员权限。",
+      "update_asset_missing": "所需的更新包缺失或命名不符合要求。",
+      "update_release_unavailable": "暂时无法获取更新元数据。",
+      "update_verify_failed": "更新包校验失败。",
+      "update_download_failed": "下载更新包失败。",
+      "update_install_failed": "安装更新包失败。",
+      "update_restart_failed": "更新完成后未能自动重新启动启动器。"
+    }
+  },
+  "downloadpage": {
+    "error": {
+      "already_downloading": "该文件正在下载中"
+    },
+    "changelog": {
+      "title": "最新更新日志"
+    },
+    "status": {
+      "downloaded": "已下载",
+      "not_downloaded": "未下载",
+      "checking": "检查中…"
+    },
+    "table": {
+      "aria_label": "版本表格",
+      "empty": "暂无数据",
+      "header": {
+        "version": "版本",
+        "type": "类型",
+        "status": "状态",
+        "loader": "加载器",
+        "actions": "操作"
+      },
+      "type": {
+        "release": "正式版",
+        "preview": "预览版"
+      }
+    },
+    "topcontent": {
+      "types": "类型",
+      "types_all": "全部",
+      "status": "状态",
+      "status_all": "全部",
+      "status_downloaded": "已下载",
+      "status_not_downloaded": "未下载",
+      "loader": "加载器",
+      "input": {
+        "placeholder": "按版本搜索…"
+      }
+    },
+    "actions": {
+      "delete_installer": "删除安装包"
+    },
+    "bottomcontent": {
+      "total": "共 {{count}} 个版本"
+    },
+    "install_folder": {
+      "confirm_title": "安装实例",
+      "name_label": "实例名称",
+      "default_name": "我的{{version}}实例",
+      "placeholder_name": "请输入实例名称",
+      "enable_isolation": "实例隔离",
+      "enable_isolation_desc": "将该实例的游戏数据（世界、设置、缓存等）保存在实例自己的目录中，而不是与系统中的其他 Minecraft 共用。",
+      "inherit_label": "继承来源",
+      "inherit_hint": "从同类型的其他隔离实例复制数据",
+      "inherit_none": "不继承",
+      "inherit_gdk": "从共用的游戏数据继承"
+    },
+    "mirror": {
+      "no_recommended": "暂无推荐镜像",
+      "download_started": "开始下载…",
+      "title": "选择下载镜像",
+      "target": "下载目标",
+      "testing": "测速中…",
+      "unselected": "未选择",
+      "copy_link": "复制链接",
+      "recommended": "推荐镜像",
+      "auto_testing": "自动测速中…",
+      "others": "其它镜像",
+      "no_mirrors": "当前版本无可用镜像。",
+      "filename_fallback": "(文件)",
+      "retest": "重新测速",
+      "download_selected": "用所选镜像下载",
+      "install_button": "安装",
+      "install_selected": "用所选镜像安装"
+    },
+    "progress": {
+      "unknown_error": "未知错误"
+    },
+    "download": {
+      "success_body": "文件已下载："
+    },
+    "delete": {
+      "title": "确认删除安装包",
+      "body": "将删除安装包：",
+      "warning": "此操作不可恢复。",
+      "success_body": "已删除安装包："
+    },
+    "install": {
+      "levilamina_label": "安装 LeviLamina",
+      "levilamina_desc": "自动安装 LeviLamina 加载器",
+      "version_label": "版本",
+      "ll_version_label": "LeviLamina 版本",
+      "ll_version_placeholder": "请选择 LeviLamina 版本",
+      "estimated_size": "安装体积（估算）",
+      "target": "安装目标",
+      "success_title": "安装完成",
+      "success": "版本已成功安装",
+      "progress": "安装进度",
+      "custom_installer": {
+        "label": "选择本地安装包 (.msixvc)",
+        "hint": "默认使用安装包目录中已下载的文件"
+      },
+      "levilamina_unsupported": "该游戏版本不支持 LeviLamina",
+      "title": "安装",
+      "wine_bridge_label": "同时安装 LeviWineBridge",
+      "wine_bridge_recommended": "推荐",
+      "wine_bridge_desc": "优化 macOS 游玩体验：启动器内 Xbox 登录、防视角甩头与 Cmd 快捷键修复、原生终端控制台与中文字体修复。",
+      "wine_bridge_checking": "正在检查 LeviWineBridge 兼容性…",
+      "wine_bridge_incompatible": "暂未适配所选的 LeviLamina 版本。",
+      "wine_bridge_unavailable": "暂时无法获取 LeviWineBridge 版本信息，可重试或稍后在模组目录中安装。",
+      "wine_bridge_installing": "正在安装 LeviWineBridge…",
+      "wine_bridge_failed_toast": "游戏与 LeviLamina 已安装完成，但 LeviWineBridge 安装失败。",
+      "wine_bridge_failed_title": "LeviWineBridge 安装未完成",
+      "wine_bridge_failed_body": "游戏与 LeviLamina 已就绪，你可以直接启动游戏，或稍后前往模组目录重新安装 LeviWineBridge。",
+      "wine_bridge_open_catalog": "前往安装 LeviWineBridge"
+    },
+    "customappx": {
+      "modal": {
+        "1": {
+          "header": "版本信息",
+          "body": {
+            "select": {
+              "item1": "正式版",
+              "item2": "预览版"
+            }
+          },
+          "footer": {
+            "install_button": "安装"
+          }
+        }
+      }
+    }
+  },
+  "onboarding": {
+    "title": "首次启动引导",
+    "subtitle": "请先设置内容路径与语言",
+    "unsaved": {
+      "title": "未保存修改",
+      "body": "你更改了内容路径但尚未保存。是否保存后完成引导？",
+      "save": "保存并完成"
+    }
+  },
+  "settings": {
+    "wine": {
+      "runtime": "Wine 运行时",
+      "configuration": "Wine 配置",
+      "advanced": "高级设置",
+      "advanced_desc": "同步、性能、按键映射和 Wine 路径",
+      "manual_paths": "手动路径",
+      "backend_options": "帧率上限和 MetalFX 适用于 Mullion、D3DMetal 和 VKD3D-Proton。",
+      "metalsharp_options": "帧率上限、MetalFX 和 Metal HUD 需要 MetalSharp Wine。",
+      "download_source": "下载来源",
+      "proxy_preset": "代理预设",
+      "in_use": "使用中",
+      "unsupported": "不受支持",
+      "managed": {
+        "run_in_background": "在后台运行",
+        "show_progress": "查看安装进度",
+        "show_result": "查看安装结果",
+        "continue_install": "继续安装",
+        "not_configured": "尚未配置 Wine",
+        "install": "安装 MetalSharp Wine",
+        "retry": "重试安装 Wine",
+        "failed": "Wine 安装失败",
+        "ready": "Wine 已准备并选用",
+        "progress": "正在准备 Wine",
+        "required": "请先配置 Wine，再安装 Minecraft。",
+        "open_settings": "去 Wine 设置",
+        "mirror_desc": "Wine 下载优先使用 GitHub 镜像，镜像失败时自动尝试 GitHub 原地址。",
+        "rosetta_title": "安装 Rosetta",
+        "rosetta_body": "Apple 芯片的 Mac 需要 Rosetta 才能通过 Wine 运行 Windows 游戏。点击「同意并安装」即表示同意 Apple 的 Rosetta 软件许可。安装完成后 Levi 会自动继续。",
+        "rosetta_info": "查看 Apple 的 Rosetta 安装说明",
+        "rosetta_confirm": "同意并安装",
+        "stage": {
+          "rosetta": "检测 Rosetta",
+          "runtime": "下载并校验 MetalSharp Wine",
+          "extract": "解压已签名的运行时",
+          "initialize": "初始化 Wine 容器",
+          "select": "验证并选用 Wine"
+        },
+        "status": {
+          "working": "正在处理",
+          "installing": "正在安装 Rosetta。如果 macOS 弹出提示，请确认。",
+          "downloading": "正在下载",
+          "verifying": "正在校验 SHA-256",
+          "fallback": "镜像连接失败，正在尝试 GitHub 原地址。",
+          "done": "完成",
+          "dependencies": "正在安装 Minecraft 依赖"
+        },
+        "upgrade": "升级到 MetalSharp Wine",
+        "legacy": "当前使用 Sikarugir。升级会创建独立的 MetalSharp Wine 容器，旧运行时仍可选用。",
+        "cleanup_legacy": "清理旧运行时",
+        "cleanup_legacy_desc": "磁盘上仍保留着未使用的旧 Sikarugir 运行时（{{size}}），可安全删除以释放空间，不影响世界存档和模组。",
+        "cleanup_legacy_done": "已清理旧 Sikarugir 运行时。"
+      },
+      "errors": {
+        "ERR_WINE_DOWNLOAD_STALLED": "下载长时间没有进度，请重试以继续下载。",
+        "ERR_WINE_INVALID_GITHUB_PROXY": "请输入有效的 HTTP 或 HTTPS 代理网址。",
+        "ERR_WINE_ROSETTA_INSTALL": "Rosetta 安装失败，请检查网络或 macOS 权限后重试。",
+        "ERR_WINE_INSTALL_BUSY": "Wine 正在安装。",
+        "ERR_WINE_ASSET_CHECKSUM": "下载文件校验失败，请重试下载。",
+        "ERR_WINE_CONTAINER_INIT": "Wine 容器初始化未完成，请重试。",
+        "ERR_WINE_UNSUPPORTED_ARCH": "MetalSharp Wine 需要搭载 Apple 芯片的 Mac。",
+        "ERR_WINE_UNSUPPORTED_OS": "MetalSharp Wine 需要 macOS 15 或更高版本。",
+        "ERR_WINE_GRAPHICS_BACKEND_UNAVAILABLE": "所选图形后端不可用。",
+        "ERR_WINE_RUNTIME_SIGNATURE": "无法验证 MetalSharp Wine 的签名。",
+        "ERR_WINE_ACCOUNT_MIGRATION": "无法复制旧 Wine 容器的账号缓存。",
+        "ERR_WINE_LEGACY_SETTINGS": "无法读取当前 Wine 配置，已保留旧运行时。",
+        "ERR_WINE_LEGACY_IN_USE": "请先切换到其他 Wine 运行时，再清理旧 Sikarugir 运行时。"
+      },
+      "setup": {
+        "next": "下一步",
+        "back_to_list": "返回 Wine 列表",
+        "title": "设置 Wine",
+        "ready": "Wine 已就绪",
+        "change": "更换 Wine",
+        "keep_current": "继续使用当前 Wine",
+        "choose_or_install": "选择已有的 Wine 环境，或安装 Wine 来运行 Minecraft。",
+        "rescan": "重新扫描",
+        "manual": "手动选择路径…",
+        "needs_prefix": "容器未初始化",
+        "use": "使用此 Wine",
+        "install_help": "在 Wine 设置中安装 MetalSharp Wine。",
+        "install_next": "安装完成后选择新运行时。",
+        "terminal_started": "安装完成后选择新运行时。",
+        "skip": "稍后设置",
+        "save_next": "保存并继续"
+      },
+      "scan": "扫描本机 Wine",
+      "install": "安装 Wine…",
+      "found": "发现 {{count}} 个 Wine 安装",
+      "empty": "未找到 Wine。",
+      "use": "选择",
+      "install_terminal": "在终端中安装",
+      "install_instructions": "官方安装说明",
+      "install_help": "在 Wine 设置中安装 MetalSharp Wine。",
+      "install_manual": "打开官方安装说明。",
+      "installer_started": "已在终端打开安装程序。",
+      "title": "Wine",
+      "app": "Wine 应用（可选）",
+      "executable": "Wine 可执行文件",
+      "prefix": "Wine 容器目录（prefix）",
+      "choose": "选择…",
+      "choose_path": "选择{{field}}",
+      "graphics": "图形后端",
+      "graphics_auto": "运行时默认",
+      "graphics_auto_mullion": "自动（Mullion）",
+      "graphics_auto_metalsharp": "自动（D3DMetal）",
+      "graphics_d3dmetal": "D3DMetal",
+      "graphics_wined3d": "WineD3D（OpenGL）",
+      "sync": "同步方式",
+      "sync_auto": "运行时默认",
+      "sync_msync": "MSync",
+      "sync_esync": "ESync",
+      "sync_none": "关闭",
+      "left_command_is_ctrl": "左侧 Command 映射为 Ctrl",
+      "left_command_is_ctrl_desc": "在游戏内将左 ⌘ 映射为 Ctrl（支持 ⌘+C/V、疾跑与 ⌘+Q 丢弃整组物品并防误触退出；同时将左 Option 映射为 Alt）。",
+      "save": "保存",
+      "check": "检查版本",
+      "reload": "重新读取",
+      "working": "正在检查 Wine 配置",
+      "saved": "已保存。",
+      "checked": "{{version}}",
+      "graphics_mullion": "Mullion (Metal)",
+      "graphics_vkd3d": "VKD3D-Proton (Vulkan)",
+      "d3dmetal_version": "D3DMetal 版本",
+      "d3dmetal_version_auto": "自动（推荐）",
+      "d3dmetal_version_gptk4": "GPTK 4（Beta）",
+      "d3dmetal_version_gptk3": "GPTK 3（稳定）",
+      "group_rendering": "渲染与帧率",
+      "group_scheduling": "CPU 调度与兼容",
+      "group_maintenance": "排障与维护",
+      "metal3_mode": "Metal 3 兼容模式（推荐）",
+      "metal3_mode_desc": "在 macOS 27+ 上强制使用更稳定的 Metal 3 后端（D3DM_MTL4=0 / MULLION_D3D12_METAL4=0），可避免 GPTK 4 与 Mullion Metal 4 导致的帧时间波动、Arke 光影不稳定及 MSAA 界面异常；仅测试 Metal 4 时关闭。",
+      "retina_mode": "Retina 原生分辨率",
+      "retina_mode_desc": "以 2× 物理分辨率（4 倍像素量）渲染。追求稳定 60 帧或使用光影时建议关闭；开启时会自动搭配 MetalFX 性能（2.0×）。",
+      "retina_d3dmetal_warn": "Retina 模式按 4 倍像素量渲染，建议搭配 MetalFX 性能（2.0×，D3DMetal 下需安装 LeviWineBridge）或直接关闭 Retina 以保证稳帧。",
+      "retina_quality_warn": "Retina 2× 搭配质量（1.33×）实际仍需渲染约 2.3×–2.4× 像素量，容易导致 GPU 过载并触发 VSync 帧时间毛刺。",
+      "retina_off_warn": "Retina 2× 未开启 MetalFX 时会按 4 倍像素量渲染，GPU 压力极高且容易掉帧。",
+      "retina_no_upscale_warn": "Retina 2× 会按 4 倍像素量渲染，且当前后端不支持 MetalFX 超分，可能影响帧率稳定性。",
+      "retina_performance_tip": "已启用推荐的 Retina 组合：内部维持约 1× 逻辑像素渲染，同时通过 MetalFX 2.0× 输出清晰的 Retina 画面。",
+      "retina_balanced_tip": "Retina 2× 搭配平衡（1.5×）约需渲染 1.8× 像素量；若开启光影后帧时间波动，建议改用性能（2.0×）或关闭 Retina。",
+      "standard_performance_tip": "未开启 Retina 时，性能（2.0×）会按 1/4 像素渲染，画面偏糊；标准分辨率下建议关闭或使用质量（1.33×）。",
+      "d3dmetal4_metalfx_unavailable": "启用 Metal 3 兼容模式后，即可在 D3DMetal 下使用启动器的 MetalFX 缩放。",
+      "d3dmetal_metalfx_tip": "D3DMetal 使用原生 MetalFX 空间缩放。自定义倍率需要 LeviWineBridge。在 Retina 显示器上启用 Retina 后，2.0× 可独立使用。",
+      "action_use_performance": "改用性能（2.0×）",
+      "action_disable_retina": "关闭 Retina",
+      "metal_fx": "MetalFX 超分辨率",
+      "metal_fx_desc": "使用 Mullion、D3DMetal 或 VKD3D-Proton 时启用 MetalFX 超分。",
+      "metal_fx_off": "关闭",
+      "metal_fx_quality": "质量（1.33×）",
+      "metal_fx_balanced": "平衡（1.5×）",
+      "metal_fx_performance": "性能（2.0×）",
+      "metal_fx_ultra_performance": "超性能（2.5×）",
+      "metal_fx_extreme": "极致性能（3.0×）",
+      "metal_fx_max": "极限（4.0×）",
+      "metal_fx_sharpness": "MetalFX 锐化",
+      "metal_fx_panel_limit": "按面板像素限制 MetalFX 输出",
+      "metal_fx_panel_limit_desc": "当 macOS 的 Retina 背板大于物理面板时，尽可能按窗口实际覆盖的面板像素输出。下次启动游戏时生效。",
+      "metal_fx_sharpness_auto": "自动（按倍率匹配）",
+      "metal_fx_sharpness_0": "关闭（0%）",
+      "metal_fx_sharpness_10": "轻度（10%）",
+      "metal_fx_sharpness_15": "适中（15%）",
+      "metal_fx_sharpness_25": "较强（25%）",
+      "metal_fx_sharpness_35": "强（35%）",
+      "metal_hud": "Metal 性能 HUD",
+      "metal_hud_desc": "在受支持的游戏中显示 Metal 性能叠层。",
+      "max_fps": "帧率上限",
+      "default_fps": "游戏默认",
+      "unlimited_fps": "无限制",
+      "vsync": "垂直同步（VSync）",
+      "vsync_auto": "跟随游戏",
+      "vsync_on": "强制开启",
+      "vsync_off": "强制关闭",
+      "frame_pacing_tip": "在原生 Metal 呈现层（CAMetalLayer）精确控制步调与 VSync，可绕过游戏内 >60 帧滑块重置。",
+      "vsync_off_tip": "已强制关闭原生 Metal 垂直同步。建议搭配「帧率上限」（如 60 或 120 FPS）获得平直帧时间曲线并避免 GPU 空转。",
+      "thread_qos": "线程性能核调度",
+      "thread_qos_desc": "控制 Wine 线程的 macOS QoS 调度等级。均衡适合大多数机型；无风扇 MacBook Air 发热降频时可改为系统默认。",
+      "thread_qos_balanced": "均衡（推荐）",
+      "thread_qos_aggressive": "激进（适合主动散热机型）",
+      "thread_qos_default": "系统默认（更低发热）",
+      "rosetta_avx": "Rosetta AVX/AVX2 加速",
+      "rosetta_avx_desc": "在 Rosetta 2 下向游戏暴露 AVX/AVX2 指令集以提升性能；如特定版本或模组闪退可关闭排查。",
+      "compat_debug_log": "兼容层调试日志",
+      "compat_debug_log_desc": "将 xgameruntime 与 WinRT 详细调用日志写入 C:\\xgr.log 和 C:\\mcwinrt.log，日常游玩请保持关闭。",
+      "shader_cache": "着色器缓存",
+      "shader_cache_size": "当前占用 {{size}}。升级版本或遇到花屏、崩溃时可清理重建。",
+      "shader_cache_empty": "当前着色器缓存为空。",
+      "shader_cache_clear": "清理缓存",
+      "shader_cache_cleared": "已清理 Wine 着色器缓存。",
+      "kill_wine": "终止 Wine 后台进程",
+      "kill_wine_desc": "游戏无响应或异常退出后，强制结束当前容器残留的 wineserver 与 Wine 进程。",
+      "kill_wine_action": "终止进程",
+      "kill_wine_done": "已终止 Wine 后台进程。"
+    },
+    "layout": {
+      "title_navbar": "使用顶部导航栏",
+      "desc_navbar": "开启后使用顶部导航栏代替默认的垂直侧边栏"
+    },
+    "tabs": {
+      "wine": "Wine",
+      "general": "基础设置",
+      "personalization": "个性化",
+      "components": "包管理",
+      "others": "其他设置",
+      "updates": "软件更新",
+      "about": "关于",
+      "privacy": "隐私"
+    },
+    "unsaved": {
+      "title": "未保存修改",
+      "body": "你更改了内容路径但尚未保存。是否保存后离开？",
+      "cancel": "取消",
+      "save": "保存并离开"
+    },
+    "lang": {
+      "changed": "语言已更改"
+    },
+    "discord_rpc": {
+      "title": "Discord 游戏状态",
+      "desc": "在 Discord 上显示你的游戏状态"
+    },
+    "beta_updates": {
+      "title": "接收测试版更新",
+      "desc": "开启后将接收正式发布前的测试版本"
+    },
+    "experimental": {
+      "title": "实验性功能",
+      "desc": "可在这里提前试用尚未完全稳定的能力；这些功能可能随时调整、失效或被移除。",
+      "instance_backup": {
+        "title": "实例备份（实验性）",
+        "desc": "开启后可在实例设置中使用备份与恢复功能；该能力仍处于实验阶段。",
+        "warning": {
+          "title": "确认启用实例备份实验性功能",
+          "body_1": "该功能目前仅面向开发与测试人员开放，不建议普通用户在正式数据环境中使用。",
+          "body_2": "实例备份的格式、包含范围与恢复兼容性后续都可能发生变化，现阶段不保证未来版本持续兼容。",
+          "body_3": "请完整阅读以上说明。确认按钮将在 10 秒后可用。",
+          "confirm": "我已知晓风险并启用"
+        }
+      }
+    },
+    "reset": {
+      "confirm": {
+        "title": "恢复默认路径？",
+        "body": "这将把内容路径重置为默认位置。确定要继续吗？"
+      }
+    },
+    "lip": {
+      "title": "清理缓存",
+      "desc": "若软件包下载失败，可清理包管理器的缓存。",
+      "cache_clean_button": "清理缓存",
+      "cache_cleaning": "正在清理缓存…",
+      "cache_clean_success": "缓存清理完成",
+      "github_proxy": {
+        "title": "GitHub 代理",
+        "desc": "下载软件包时使用的 GitHub 代理，留空可恢复默认值。",
+        "preset_custom": "自定义",
+        "save_success": "GitHub 代理已保存",
+        "save_failed": "保存 GitHub 代理失败"
+      }
+    },
+    "mirror_source": {
+      "title": "使用镜像源",
+      "desc": "为启动器更新、软件包和版本列表优先使用中国大陆的镜像源。中国大陆用户默认开启。"
+    },
+    "header": {
+      "title": "设置",
+      "content": "配置启动器常用选项"
+    },
+    "body": {
+      "version": {
+        "name": "当前版本",
+        "hasnew": "有新的版本更新！",
+        "button": "检查更新",
+        "ignore": "忽略此版本"
+      },
+      "paths": {
+        "title": "内容路径",
+        "subtitle": "管理游戏数据存储位置",
+        "base_root": "根目录",
+        "apply": "应用",
+        "reset": "恢复默认",
+        "installer": "安装包目录",
+        "versions": "实例目录",
+        "unsaved": "更改未保存",
+        "not_writable": "目录不可写入"
+      },
+      "language": {
+        "name": "语言",
+        "button": "更改"
+      }
+    },
+    "process": {
+      "title": "进程管理",
+      "desc": "管理运行中的 Minecraft 进程",
+      "scan": "扫描进程",
+      "kill_all": "结束所有进程",
+      "kill": "结束",
+      "no_process": "未发现运行中的 Minecraft 进程"
+    },
+    "modal": {
+      "2": {
+        "footer": {
+          "download_button": "更新"
+        }
+      }
+    },
+    "appearance": {
+      "mode_config": "按模式分别设置",
+      "edit_mode_desc": "个性化设置（颜色、透明度等）将按日间/夜间模式独立保存。切换右侧标签页以配置不同模式。",
+      "theme_mode": "外观模式",
+      "theme_mode_desc": "选择应用的主题模式",
+      "theme_system": "跟随系统",
+      "theme_light": "日间模式",
+      "theme_dark": "夜间模式",
+      "theme_schedule": "手动设置时间",
+      "theme_auto": "日出日落",
+      "theme_start_time": "夜间模式开始时间",
+      "theme_end_time": "夜间模式结束时间",
+      "theme_schedule_desc": "在指定时间段内自动切换到夜间模式",
+      "theme_auto_desc": "根据当地日出日落时间自动切换主题",
+      "theme_system_desc": "跟随 Windows 系统设置",
+      "theme_color": "主题色",
+      "theme_color_desc": "应用的主要强调颜色",
+      "theme_standard": "预设颜色",
+      "theme_generated": "更多颜色",
+      "custom_color": "自定义颜色",
+      "background_image": "背景图片",
+      "background_image_desc": "选择一个文件夹，从中挑选图片作为背景",
+      "background_play_order": "播放顺序",
+      "background_play_random": "随机",
+      "background_play_sequential": "顺序",
+      "background_fit_mode": "自适应方式",
+      "background_fit_smart": "智能",
+      "background_fit_center": "居中",
+      "background_fit_fit": "适应",
+      "background_fit_stretch": "拉伸",
+      "background_fit_tile": "平铺",
+      "background_fit_top_left": "左上对齐",
+      "background_fit_top_right": "右上对齐",
+      "no_image_selected": "未选择文件夹",
+      "select_image": "选择文件夹",
+      "clear_image": "清除文件夹",
+      "background_blur": "背景模糊",
+      "background_brightness": "背景亮度",
+      "background_opacity": "背景不透明度",
+      "background_base_mode": "底色模式",
+      "background_base_mode_desc": "在背景图片下方添加一层纯色遮罩，以增强对比度",
+      "background_base_none": "无",
+      "background_base_theme": "跟随主题色",
+      "background_base_color": "自定义颜色",
+      "background_base_color_pick": "底色颜色",
+      "background_base_opacity": "底色不透明度",
+      "disable_animations": "禁用动画",
+      "disable_animations_desc": "关闭界面过渡动画以提升性能",
+      "calculating": "正在计算…",
+      "sunrise_time": "今日日出",
+      "sunset_time": "今日日落",
+      "sun_fetch_failed": "获取日出日落时间失败",
+      "material": {
+        "title": "界面材质",
+        "description": "统一控制导航栏、卡片、标签页、控件和浮层。日间与夜间分别保存，随主题自动应用。",
+        "edit_mode": "编辑主题材质",
+        "preview": "实时预览",
+        "preview_label": "所选主题下背景图片、文字与卡片材质的叠加预览",
+        "preview_action": "启动",
+        "preview_text": "文字与操作清晰在前，背景图片自然呈现。",
+        "no_image": "选择图片文件夹并把图片不透明度调到 0 以上即可看到效果。材质设置会一直保留。",
+        "presets": "材质预设",
+        "balanced": "均衡",
+        "balanced_desc": "柔和磨砂，兼顾清晰",
+        "clear": "通透",
+        "clear_desc": "更多背景，较弱的文字保护",
+        "solid": "纯色",
+        "solid_desc": "面板不透明，关闭磨砂",
+        "opacity": "界面不透明度",
+        "blur": "界面磨砂",
+        "overlay": "背景遮罩",
+        "readability": "可读性保护",
+        "readability_desc": "根据主题、图片亮度和模糊程度自动设置底色深度，并加强次要文字，保证文字清晰可读。控件和浮层使用同一套材质。",
+        "protected_opacity": "保护已生效：界面实际不透明度为 {{value}}%。",
+        "protected": "已启用可读性保护。",
+        "unprotected": "保护已关闭，复杂图片可能影响文字辨认。",
+        "reset": "重置当前主题",
+        "next_image": "换一张"
+      }
+    },
+    "privacy": {
+      "analytics": {
+        "title": "使用情况统计（Google Analytics）",
+        "desc": "开启后可帮助我们持续优化功能和界面。你可以随时在这里关闭。"
+      },
+      "links": {
+        "google_analytics_terms": "Google Analytics 服务条款",
+        "google_privacy": "Google 隐私政策"
+      }
+    },
+    "game_behavior": {
+      "on_launch_title": "Minecraft 启动时",
+      "on_launch_desc": "Minecraft 启动后启动器的行为",
+      "on_launch_minimize": "最小化启动器",
+      "on_launch_hide": "隐藏到系统托盘",
+      "on_launch_close": "关闭启动器",
+      "on_launch_keep": "保持启动器开启",
+      "on_exit_title": "Minecraft 关闭时",
+      "on_exit_desc": "Minecraft 退出后启动器的行为",
+      "on_exit_reopen": "重新打开启动器",
+      "on_exit_keep": "保持原样",
+      "on_exit_close": "关闭启动器",
+      "minimize_to_tray": "关闭窗口时隐藏到托盘",
+      "minimize_to_tray_desc": "点击关闭按钮时将启动器隐藏到系统托盘，而不是退出；最小化按钮仍最小化到任务栏"
+    },
+    "troubleshoot": {
+      "title": "故障排查",
+      "desc": "检查启动器依赖的运行库、Windows 设置、网络、代理和账户授权。最多耗时一分钟，不会更改任何设置。",
+      "mac_desc": "检查 Wine、Rosetta、游戏运行库、网络和账户授权。诊断期间不会修改设置。",
+      "run": "运行诊断"
+    }
+  },
+  "downloadmodal": {
+    "download_button": "下载",
+    "installing": {
+      "title": "正在安装"
+    },
+    "open_folder": "打开目录"
+  },
+  "aboutcard": {
+    "title": "关于",
+    "description": "© 2024-2026 {{name}} 保留所有权利",
+    "font": "本软件使用 {{name}} 字体"
+  },
+  "sponsor_prompt": {
+    "title": "感谢一路相伴",
+    "body": "你已经启动 LeviLauncher {{count}} 次了！如果它让你的 Minecraft 时光更加轻松，愿意赞助一下，支持后续开发吗？",
+    "dismiss": "暂时不用",
+    "open_error": "无法打开赞助链接，请稍后重试"
+  },
+  "about": {
+    "description": "LeviLauncher - 一个现代化的 Minecraft 基岩版启动器",
+    "authors": "作者与维护者",
+    "author": "作者",
+    "ll_authors": "LeviLauncher 作者",
+    "source": "源代码与开源",
+    "thanks": "特别鸣谢",
+    "thanks.desc": "特别感谢为 LeviLauncher 提供帮助与支持的个人与项目。",
+    "sponsors": "支持者（赞助者）",
+    "sponsors.desc": "感谢所有为项目发展提供帮助的赞助者与支持者！",
+    "contribute": "参与贡献",
+    "contribute.desc": "欢迎通过提交 Issue 或 Pull Request 的方式参与贡献，共同完善 LeviLauncher。",
+    "afdian": "爱发电",
+    "patreon": "Patreon",
+    "github_repo": "GitHub · LeviLauncher",
+    "github_org": "LiteLDev 组织",
+    "license.tip": "LeviLauncher 使用 GPL-3.0-only 许可，完整文本见仓库中的 COPYING 文件。",
+    "third_party": "本软件使用了 MiSans 字体，并随附遵循各自许可的第三方组件，详见 THIRD_PARTY_NOTICES。",
+    "website": "官网",
+    "issue": "Issue",
+    "star_fork": "Star / Fork",
+    "rhymc_name": "旋律云"
+  },
+  "common": {
+    "retry": "重试",
+    "completed": "已完成",
+    "downloading": "下载中",
+    "ok": "确定",
+    "continue": "继续",
+    "cancel": "取消",
+    "cancelled": "已取消",
+    "error": "错误",
+    "refresh": "刷新",
+    "quit_launcher": "退出启动器",
+    "show_launcher": "显示启动器",
+    "confirm": "确定",
+    "success": "操作成功",
+    "delete": "删除",
+    "search": "搜索",
+    "search_placeholder": "搜索…",
+    "open": "打开",
+    "select_mode": "选择模式",
+    "select_all": "全选",
+    "selected_count": "已选 {{count}} 项",
+    "preview": "预览版",
+    "release": "正式版",
+    "back": "返回",
+    "loading": "加载中",
+    "yes": "是",
+    "no": "否",
+    "close": "关闭",
+    "empty": "暂无数据",
+    "browse": "选择…",
+    "processing": "正在处理…",
+    "done": "完成",
+    "wait": "请稍候…",
+    "updating": "更新中",
+    "expand": "展开",
+    "collapse": "收起",
+    "save": "保存",
+    "add": "添加",
+    "save_failed": "保存失败",
+    "load_failed": "加载失败",
+    "view_all": "查看全部",
+    "confirm_delete": "确认删除",
+    "no_results": "无搜索结果",
+    "edit": "编辑",
+    "backup": "备份",
+    "date": "日期",
+    "version": "版本",
+    "details": "详情",
+    "disable": "禁用",
+    "enable": "启用",
+    "open_folder": "打开文件夹",
+    "open_folder_failed": "无法打开文件夹",
+    "remove": "移除",
+    "tip": "提示",
+    "feature_unavailable": "该功能暂时不可用",
+    "unknown": "未知"
+  },
+  "useravatar": {
+    "xbox_live": "Xbox Live",
+    "refresh_session_aria": "刷新 Xbox 会话",
+    "xuid": "XUID: {{xuid}}",
+    "authorization": {
+      "title": "游戏授权",
+      "checking": "正在检查",
+      "authorized": "已授权",
+      "trial": "仅试用",
+      "not_entitled": "未获授权",
+      "error": "检查失败",
+      "description": "登录后会自动检查正式版和预览版的授权状态。点击刷新可重新检查。"
+    },
+    "sign_out": "退出登录",
+    "signout_failed": "退出登录失败",
+    "sign_in": "登录微软账户",
+    "switch_account": "切换账户",
+    "signin_failed": "微软账户登录失败"
+  },
+  "content": {
+    "count": {
+      "worlds": "世界",
+      "resource_packs": "资源包",
+      "behavior_packs": "行为包"
+    }
+  },
+  "contentpage": {
+    "current_version": "当前实例",
+    "none": "无",
+    "isolation": "实例隔离",
+    "worlds": "世界",
+    "worlds_list": "世界列表",
+    "select_player": "选择玩家",
+    "no_players": "暂无玩家",
+    "backup_success": "备份成功",
+    "backup_failed": "备份失败",
+    "resource_packs": "资源包",
+    "no_resource_packs": "暂无资源包",
+    "behavior_packs": "行为包",
+    "no_behavior_packs": "暂无行为包",
+    "skin_packs": "皮肤包",
+    "no_skin_packs": "暂无皮肤包",
+    "servers": "服务器",
+    "error_resolve_paths": "无法定位内容目录。",
+    "open_users_dir": "打开存储目录",
+    "players_aria": "玩家列表",
+    "sort_time": "时间",
+    "sort_asc": "升序",
+    "sort_desc": "降序",
+    "drop_hint": "拖入 .mcworld/.mcpack/.mcaddon 以导入",
+    "import_button": "导入",
+    "transfer_resources_button": "转移内容",
+    "transfer_resources_title": "转移内容到其他实例",
+    "transfer_resources_body_overview": "当前实例中的全部资源包、行为包、皮肤包和世界都会复制到目标实例。请选择目标实例。",
+    "transfer_resources_body_simple": "请选择要转移到的目标实例。",
+    "transfer_no_targets": "暂无可用的隔离实例",
+    "transfer_target_placeholder": "请选择目标实例",
+    "transfer_progress_title": "正在转移内容…",
+    "transfer_progress_body": "正在把内容转移到所选实例，请稍候。",
+    "require_player_for_world_import": "导入世界 (.mcworld) 前请先选择玩家",
+    "no_player_selected": "未选择玩家",
+    "world_leveldat_editor": "世界属性",
+    "version": "版本号",
+    "add_field": "新增字段",
+    "field_name": "名称",
+    "initial_value": "初始值",
+    "select_player_title": "选择玩家",
+    "select_player_for_import": "请选择要导入到的玩家",
+    "no_items": "没有找到内容",
+    "delete_pack_confirm": "确定要删除 {{name}} 吗？",
+    "delete_warning": "此操作无法撤销！",
+    "delete_selected_confirm": "确定要删除选中的 {{count}} 个项目吗？",
+    "deleted_name": "已删除 {{name}}",
+    "delete_world_confirm": "确定要删除世界 {{name}} 吗？",
+    "basic_info": "基本信息",
+    "level_name": "世界名称",
+    "screenshots": "屏幕截图",
+    "no_screenshots": "暂无截图",
+    "delete_screenshot_confirm": "确定要删除截图 {{name}} 吗？",
+    "preview_screenshot": "查看大图",
+    "screenshot_viewer_hint": "大图预览",
+    "screenshot_viewer_nav_hint": "可使用 ← / → 键或两侧按钮切换截图",
+    "editor_unsaved": "有未保存修改",
+    "editor_unsaved_body": "继续前请保存修改，或放弃修改并使用已保存的世界数据。",
+    "editor_continue": "继续编辑",
+    "editor_discard": "放弃修改",
+    "editor_save_refresh": "保存并刷新",
+    "editor_save_leave": "保存并离开",
+    "selected_outside_filter": "包含当前筛选外的 {{count}} 项",
+    "delete_result": "已删除 {{success}} 项，失败 {{failed}} 项",
+    "delete_retry_failed": "已保留失败项的选择。请查看下方原因后重试。",
+    "delete_scope": "实例：{{instance}} · 玩家：{{player}}",
+    "screenshot_load_failed": "读取截图失败",
+    "screenshot_image_failed": "无法读取 {{name}}",
+    "screenshot_select_player": "请先在内容管理中选择玩家，再查看截图。",
+    "screenshot_no_instance": "请先选择实例，再查看截图。",
+    "select_item": "选择 {{name}}",
+    "servers_read_only": "此处显示游戏内已添加的服务器。",
+    "sort_old_new": "从旧到新",
+    "sort_new_old": "从新到旧",
+    "previous_screenshot": "上一张截图",
+    "next_screenshot": "下一张截图"
+  },
+  "versions": {
+    "info": {
+      "name": "名称"
+    },
+    "edit": {
+      "tabs": {
+        "general": "基础设置",
+        "launch": "启动选项",
+        "features": "功能",
+        "manage": "管理",
+        "loader": "加载器"
+      },
+      "title": "实例设置",
+      "mc_version": "游戏版本",
+      "new_name": "新名称",
+      "placeholder": "输入新名称",
+      "hint": "仅重命名实例文件夹，不影响游戏版本和类型。",
+      "enable_isolation": "启用实例隔离",
+      "enable_console": "启用控制台",
+      "enable_editor_mode": "启用编辑器模式",
+      "editor_min_version": "当前发行通道需要 {{version}} 或更高版本；无法识别版本号时不可启用。",
+      "launch_args": "启动参数",
+      "launch_args_placeholder": "启动参数 (例如: -Editor true)",
+      "launch_args_hint": "设置游戏启动参数。",
+      "env_vars": "环境变量",
+      "env_vars_placeholder": "环境变量 (KEY=VALUE)，每行一个",
+      "env_vars_hint": "设置启动时的环境变量。",
+      "delete_hint": "永久从你的设备中删除该实例，包括世界、配置及所有安装内容。请谨慎操作，删除后无法恢复。",
+      "danger_title": "危险操作",
+      "danger_hint": "以下操作会影响当前实例的系统注册或本地文件，请确认后再继续。",
+      "backup": {
+        "title": "实例备份",
+        "hint": "为当前实例创建备份，可在调整设置、安装模组或导入新内容前先保留一份",
+        "section_body": "备份只包含你在下方勾选的游戏内容和模组",
+        "experimental_badge": "实验性",
+        "experimental_disabled": "前往 {{settingsPath}} 启用后，才能使用实例备份与恢复。",
+        "button": "备份实例",
+        "dialog_title": "选择要备份的内容",
+        "dialog_body": "请选择要包含在本次备份中的内容",
+        "path_label": "目录",
+        "size_label": "预计大小",
+        "shared_tag": "共享数据",
+        "missing_tag": "未找到",
+        "empty_tag": "目录为空",
+        "shared_warning": "当前实例未启用隔离，若勾选游戏数据，将同时备份当前使用的共享游戏数据目录",
+        "no_scope_selected": "请至少选择一项要备份的内容",
+        "confirm": "开始备份",
+        "progress_title": "正在备份实例",
+        "progress_body": "正在打包所选范围，请稍候…",
+        "progress_scanning": "正在统计需要备份的文件…",
+        "progress_files_bytes": "{{files}} / {{totalFiles}} 个文件 · {{bytes}} / {{totalBytes}}",
+        "progress_bytes": "已处理 {{current}} / {{total}}",
+        "progress_files": "{{current}} / {{total}} 个文件",
+        "progress_packages": "{{current}} / {{total}} 个包",
+        "success_title": "实例备份完成",
+        "success_body": "备份文件已生成",
+        "archive_label": "备份文件",
+        "location_label": "保存位置",
+        "open_dir": "打开目录",
+        "lip_summary": "已识别 {{count}} 个由包管理器管理的模组包：{{summary}}",
+        "mode": {
+          "safe": {
+            "label": "安全模式"
+          },
+          "full": {
+            "label": "全量模式",
+            "warning": "全量备份会包含 Users 目录以外的内容，可能带入账户缓存、隐私数据或其他不适合共享的文件。"
+          }
+        },
+        "restore": {
+          "button": "恢复备份",
+          "file_picker_title": "选择实例备份压缩包",
+          "dialog_title": "确认恢复实例备份",
+          "dialog_body": "请选择要从备份中恢复的内容。若检测到与当前实例冲突的内容，会在恢复前列出供你逐项选择。",
+          "confirm": "开始恢复",
+          "scope_section_title": "恢复范围",
+          "created_at": "创建时间",
+          "lip_summary": "检测到 {{count}} 个模组包，恢复时会尝试自动补装。",
+          "conflict_loading": "正在扫描恢复冲突，请稍候…",
+          "conflict_summary": "发现 {{count}} 处与当前实例冲突的内容，请逐项选择保留备份版本还是当前版本。",
+          "conflict_empty": "当前所选范围没有发现冲突，可以直接恢复。",
+          "conflict_choice_placeholder": "请选择冲突处理方式",
+          "conflict_choice_backup": "使用备份版本",
+          "conflict_choice_current": "保留当前版本",
+          "conflict_choice_pending": "待选择",
+          "conflict_group_count": "{{count}} 项冲突",
+          "conflict_group_unresolved": "{{count}} 项待选择",
+          "conflict_group_resolved": "已完成选择",
+          "conflict_group_apply_backup": "本组全选备份",
+          "conflict_group_apply_current": "本组全选当前",
+          "conflict_unresolved": "请先为每一项冲突选择处理方式。",
+          "conflict_details_toggle": "查看路径与详细差异",
+          "conflict_item_fallback": "未命名内容",
+          "identity_key_label": "匹配依据",
+          "backup_side_label": "备份版本",
+          "current_side_label": "当前版本",
+          "backup_path_label": "备份路径",
+          "current_path_label": "当前路径",
+          "conflict_category": {
+            "mods": "模组",
+            "skin_packs": "皮肤包",
+            "behavior_packs": "行为包",
+            "resource_packs": "资源包",
+            "worlds": "世界",
+            "dev_behavior_packs": "开发行为包",
+            "dev_resource_packs": "开发资源包",
+            "templates": "世界模板",
+            "files": "其他文件",
+            "other": "其他内容"
+          },
+          "identity_kind": {
+            "pack_uuid": "内容包",
+            "world_folder": "世界文件夹",
+            "mod_folder": "模组文件夹",
+            "file_path": "文件路径"
+          },
+          "conflict_type": {
+            "file": "文件",
+            "dir": "目录"
+          },
+          "diff_field": {
+            "folder": "目录名",
+            "uuid": "UUID",
+            "name": "名称",
+            "version": "版本",
+            "min_engine_version": "最低引擎版本",
+            "level_name": "世界名称",
+            "entry": "入口",
+            "type": "类型"
+          },
+          "progress_title": "正在恢复实例备份",
+          "progress_body": "正在应用备份内容，请稍候…",
+          "progress_preparing": "正在准备恢复内容…",
+          "progress_extracting": "正在解压备份内容…",
+          "progress_scope": "正在恢复 {{scope}}…",
+          "progress_finalizing": "正在整理恢复结果…",
+          "progress_step": "步骤 {{current}} / {{total}}",
+          "success_title": "实例恢复完成",
+          "partial_title": "实例恢复部分完成",
+          "failed_title": "实例恢复失败",
+          "success_body": "所选内容已恢复完成。",
+          "partial_body": "部分内容已恢复，但仍有项目需要手动处理。",
+          "failed_body": "未能完成本次恢复，请检查下方结果。",
+          "status": {
+            "success": "成功",
+            "partial": "部分完成",
+            "failed": "失败"
+          }
+        }
+      },
+      "unregister_button": "取消注册",
+      "unregister_hint": "取消该实例在系统中的注册，使其不再显示于系统应用列表。此操作不会删除文件。",
+      "unregister_progress": {
+        "title": "正在取消注册",
+        "body": "正在执行系统取消注册，请稍候…"
+      },
+      "unregister_success": {
+        "title": "取消注册成功",
+        "body": "已成功取消注册，现在可以删除该实例了。"
+      },
+      "loader": {
+        "ll_not_installed": "未安装",
+        "ll_select_version": "LeviLamina 版本",
+        "ll_select_placeholder": "请选择 LeviLamina 版本",
+        "ll_select_guidance": "请选择你要安装、升级、降级或重装的 LeviLamina 版本。",
+        "ll_remove_confirm_title": "确认移除 LeviLamina",
+        "ll_remove_confirm_body": "将从当前实例中移除 LeviLamina。",
+        "ll_remove_confirm_warning": "此操作不可撤销。",
+        "wine_bridge_status_enabled": "已启用",
+        "wine_bridge_status_disabled": "已禁用",
+        "wine_bridge_status_not_installed": "未安装",
+        "wine_bridge_requires_ll": "请先安装 LeviLamina 后再安装 LeviWineBridge。",
+        "wine_bridge_view_details": "查看详情",
+        "wine_bridge_install": "安装",
+        "wine_bridge_install_success": "LeviWineBridge 已安装。",
+        "wine_bridge_update_success": "LeviWineBridge 已更新。",
+        "wine_bridge_install_failed": "LeviWineBridge 安装失败。",
+        "wine_bridge_enable_success": "LeviWineBridge 已启用。",
+        "wine_bridge_enable_failed": "启用 LeviWineBridge 失败。"
+      }
+    },
+    "logo": {
+      "title": "自定义图标（需为正方形）",
+      "change": "点击更换",
+      "clear": "清除",
+      "hint": "图标会保存在实例文件夹中。点击图标即可更换。"
+    },
+    "unsaved": {
+      "body": "你更改了实例设置但尚未保存。是否保存后离开？"
+    },
+    "sort": {
+      "name": "名称 (A-Z)",
+      "name_za": "名称 (Z-A)",
+      "version": "版本 (新到旧)",
+      "version_old_new": "版本 (旧到新)"
+    },
+    "tab": {
+      "all": "全部",
+      "preview": "预览版",
+      "release": "正式版"
+    }
+  },
+  "mirror": {
+    "target": "目标实例"
+  },
+  "errorDetail": {
+    "causes_title": "可能的原因",
+    "technical_title": "技术详情",
+    "copy": "复制详情",
+    "copied": "已复制详情",
+    "copy_failed": "复制详情失败",
+    "open_logs": "打开日志文件夹",
+    "log_hint": "完整日志保存在启动器日志文件夹中。"
+  },
+  "errors": {
+    "explain": {
+      "game_exited_early": "游戏进程已启动，但很快又退出了。常见原因是某个模组、附加包或资源包有问题，或游戏文件已损坏。",
+      "game_no_window": "游戏进程在运行，却一直没有出现窗口。可能卡在加载某个模组，或缺少运行库、显卡驱动有问题。",
+      "loader_activation": "无法为该实例准备模组加载器。请检查实例文件夹是否完整且可写，然后在实例设置中重新安装 LeviLamina。",
+      "bad_executable": "游戏主程序与当前系统不匹配或已损坏。请重新安装该实例，或选择适合你平台的版本。",
+      "access_denied": "Windows 拒绝访问某个文件或文件夹。请关闭可能占用它的程序（包括杀毒软件），确认实例文件夹可写，或以管理员身份运行启动器。",
+      "file_in_use": "有文件正被其他程序占用，通常是游戏本身或杀毒软件在扫描。请关闭游戏以及访问实例文件夹的程序后重试。",
+      "disk_full": "磁盘可用空间不足。请释放空间，或将实例移到其他磁盘。",
+      "path_too_long": "某个文件路径对 Windows 来说太长。请把实例移到更短的目录，或缩短实例名称。",
+      "not_found": "缺少必需的文件或文件夹。实例可能被移动、删除或只安装了一部分，请尝试修复或重新安装。",
+      "developer_mode": "此操作需要开启 Windows 开发人员模式。请在「设置 > 系统 > 开发者选项」中开启后重试。",
+      "dns": "无法解析服务器域名。请检查网络连接、DNS 或代理设置。",
+      "tls": "无法建立安全连接。请确认系统日期和时间正确，且没有代理或安全软件拦截连接。",
+      "timeout": "服务器响应超时。请检查网络，稍后重试，或在设置中启用镜像/代理。",
+      "connection": "与服务器的连接被拒绝或中断。请检查网络、防火墙和代理设置后重试。",
+      "http_403": "服务器拒绝了请求（HTTP 403）。该服务可能限制了你所在的网络地区，可尝试在设置中启用镜像或代理。",
+      "http_404": "服务器上找不到该文件（HTTP 404）。它可能已被移除或改名，请刷新列表后重试。",
+      "http_429": "服务器正在限制请求频率（HTTP 429）。请等待几分钟后重试。",
+      "http_5xx": "服务器报告了内部错误，问题在服务器一侧，请稍后重试。",
+      "lip_no_package": "没有与该版本、该平台匹配的包。该模组可能尚未支持当前游戏版本。",
+      "lip_already_installed": "该包已经安装。请使用「更新」而不是「安装」。",
+      "lip_conflict": "这些包的版本要求相互冲突，无法同时安装。请移除或更新冲突的模组后重试。",
+      "corrupt_download": "下载的文件已损坏或不完整。请在设置中清理下载缓存后重试。"
+    },
+    "ERR_GAME_ALREADY_RUNNING": "检测到当前实例 Minecraft 已在运行，请先关闭再启动或者切换其他实例",
+    "ERR_TARGET_DIR_NOT_SPECIFIED": "未指定目标目录",
+    "ERR_CREATE_TARGET_DIR": "无法创建目标目录",
+    "ERR_NOT_FOUND_GAME_DIR": "未找到游戏文件",
+    "ERR_NOT_FOUND_EXE": "未找到游戏主程序",
+    "ERR_WRITE_TARGET": "无法写入实例目录",
+    "ERR_LAUNCH_GAME": "游戏未能正常启动",
+    "ERR_GAME_CRASH_DURING_LAUNCH": "启动过程中游戏崩溃",
+    "ERR_WAIT_KERNEL_TIMEOUT": "等待游戏启动超时",
+    "ERR_COPY_WALK": "无法读取要复制的文件",
+    "ERR_COPY_FAILED": "复制失败",
+    "ERR_NAME_REQUIRED": "名称不能为空",
+    "ERR_NAME_TOO_LONG": "名称过长",
+    "ERR_NAME_TRAILING_DOT_SPACE": "名称不能以空格或点结尾",
+    "ERR_NAME_INVALID_CHAR": "名称包含非法字符: <>:\"/\\|?*",
+    "ERR_NAME_CONTROL_CHAR": "名称包含控制字符",
+    "ERR_NAME_RESERVED": "该名称是 Windows 保留名称（如 CON、PRN、NUL），请换一个名称",
+    "ERR_ACCESS_VERSIONS_DIR": "无法访问实例目录",
+    "ERR_ACCESS_INSTALLERS_DIR": "无法访问安装包目录",
+    "ERR_READ_VERSIONS_DIR": "无法读取实例目录",
+    "ERR_LL_VERSION_UNSUPPORTED": "所选 LeviLamina 版本不受当前游戏版本支持",
+    "ERR_LL_NOT_SUPPORTED": "当前游戏版本不支持 LeviLamina",
+    "ERR_FETCH_LL_DB": "获取 LeviLamina 版本数据失败",
+    "ERR_INVALID_VERSION_FORMAT": "游戏版本格式无效",
+    "ERR_LIP_INSTALL_FAILED": "安装 LeviLamina 失败",
+    "ERR_NAME_EXISTS": "名称已存在",
+    "ERR_INVALID_NAME": "无效的名称",
+    "ERR_ICON_DECODE": "图标解析失败",
+    "ERR_ICON_NOT_SQUARE": "图标必须是正方形",
+    "ERR_NOT_FOUND_OLD": "未找到原目录",
+    "ERR_RENAME_FAILED": "重命名失败，可能被占用或无权限",
+    "ERR_MSIXVC_NOT_SPECIFIED": "未指定安装包",
+    "ERR_MSIXVC_NOT_FOUND": "安装包不存在",
+    "ERR_APPX_UNINSTALL_FAILED": "卸载已安装游戏失败",
+    "ERR_APPX_INSTALL_FAILED": "安装失败，请重试。",
+    "ERR_MC_NOT_AUTHORIZED": "当前账户没有 {{typeLabel}} Minecraft 的授权。请登录拥有该游戏的微软账户，或购买后重试。",
+    "ERR_INHERIT_SOURCE_NOT_FOUND": "未找到要继承的实例",
+    "ERR_DELETE_FAILED": "删除失败，可能被占用或无权限",
+    "ERR_INHERIT_TARGET_NOT_FOUND": "未找到目标实例",
+    "ERR_INHERIT_TYPE_MISMATCH": "两个实例类型不同，无法继承数据",
+    "ERR_INHERIT_COPY_FAILED": "复制继承数据失败",
+    "ERR_NO_GAME_DATA": "当前来源没有任何游戏数据",
+    "ERR_GAMEINPUT_INSTALL": "无法在当前 Wine 环境中安装 GameInput。",
+    "ERR_VCRUNTIME_MISSING": "缺少必要的运行库。请安装 Microsoft Visual C++ 运行库后重试。",
+    "ERR_SHORTCUT_CREATE_FAILED": "创建桌面快捷方式失败",
+    "ERR_UNREGISTER_FAILED": "取消注册失败",
+    "ERR_NOT_REGISTERED_THIS_VERSION": "该实例未注册到系统",
+    "ERR_DEV_MODE_REQUIRED": "系统未开启开发者模式，且自动开启失败。请手动开启开发者模式后重试。",
+    "ERR_LIP_PACKAGE_INVALID_IDENTIFIER": "包标识无效",
+    "ERR_LIP_PACKAGE_VERSION_REQUIRED": "需要指定包的版本",
+    "ERR_LIP_PACKAGE_INSTALL_FAILED": "安装包失败",
+    "ERR_LIP_PACKAGE_UNINSTALL_FAILED": "卸载包失败",
+    "ERR_LIP_PACKAGE_QUERY_FAILED": "查询包状态失败",
+    "ERR_LIP_CACHE_CLEAN_FAILED": "清理缓存失败",
+    "ERR_LIP_PACKAGE_REQUIRED_BY_DEPENDENTS": "该包仍被其他已安装的模组依赖，暂时无法卸载",
+    "ERR_LIP_PACKAGE_DEMOTED_TO_DEPENDENCY": "该包仍被其他已安装的模组依赖，无法完全卸载；现在仅作为依赖保留，等不再被需要时会自动清理。",
+    "ERR_LL_MANAGED_IN_VERSION_SETTINGS": "LeviLamina 只能在实例设置中管理",
+    "ERR_INSTANCE_BACKUP_INSTANCE_NOT_FOUND": "未找到要备份的实例",
+    "ERR_INSTANCE_BACKUP_NO_SCOPE": "请至少选择一个备份范围",
+    "ERR_INSTANCE_BACKUP_INVALID_SCOPE": "包含无效的备份范围",
+    "ERR_INSTANCE_BACKUP_INVALID_SCOPE_MODE": "备份范围模式无效",
+    "ERR_INSTANCE_BACKUP_GAME_DATA_NOT_FOUND": "未找到 Minecraft Bedrock 数据目录",
+    "ERR_INSTANCE_BACKUP_CREATE_DIR": "创建实例备份目录失败",
+    "ERR_INSTANCE_BACKUP_CREATE_ARCHIVE": "创建实例备份压缩包失败",
+    "ERR_INSTANCE_BACKUP_READ_SOURCE": "读取备份源目录失败",
+    "ERR_INSTANCE_BACKUP_WRITE_ARCHIVE": "写入实例备份压缩包失败",
+    "ERR_INSTANCE_BACKUP_ARCHIVE_OPEN": "无法打开实例备份压缩包",
+    "ERR_INSTANCE_BACKUP_INVALID_ARCHIVE": "实例备份压缩包格式无效",
+    "ERR_INSTANCE_BACKUP_MODS_STATE_UNAVAILABLE": "无法确认模组列表，请刷新实例后重新备份。",
+    "ERR_INSTANCE_BACKUP_RESTORE_EXTRACT_ARCHIVE": "解压实例备份失败",
+    "ERR_INSTANCE_BACKUP_RESTORE_WRITE_TARGET": "恢复实例备份内容失败",
+    "ERR_INSTANCE_BACKUP_RESTORE_CONFLICT_UNRESOLVED": "仍有恢复冲突未处理，请先完成选择。",
+    "ERR_INSTANCE_BACKUP_RESTORE_INVALID_CONFLICT_RESOLUTION": "恢复冲突处理方式无效，请重新检查选择。",
+    "ERR_INSTANCE_BACKUP_RESTORE_FULL_REQUIRES_EMPTY_TARGET": "全量 Minecraft Bedrock 备份只能恢复到空目标目录",
+    "ERR_INSTANCE_BACKUP_RESTORE_LIP_INSTALL_FAILED": "部分模组包安装失败",
+    "ERR_INSTANCE_BACKUP_RESTORE_LIP_MISSING": "部分模组包未能恢复",
+    "ERR_INSTANCE_BACKUP_RESTORE_LIP_VERSION_MISMATCH": "部分模组包版本与备份不一致",
+    "ERR_AUTH_FAILED": "微软账户登录或授权失败，请检查网络后重试。",
+    "ERR_AUTH_BROWSER_STORE_UNAVAILABLE": "当前登录未获得 Microsoft Store 安装授权，请重新登录拥有游戏的微软账户后重试。",
+    "ERR_AUTH_TIMEOUT": "登录已超时，请重试。",
+    "ERR_AUTH_DEVICE_CACHE": "无法读取设备授权缓存，请检查当前 Windows 用户和文件权限。",
+    "ERR_AUTH_DEVICE_BUSY": "账户正在用于另一项操作，请稍后重试。",
+    "ERR_AUTH_DEVICE_PROVISION": "设备授权失败，请检查网络后重试。",
+    "ERR_AUTH_DEVICE_TOKEN": "微软未签发设备许可令牌。请关闭代理或网络加速器，确认系统时间准确后重试。",
+    "ERR_AUTH_ACCOUNT_CHANGED": "当前微软账户已变更。请通过启动器头像刷新账户，然后重试。",
+    "ERR_AUTH_INTERACTION_REQUIRED": "请通过启动器头像登录拥有此游戏的微软账户，然后重试。",
+    "ERR_LICENSE_NOT_ENTITLED": "当前账户没有此版本的授权。",
+    "ERR_LICENSE_FULL_REQUIRED": "微软仅返回了试用许可证，无法安装正式版。请通过启动器头像选择拥有游戏的账户后重试。",
+    "ERR_LICENSE_HTTP": "无法取得微软内容许可证，请检查网络后重试。",
+    "ERR_LICENSE_MISSING_KEY": "微软返回的授权信息不包含此安装包。",
+    "ERR_LICENSE_UNSUPPORTED": "微软返回了不支持的许可证类型。",
+    "ERR_MSIXVC_UNSUPPORTED_FORMAT": "不支持此安装包格式，请使用完整的 Windows x64 安装包。",
+    "ERR_NATIVE_MSIXVC": "安装包验证或提取失败。",
+    "ERR_TARGET_EXISTS": "同名的实例目录已存在，请换一个名称。",
+    "ERR_INVALID_FOLDER_NAME": "实例目录名称无效。",
+    "ERR_CANCELED": "操作已取消。",
+    "ERR_AUTH_ACCOUNT_SELECTION": "无法恢复启动器已选择的微软账户。请检查当前 Windows 用户和账户配置文件的读取权限。",
+    "ERR_UWP_NOT_SPECIFIED": "请选择 UWP 安装包，或先下载对应版本。",
+    "ERR_INSTANCE_BACKUP_PACKAGE_TYPE_MISMATCH": "备份与目标实例的包类型不兼容，请选择相同包类型的实例。",
+    "ERR_UWP_UNSUPPORTED_FEATURE": "微软商店（UWP）实例不支持该功能。",
+    "ERR_UWP_INVALID_VERSION": "UWP 版本信息无效，请刷新版本列表后重试。",
+    "ERR_UWP_DOWNLOAD_URL": "未能从 Windows Update 获取 UWP 下载地址，请检查网络后重试。",
+    "ERR_UWP_QUERY": "无法读取 Windows 应用注册信息，请查看详细错误后重试。",
+    "ERR_UWP_DEPENDENCY": "缺少此安装包所需的 Windows 框架包。请安装与系统匹配的 Microsoft.VCLibs 等依赖后重试；桌面版 Visual C++ 运行库是另一个组件，不能替代它。",
+    "ERR_UWP_SYSTEM_VERSION": "当前 Windows 版本不满足此 UWP 包的最低要求，请更新 Windows 或选择兼容的游戏版本。",
+    "ERR_UWP_DEVELOPER_MODE": "Windows 阻止了 UWP 开发包注册，请在系统设置中启用开发者模式后重试。",
+    "ERR_UWP_PACKAGE_CONFLICT": "Windows 中已有冲突的 Minecraft 应用注册。启动器保留商店或外部安装的现有注册；请先备份游戏内容，再通过 Windows 系统设置自行处理冲突后重试。",
+    "ERR_UWP_REGISTER": "UWP 游戏包注册失败，请查看 Windows 返回的详细错误并重试。",
+    "ERR_UWP_UNREGISTER": "UWP 游戏包注销失败，请查看 Windows 返回的详细错误并重试。",
+    "ERR_UWP_REGISTER_ROLLBACK": "新实例注册失败，且未能恢复原实例注册。游戏文件仍保留，请查看详细错误并通过系统设置修复注册状态。",
+    "ERR_UWP_LAUNCH": "无法通过 Windows 应用激活启动 UWP 游戏，请检查包注册状态和详细错误。",
+    "ERR_UWP_MANIFEST": "UWP 安装清单缺失或无效，请选择完整的 Minecraft 安装包。",
+    "ERR_UWP_UNSAFE_ARCHIVE": "UWP 安装包包含不安全或冲突的文件路径，已停止安装。",
+    "ERR_UWP_ARCHITECTURE": "此 UWP 安装包不包含适合当前系统架构的游戏程序。",
+    "ERR_UWP_ARCHIVE": "UWP 安装包损坏或超出解压限制，请重新下载完整安装包。",
+    "ERR_UWP_INSTALL": "UWP 安装失败，请查看详细错误后重试。",
+    "ERR_UWP_NOT_MINECRAFT": "此安装包的应用标识或发布者与受支持的 Minecraft UWP 包不符。",
+    "ERR_UWP_PACKAGE_NOT_FOUND": "未找到对应的 UWP 安装包，请刷新版本列表或重新下载。",
+    "ERR_UWP_PACKAGE_NOT_SPECIFIED": "请选择 UWP 安装包，或先下载对应版本。",
+    "ERR_UWP_CHANNEL": "UWP 安装包与所选渠道不匹配，请选择对应渠道或重新导入本地安装包。",
+    "ERR_UWP_RESOURCE_BUNDLE": "此安装包附带独立的资源子包，暂不支持。请改用单个独立安装包。",
+    "ERR_UWP_INTEGRITY": "安装包完整性校验失败，请重新下载。",
+    "ERR_UWP_NOT_REGISTERED": "此 UWP 实例尚未注册到系统。请先点击“注册”，成功后再启动。",
+    "ERR_UWP_PREPARE": "无法为该实例准备系统注册，请检查实例目录权限后重试。",
+    "ERR_LIP_INVALID_GITHUB_PROXY": "请输入有效的 HTTP(S) URL"
+  },
+  "filemanager": {
+    "sort": {
+      "name": "名称"
+    }
+  },
+  "file": {
+    "types": {
+      "folder": "文件夹",
+      "executable": "可执行文件",
+      "library": "库文件",
+      "archive": "压缩包",
+      "image": "图片",
+      "text": "文本",
+      "json": "JSON",
+      "jar": "JAR 包",
+      "mcpack": "MCPack",
+      "mcaddon": "MCAddon",
+      "file": "文件"
+    }
+  },
+  "mods": {
+    "import_button": "导入 .mcmod",
+    "file_filter_mcmod": "LeviLauncher 模组 (*.mcmod)",
+    "file_filter_all": "所有文件 (*.*)",
+    "importing_title": "正在导入…",
+    "importing_body": "请稍候，正在处理所选文件。",
+    "importing_count": "已处理 {{done}} / {{total}} 个文件",
+    "summary_title_done": "导入完成",
+    "summary_title_partial": "导入完成（部分失败）",
+    "summary_success": "成功",
+    "summary_failed": "失败",
+    "details_title": "模组详情",
+    "field_name": "名称",
+    "field_version": "版本",
+    "field_type": "类型",
+    "field_entry": "入口",
+    "field_author": "作者",
+    "confirm_delete_body": "确定要删除此{{type}}吗？此操作不可撤销。",
+    "dll_modal_title": "导入 DLL 模组",
+    "dll_name": "模组名称",
+    "dll_type": "类型",
+    "dll_version": "版本",
+    "err_invalid_name": "实例名或模组名无效",
+    "err_access_versions_dir": "无法访问实例目录",
+    "err_create_target_dir": "创建目标目录失败",
+    "err_open_zip": "无法打开 ZIP 文件",
+    "err_open_package": "无法打开模组包，请选择有效的 .mcmod 文件",
+    "err_unsupported_file": "不支持的文件类型，请选择 .mcmod 文件",
+    "err_manifest_not_found": "压缩包内没有 manifest.json，不是有效的模组包",
+    "err_invalid_manifest": "manifest.json 无效或缺少必要字段",
+    "err_manifest_entry_not_found": "manifest.json 指定的入口文件不存在",
+    "err_invalid_package": "这不是有效的模组包",
+    "err_duplicate_folder": "已存在同名的模组文件夹",
+    "err_read_zip_entry": "无法读取压缩包内的文件",
+    "err_write_file": "写入文件失败",
+    "err_unknown": "未知错误",
+    "overwrite_modal_title": "检测到重复",
+    "overwrite_modal_body": "已安装同名模组，是否覆盖？",
+    "toggle_label": "启用模组",
+    "toggle_on": "已启用",
+    "toggle_off": "已关闭",
+    "toggle_desc_on": "模组已启用，启动游戏时会加载。",
+    "toggle_desc_off": "模组已关闭，启动游戏时不会加载。",
+    "only_enabled": "仅显示已启用的模组",
+    "drop_hint": "拖入 .mcmod 文件以导入模组",
+    "err_lip_install_failed_suggestion": "安装失败。请确认实例和 LeviLamina 安装正常后重试。",
+    "rc_warning": {
+      "title": "实验性版本警告",
+      "body_1": "检测到你即将安装的 LeviLamina 版本 ({{version}}) 为候选发布版 (RC)。",
+      "body_2": "这是一个实验性版本，可能存在不稳定因素，仅建议开发者或高级用户使用。",
+      "body_3": "是否继续安装？"
+    },
+    "action_update": "更新",
+    "action_uninstall": "卸载",
+    "action_promote_install": "标记为手动安装",
+    "action_promote_install_success": "{{name}} 已标记为手动安装，不会被自动清理",
+    "action_promote_install_failed_no_version": "未找到该包的已安装版本",
+    "batch_update_title": "批量更新模组",
+    "batch_update_body": "已选择 {{selected}} 个模组，其中 {{updatable}} 个可以更新，是否继续？",
+    "batch_uninstall_title": "批量卸载模组",
+    "batch_uninstall_body": "你将要卸载 {{count}} 个模组，是否继续？",
+    "update_available": "更新到 {{version}}",
+    "update_latest": "已是最新",
+    "no_update_source": "没有可用的更新源",
+    "err_ll_managed_in_version_settings": "LeviLamina 只能在实例设置中管理",
+    "action_result_title_done": "操作完成",
+    "action_result_title_partial": "操作完成（部分失败）",
+    "action_result_title_failed": "操作失败",
+    "tab_all": "全部",
+    "tab_normal": "普通模组",
+    "tab_lip": "包管理模组",
+    "lip_children_summary": "包含：{{children}}（+{{count}}）",
+    "lip_open_package": "打开包详情",
+    "lip_sync_loading": "本地模组已加载，正在获取在线信息…",
+    "lip_sync_error": "暂时无法获取在线信息，当前仅显示本地模组。",
+    "overwrite_and_import": "覆盖并导入"
+  },
+  "terms": {
+    "title": "LeviLauncher 用户协议",
+    "body": "欢迎使用 LeviLauncher\n\n使用本软件即表示你同意：\n• 这是一个非官方的 Minecraft 启动器\n• 你需要拥有正版授权的 Minecraft，否则游戏将以试玩模式运行\n• 禁止任何形式的盗版和作弊行为\n• 使用模组和资源包的风险由你自行承担\n• 本软件与 Mojang、Microsoft 无关联\n\n继续使用即视为接受以上条款",
+    "agree": "同意并继续",
+    "decline": "不同意，退出"
+  },
+  "contentdownload": {
+    "title": "内容下载"
+  },
+  "curseforge": {
+    "title": "CurseForge",
+    "search_placeholder": "搜索游戏内容…",
+    "search": "搜索",
+    "minecraft_version": "Minecraft 版本",
+    "select_version": "选择版本",
+    "all_versions": "全部版本",
+    "load_error": "加载数据失败，请重试",
+    "search_error": "搜索失败，请重试",
+    "class": "类型",
+    "select_class": "选择类型",
+    "all_classes": "全部类型",
+    "category": "分类",
+    "select_category": "选择分类",
+    "sort_by": "排序",
+    "select_sort": "选择排序",
+    "no_results": "未找到结果",
+    "by_author": "作者：{{author}}",
+    "no_description": "暂无简介。",
+    "downloads": "下载量",
+    "updated": "更新时间",
+    "created": "创建时间",
+    "size": "大小",
+    "game_version": "Minecraft 版本",
+    "mod_not_found": "未找到该内容",
+    "go_back": "返回",
+    "by": "作者",
+    "updated_date": "更新于 {{date}}",
+    "download_count": "{{count}} 次下载",
+    "install_action": "安装",
+    "website": "官网",
+    "source": "源码",
+    "issues": "反馈",
+    "no_download_url": "无下载链接",
+    "no_files_found": "未找到文件",
+    "sort": {
+      "featured": "精选",
+      "popularity": "热度",
+      "last_updated": "最近更新",
+      "creation_date": "创建日期",
+      "total_downloads": "总下载量"
+    },
+    "install": {
+      "downloading_title": "下载内容",
+      "select_version_title": "选择游戏实例",
+      "select_player_title": "选择玩家",
+      "importing_title": "正在导入",
+      "success_title": "成功",
+      "error_title": "错误",
+      "downloading_body": "正在下载文件…",
+      "select_version_body": "请选择要导入到的游戏实例：",
+      "local_installation": "本地实例",
+      "select_version_placeholder": "选择实例",
+      "registered": "已注册",
+      "select_player_body": "此内容需要选择玩家：",
+      "player_label": "玩家",
+      "select_player_placeholder": "选择玩家",
+      "importing_body": "正在导入内容…",
+      "success_msg": "导入成功",
+      "success_desc": "内容已成功导入到选定的实例。",
+      "failed_msg": "导入失败",
+      "next": "下一步",
+      "close": "关闭"
+    },
+    "mod_details_aria_label": "模组详情",
+    "loading_description": "正在加载描述…",
+    "mod_tabs": {
+      "description": "描述",
+      "files": "文件"
+    },
+    "mod_files": {
+      "title": "全部文件",
+      "table_aria_label": "模组文件表格",
+      "columns": {
+        "type": "类型",
+        "name": "名称",
+        "uploaded": "上传时间",
+        "size": "大小",
+        "downloads": "下载量",
+        "actions": "操作"
+      }
+    }
+  },
+  "lip": {
+    "search_placeholder": "搜索模组…",
+    "sort_by": "排序",
+    "select_sort": "选择排序",
+    "no_description": "暂无简介",
+    "ll_version_label": "LeviLamina 版本",
+    "ll_version_placeholder": "选择 LeviLamina 版本",
+    "ll_all_versions": "所有 LeviLamina 版本",
+    "game_version_label": "游戏版本",
+    "game_version_placeholder": "选择游戏版本",
+    "game_all_versions": "所有游戏版本",
+    "mapping_unavailable_hint": "暂时无法获取 LeviLamina 版本信息，已关闭 LeviLamina 版本筛选以免匹配错误。",
+    "files": {
+      "game_versions_unknown": "未找到匹配的游戏版本",
+      "version_count": "{{count}} 个版本",
+      "game_versions_label": "游戏版本",
+      "game_versions_unrestricted": "无游戏版本限制",
+      "game_versions_unavailable": "兼容性未知",
+      "dependencies_count": "{{count}} 个依赖",
+      "install": "安装",
+      "upgrade": "升级",
+      "downgrade": "降级",
+      "reinstall": "重装",
+      "redirect": "前往加载器",
+      "instance_game_version_label": "游戏版本",
+      "select_instance_title": "选择目标实例",
+      "installing_version_label": "将安装的版本",
+      "variant_label": "变体",
+      "variant_hint_keep_default": "大多数包只有一个变体，除非作者另有说明，保持默认即可",
+      "variant_placeholder": "选择要安装的变体",
+      "select_version_incompatible_hint": "版本 {{version}} 与游戏版本 {{gameVersion}} 不兼容。",
+      "checking_ll_state": "正在检查 LeviLamina 状态…",
+      "mapping_unavailable_blocked_hint": "暂时无法确认 LeviLamina 与游戏版本的兼容关系，已阻止本次安装以免装错包。",
+      "ll_missing_redirect_hint": "该实例尚未安装 LeviLamina。点击“前往加载器”会打开实例设置中的加载器页面，请先在那里安装 LeviLamina。",
+      "ll_missing_redirect_to_loader": "未检测到 LeviLamina，正在跳转到实例设置的加载器页面。",
+      "ll_installed_incompatible_hint": "已安装的 LeviLamina 版本 {{installedVersion}} 与此包不兼容，请先手动调整 LeviLamina。",
+      "action_failed": "操作失败：{{error}}",
+      "tab_label": "版本",
+      "table_aria_label": "包文件表格",
+      "install_success": "安装成功",
+      "upgrade_success": "升级成功",
+      "downgrade_success": "降级成功",
+      "reinstall_success": "重装成功",
+      "current_installed_version_label": "当前已安装版本",
+      "checking_current_installed_version": "正在检查当前已安装版本…",
+      "prerelease": "预发布",
+      "no_client_variant": "此模组没有可在 {{platform}} 客户端上安装的变体，LeviLauncher 无法安装。"
+    },
+    "guide": {
+      "open_button": "开发者指南",
+      "title": "LeviMC 模组开发者指南",
+      "description": "如果你希望自己的模组出现在 LeviLauncher 的 LeviMC 模组页面中，请按照文档在仓库中提供 lip.toml 并发布。",
+      "manifest_hint": "当模组最新版本的 lip.toml 中有 side = \"client\" 且 platform = \"win-x64\" 的条目时，LeviLauncher 才会收录它，并安装与之匹配的变体：优先 \"client\"，其次默认变体 \"\"，其余按名称排序。",
+      "variant_hint": "请为每个支持的运行端和平台各添加一个条目，例如在服务端条目旁添加 side = \"client\"、platform = \"win-x64\" 的 [[variants.\"\"]] 条目。在 [info] tags 中使用 \"library\"、\"economy\" 等推荐标签，模组就会出现在对应的筛选中。",
+      "docs_button": "查看完整规范",
+      "close_button": "关闭"
+    },
+    "title": "LeviMC 模组",
+    "sort_options": {
+      "relevance": "相关性",
+      "stars": "星标",
+      "updated": "最近更新",
+      "newest": "最新发布"
+    },
+    "filters": {
+      "title": "筛选",
+      "title_count": "筛选（{{count}}）",
+      "clear": "清除所有筛选",
+      "active": "已选筛选条件",
+      "tags": "标签",
+      "other_tags": "其他标签",
+      "license": "许可证",
+      "dependencies": "依赖",
+      "exclude": "排除 {{label}}",
+      "not_label": "排除 {{label}}",
+      "remove": "移除筛选：{{label}}",
+      "show_more": "再显示 {{count}} 项",
+      "show_fewer": "收起",
+      "search_tags": "搜索标签…",
+      "license_ids": "{{family}}许可证",
+      "depends_on": "依赖 {{name}}",
+      "more_by_owner": "{{owner}} 的更多项目",
+      "more_tags": "另外 {{count}} 项"
+    },
+    "tags": {
+      "library": "前置库 / API",
+      "utility": "实用工具",
+      "management": "服务器管理",
+      "game-mechanics": "游戏机制",
+      "adventure": "内容与冒险",
+      "visual": "视觉与界面",
+      "economy": "经济",
+      "teleport": "传送",
+      "anticheat": "反作弊",
+      "optimization": "性能优化",
+      "bugfix": "错误修复",
+      "technology": "技术与红石",
+      "protocol": "协议与多版本"
+    },
+    "license": {
+      "permissive": "宽松",
+      "weak-copyleft": "弱著佐权",
+      "copyleft": "著佐权",
+      "other": "其他",
+      "none": "无许可证"
+    },
+    "variant_default": "默认",
+    "mod_id": "模组 ID",
+    "by_author_inline": "作者 {{author}}",
+    "package_details_aria_label": "包详情",
+    "task_console": {
+      "title_install": "安装中",
+      "title_upgrade": "升级中",
+      "title_downgrade": "降级中",
+      "title_reinstall": "重装中",
+      "title_update": "更新中",
+      "title_uninstall": "卸载中",
+      "title_generic": "包管理任务",
+      "status_running": "运行中",
+      "status_success": "成功",
+      "status_failed": "失败",
+      "target_label": "目标实例",
+      "progress_label": "进度",
+      "log_title": "日志输出",
+      "no_output": "暂无输出",
+      "waiting_start": "正在等待包管理器…",
+      "copy_logs": "复制日志",
+      "copy_success": "日志已复制",
+      "close": "关闭",
+      "stage_install_pkg": "安装目标包",
+      "stage_fallback_delete": "无法通过包管理卸载，改为直接删除目录"
+    },
+    "task_progress": {
+      "stage_task": "应用包变更",
+      "stage_resolve": "解析包",
+      "stage_solve": "解析依赖",
+      "stage_git_fetch": "从 Git 拉取",
+      "stage_download": "下载",
+      "stage_extract": "解压",
+      "stage_place": "复制文件",
+      "stage_scripts": "运行脚本",
+      "stage_remove": "删除文件",
+      "stage_cache_clean": "删除缓存",
+      "stage_generic": "处理中",
+      "unit_files": "文件",
+      "unit_objects": "对象",
+      "unit_blobs": "数据块",
+      "unit_packages": "包",
+      "unit_commands": "命令",
+      "unit_manifests": "已读取清单",
+      "amount": "{{unit}}：{{current}} / {{total}}",
+      "amount_unknown": "{{unit}}：{{current}}",
+      "outer": "第 {{current}} 项，共 {{total}} 项",
+      "show_log": "显示日志",
+      "hide_log": "隐藏日志"
+    },
+    "package": {
+      "confirm_install_title": "确认安装",
+      "confirm_install_body": "确定要为实例 {{instance}} {{action}} {{package}} {{version}} 吗？"
+    }
+  },
+  "server": {
+    "offline": "离线 / 无法连接",
+    "players": "在线玩家",
+    "delay": "延迟",
+    "online": "在线",
+    "version": "版本"
+  },
+  "installpage": {
+    "error": {
+      "dll_dependency_missing": "缺少 Visual C++ 运行库",
+      "name_required": "名称不能为空",
+      "msixvc_not_specified": "未指定安装包",
+      "unknown": "未知错误",
+      "nh_err_unknown": "未知错误",
+      "nh_err_exception": "安装程序意外退出，请重试。",
+      "nh_err_invalid_params": "安装程序收到了无效的参数，请重试。",
+      "nh_err_key_not_found": "游戏安装包校验失败，请删除安装包后重试",
+      "nh_err_unauthorized_caller": "请确保启动器 exe 名称未被修改（LeviLauncher.exe）",
+      "nh_err_pipe_open_failed": "无法读取安装进度，请重试。",
+      "nh_err_input_not_found": "未找到安装包文件，请重新下载。",
+      "nh_err_output_dir_invalid": "安装目录不可用，请更换目录。",
+      "nh_err_parse_failed": "无法读取安装包内容，请重新下载。",
+      "nh_err_extract_failed": "安装包解压失败，请重新下载。"
+    }
+  },
+  "analytics": {
+    "prompt": {
+      "title": "愿意帮助我们改进 LeviLauncher 吗？",
+      "body": "经你同意，LeviLauncher 会使用 Google Analytics 统计启动器页面访问和基础设备信息，以改进功能和界面。Google Analytics 会使用 Cookie 识别访问。我们不会发送账户信息、游戏数据或本地文件路径。你可以随时在“设置 > 隐私”中关闭。",
+      "enable": "同意并开启",
+      "disable": "暂不开启",
+      "google_analytics_terms": "Google Analytics 服务条款",
+      "google_privacy": "Google 隐私政策"
+    }
+  },
+  "audit": {
+    "primary": {
+      "local_install": "本地安装",
+      "download_minecraft": "下载 Minecraft",
+      "select_instance_first": "请先选择实例，再使用这些操作。",
+      "clear_filters": "清除搜索和筛选",
+      "download": {
+        "verifying": "正在校验安装包完整性",
+        "cancel": "取消下载",
+        "remove": "移除记录",
+        "remove_hint": "移除记录，保留已下载的文件",
+        "progress": "{{name}} 的下载进度",
+        "failed": "版本列表加载失败，请检查网络后重试。",
+        "stale": "版本列表刷新失败，正在显示已保存的列表。",
+        "no_matches": "没有符合搜索或筛选条件的版本。"
+      },
+      "instances": {
+        "failed": "实例列表加载失败，请重试。",
+        "empty": "尚未安装实例",
+        "empty_description": "下载 Minecraft 或导入本地安装包，创建第一个实例。",
+        "no_matches": "没有符合搜索或筛选条件的实例。",
+        "settings": "{{name}} 的设置"
+      },
+      "install": {
+        "failed": "安装失败",
+        "copy_details": "复制错误详情",
+        "copied": "已复制错误详情",
+        "copy_failed": "复制失败，请选中上方错误文本手动复制。",
+        "go_launch": "选择实例并前往启动"
+      },
+      "onboarding": {
+        "keep_current": "保留当前目录继续"
+      },
+      "clear_search": "清除搜索"
+    },
+    "mods": {
+      "name_required": "请输入模组名称后再导入。",
+      "clear_search": "清除搜索",
+      "clear_filters": "清除筛选",
+      "no_filtered_results": "已安装的模组中没有符合当前搜索或筛选条件的内容。",
+      "more_actions": "{{name}} 的更多操作",
+      "view_details": "查看 {{name}} 的详情",
+      "copy_project_link": "复制项目链接",
+      "link_copied": "已复制项目链接",
+      "copy_failed": "复制链接失败，请重试。",
+      "project_page": "打开项目主页",
+      "detail_load_failed": "项目加载失败，请检查网络连接后重试。",
+      "description_load_failed": "说明加载失败，仍可查看项目信息和文件。",
+      "files_load_failed": "文件列表加载失败，请重试。",
+      "catalog_load_failed": "无法加载包列表，请检查网络后重试。",
+      "install_file": "安装 {{name}}",
+      "path_save_success": "已保存存储路径",
+      "path_reset_success": "已恢复默认存储路径",
+      "path_save_failed": "无法更新存储路径：{{message}}",
+      "close_update_window": "关闭更新窗口",
+      "update_recovery": "关闭此更新窗口后，重新打开 LeviLauncher 并再次检查更新。如果问题持续，请从官方项目主页下载最新安装程序。",
+      "theme_color": "{{name}}（{{hex}}）",
+      "custom_color": "自定义主题颜色",
+      "github": "在 GitHub 上查看 LiteLDev",
+      "discord": "加入 Discord 社区",
+      "colors": {
+        "emerald": "翡翠绿",
+        "blue": "蓝色",
+        "violet": "紫罗兰",
+        "amber": "琥珀色",
+        "pink": "粉色",
+        "cyan": "青色",
+        "win_yellow": "Windows 黄色",
+        "win_orange": "Windows 橙色",
+        "win_red": "Windows 红色",
+        "win_blue": "Windows 蓝色",
+        "win_green": "Windows 绿色",
+        "win_purple": "Windows 紫色",
+        "win_teal": "Windows 蓝绿色",
+        "win_pink_red": "Windows 粉红色",
+        "win_light_orange": "浅橙色",
+        "win_orange_red": "橙红色",
+        "win_red_orange": "红橙色",
+        "win_light_red": "浅红色",
+        "win_bright_red": "亮红色",
+        "win_deep_red": "绯红色",
+        "win_rose": "玫瑰色",
+        "win_dark_rose": "深玫瑰色",
+        "win_magenta": "品红色",
+        "win_dark_magenta": "深品红色",
+        "win_orchid": "兰花紫",
+        "win_dark_orchid": "深兰花紫",
+        "win_dark_blue": "深蓝色",
+        "win_light_purple": "浅紫色",
+        "win_medium_purple": "中紫色",
+        "win_dark_purple": "暗紫色",
+        "win_light_magenta": "浅品红色",
+        "win_deep_purple": "深紫色",
+        "win_dark_teal": "深蓝绿色",
+        "win_cyan": "Windows 青色",
+        "win_dark_cyan": "深青色",
+        "win_green_blue": "绿蓝色",
+        "win_dark_green_blue": "深绿蓝色",
+        "win_light_green": "浅绿色",
+        "win_gray": "灰色",
+        "win_dark_gray": "深灰色",
+        "win_blue_gray": "蓝灰色",
+        "win_dark_blue_gray": "深蓝灰色",
+        "win_green_gray": "绿灰色",
+        "win_dark_green_gray": "深绿灰色",
+        "win_olive": "橄榄色",
+        "win_dark_green": "深绿色",
+        "win_medium_gray": "中灰色",
+        "win_darker_gray": "炭灰色",
+        "win_slate_gray": "石板灰"
+      },
+      "color_preview": "颜色预览：{{hex}}",
+      "invalid_hex": "请输入六位十六进制颜色，例如 #10B981。",
+      "invalid_rgb": "请输入 0 至 255 的整数。",
+      "rgb_red": "红色（R）",
+      "rgb_green": "绿色（G）",
+      "rgb_blue": "蓝色（B）"
+    },
+    "usability": {
+      "process_all": "全部 {{count}} 个 Minecraft 进程",
+      "process_confirm": "结束 Minecraft 进程？",
+      "process_warning": "即将强制结束 {{target}}。尚未保存的游戏进度可能丢失，是否继续？",
+      "process_success": "已结束 Minecraft 进程。",
+      "process_failed": "进程操作未完成：{{message}}",
+      "continue_editing": "继续编辑",
+      "discard_leave": "放弃修改并离开",
+      "start_using": "开始使用 LeviLauncher",
+      "root_load_failed": "无法确认当前内容目录。请重试，或选择可写入的目录并应用后继续。",
+      "content_load_failed": "无法加载该内容，请重试。",
+      "worlds_partial": "有 {{count}} 个世界的信息读取失败，以下文件夹未显示在列表中：",
+      "choose_player": "请先选择玩家。如果没有可选玩家，请先在游戏中创建或登录玩家档案。",
+      "appearance_theme": "主题与配色",
+      "appearance_layout": "布局与动效",
+      "appearance_wallpaper": "壁纸",
+      "appearance_material": "材质与可读性",
+      "search_settings": "搜索设置",
+      "search_count": "找到 {{count}} 个设置分区",
+      "browse_downloads": "前往下载",
+      "download_filters": "筛选下载任务",
+      "download_all": "全部任务",
+      "download_active": "进行中",
+      "download_done": "已完成",
+      "download_failed": "失败 / 已取消",
+      "install_download": "安装此版本",
+      "main_nav": "主导航",
+      "browse_content": "浏览内容"
+    }
+  },
+  "uwp": {
+    "register_button": "注册",
+    "registering": "注册中…",
+    "unregistering": "取消注册中…",
+    "launching": "启动中…",
+    "local_installer": "选择本地安装包",
+    "package_type": "游戏包类型",
+    "beta": "Beta 版",
+    "install_description": "安装微软商店（UWP）版游戏包，通过 Windows 应用注册启动。支持实例隔离、控制台和兼容的原生 DLL 模组。",
+    "isolation_min_version": "UWP 实例隔离仅支持 {{version}} 及以上版本。",
+    "launch_options_description": "UWP x64 支持实例隔离与控制台。隔离后，本地游戏数据保存在实例目录中；现有共享数据不会自动复制。游戏仍通过 Windows 应用激活启动，启动参数和环境变量暂不可用。",
+    "loader_description": "UWP x64 支持加载兼容当前游戏版本的 preload-native DLL 模组。可在模组管理中导入，也可放入实例的 mods 目录。LeviLamina 自动安装目前仅适用于受支持的 GDK 版本。",
+    "shared_content": "未启用隔离的 UWP 实例共享同一 Windows 应用的游戏内容",
+    "open_content_dir": "打开 UWP 内容目录",
+    "not_specified": "请选择 UWP 安装包，或先下载对应版本。",
+    "resolving_download": "获取下载地址…"
+  },
+  "troubleshoot": {
+    "causes_title": "可能的原因",
+    "steps_title": "解决办法",
+    "open_faq": "在常见问题中查看详情",
+    "open_faq_index": "浏览常见问题",
+    "learn_more": "了解详情",
+    "how_to_fix": "可能的原因与解决办法",
+    "action_failed": "无法打开",
+    "action_failed_body": "Windows 无法打开该链接或设置页面。",
+    "installer_started": "安装程序已启动",
+    "installer_started_body": "请按 Windows 的提示完成安装，完成后可再次运行诊断。",
+    "developer_mode_enabled": "开发者模式已开启",
+    "developer_mode_failed": "未能开启开发者模式",
+    "developer_mode_failed_body": "管理员权限请求被拒绝或被阻止。请在“设置 > 系统 > 开发者选项”中手动开启。",
+    "download_failed_title": "下载失败",
+    "download_start_failed_title": "无法开始下载",
+    "download_failed_hint": "下载管理中列出了可能的原因，并提供诊断按钮。",
+    "version_list_failed_hint": "版本列表来自 GitHub。如果一直失败，请在设置中开启“使用镜像源”，或运行诊断。",
+    "action": {
+      "diagnose": "运行诊断",
+      "install_vcruntime": "安装 Visual C++ 运行库",
+      "install_gameinput": "安装 GameInput",
+      "open_gaming_services": "获取 Gaming Services",
+      "open_minecraft_store": "在商店中打开 Minecraft",
+      "open_preview_store": "获取 Minecraft 预览版",
+      "open_buy": "购买 Minecraft",
+      "open_devices": "管理设备",
+      "open_orders": "订单记录",
+      "enable_developer_mode": "开启开发者模式",
+      "open_developer_settings": "打开开发者选项",
+      "open_proxy_settings": "打开代理设置",
+      "open_date_settings": "打开日期和时间设置",
+      "open_region_settings": "打开区域设置",
+      "open_apps_settings": "打开已安装的应用",
+      "open_storage_settings": "打开存储设置",
+      "open_mirror_settings": "打开包管理设置",
+      "open_wine_settings": "前往 Wine 设置",
+      "open_data_settings": "打开数据目录设置",
+      "open_process_settings": "打开运行中的进程",
+      "open_update_settings": "打开更新设置",
+      "open_download_page": "前往下载页",
+      "open_account": "打开账户菜单",
+      "open_logs": "打开日志文件夹",
+      "open_releases": "打开 GitHub Releases"
+    },
+    "license": {
+      "preview_only": {
+        "title": "此账户无法使用正式版，但预览版可用",
+        "body": "微软拒绝为此账户发放正式版（Release）授权，而预览版（Preview）已授权。常见原因：游戏是在另一个微软账户上购买的；购买已退款，或来自已到期的 Game Pass 订阅；或账户已达到 10 台设备的上限。请检查 Microsoft Store 的游戏库和订单记录，移除不再使用的设备，然后刷新。",
+        "banner": "使用此账户下载或安装正式版会失败；预览版可以正常使用。"
+      },
+      "release_only": {
+        "title": "此账户无法使用预览版",
+        "body": "正式版已授权，但预览版需要单独的授权：请用此账户在 Microsoft Store 或 Xbox 应用中获取一次“Minecraft Preview”。在中国大陆，需要先把 Windows 的区域改为其他国家或地区，因为商店不在该区域提供预览版。",
+        "banner": "可以安装正式版；在此账户获得预览版授权之前，安装预览版会失败。"
+      },
+      "trial": {
+        "title": "只有试用版授权",
+        "body": "微软只发放了试用版授权。通常是账户没有购买完整版、完整版在另一个账户上，或账户已达到 10 台设备的上限。",
+        "banner": "在此账户获得完整授权之前，安装游戏版本会失败。"
+      },
+      "none": {
+        "title": "此账户未拥有 Minecraft for Windows",
+        "body": "正式版和预览版都未授权。请登录购买了 Minecraft for Windows 的微软账户（仅在游戏内登录 Xbox 并不等于拥有 PC 版），或购买游戏。",
+        "banner": "下载和安装游戏版本需要拥有 Minecraft for Windows 的账户。"
+      },
+      "error": {
+        "title": "无法检查授权",
+        "body": "启动器无法连接微软检查授权。常见原因是代理、VPN、“网络加速器”或系统时间不正确。运行诊断即可找出原因。"
+      },
+      "partial_error": {
+        "title": "有一个渠道的授权无法检查",
+        "body": "其中一个渠道的授权检查失败（网络或微软服务问题）。请刷新重试；若一直失败，请运行诊断。"
+      },
+      "signed_out": {
+        "title": "未登录",
+        "banner": "请登录拥有 Minecraft 的微软账户，才能下载和安装游戏版本。"
+      },
+      "unreachable": {
+        "title": "无法连接 Xbox Live",
+        "body": "你的账户仍处于选中状态，但启动器无法连接 Xbox Live 进行确认，因此下载和授权检查都会失败。常见原因是代理、VPN、防火墙、“网络加速器”或系统时间不正确。运行诊断即可找出原因。",
+        "banner": "账户仍处于选中状态，但无法连接 Xbox Live，因此暂时无法下载游戏版本。运行诊断可以找出原因。",
+        "other_account": "要使用其他账户？"
+      }
+    },
+    "guide": {
+      "launch_game": {
+        "cause": {
+          "components": "游戏需要的组件缺失或损坏：Visual C++ 运行库，以及 GDK 版需要的 GameInput 和 Microsoft Gaming Services。",
+          "first_run": "这台电脑上从未通过 Microsoft Store 或 Xbox 应用安装并启动过 Minecraft（重装系统后很常见），因此游戏依赖的系统组件从未安装。",
+          "stale_login": "很久没玩后，游戏保存的 Xbox 登录数据已过期；用官方方式启动一次游戏即可刷新。",
+          "mods": "某个模组、附加包、资源包或光影与此游戏版本不兼容（如果只有装了模组才出现）。",
+          "graphics": "显卡驱动过旧或损坏，或者叠加层、补帧工具干扰了游戏。",
+          "outdated": "启动器本身版本过旧。"
+        },
+        "step": {
+          "diagnose": "运行诊断，检查运行库、Gaming Services 和此实例的文件。",
+          "components": "安装诊断报告缺失的组件。Gaming Services 必须从 Microsoft Store 安装。",
+          "official_once": "通过 Microsoft Store 或 Xbox 应用安装一次 Minecraft 并成功启动，然后重试。这是最常见的解决办法，之后可以卸载商店版。",
+          "proxy": "如果使用代理，在商店安装组件期间请关闭代理（或将 microsoft.com、xboxlive.com 设为直连）。",
+          "clean_instance": "用一个没有模组、没有 LeviLamina 的实例试试。如果能启动，再逐个启用模组找出出问题的那个。",
+          "graphics": "更新或重装显卡驱动，并关闭叠加层和补帧功能。",
+          "report": "仍然失败？请更新启动器、重装实例，并附上启动器日志到 GitHub 反馈问题。"
+        }
+      },
+      "game_running": {
+        "cause": {
+          "still_running": "此实例仍在运行，可能已最小化或在后台。",
+          "stuck": "上一次的游戏进程没有正常退出，仍占用着此实例。"
+        },
+        "step": {
+          "close": "关闭正在运行的游戏后重试，或使用“强制启动”再启动一个（仅 GDK 版）。",
+          "end_process": "在“设置 > 其他设置 > 进程管理”中结束残留的游戏进程。"
+        }
+      },
+      "game_files": {
+        "cause": {
+          "moved": "实例文件夹被移动、重命名或删除，或数据目录位置发生了变化。",
+          "antivirus": "杀毒软件隔离了游戏主程序。",
+          "incomplete": "安装没有完成。"
+        },
+        "step": {
+          "diagnose": "运行诊断，查看缺少哪个文件。",
+          "antivirus": "检查杀毒软件的隔离区并恢复游戏文件，再把启动器的数据目录加入排除列表。",
+          "reinstall": "重新安装此实例：重新下载同一版本并安装。"
+        }
+      },
+      "launch_window": {
+        "cause": {
+          "loading": "游戏仍在加载；安装后第一次启动或模组较多时可能需要一些时间。",
+          "mods": "某个模组在加载时卡住了。",
+          "graphics": "显卡驱动无法创建游戏窗口。",
+          "components": "缺少运行库或 Gaming Services。"
+        },
+        "step": {
+          "wait": "等待一分钟，看游戏窗口是否出现。",
+          "diagnose": "运行诊断，检查运行库和此实例。",
+          "clean_instance": "去掉模组后再试，看是否有模组卡住。",
+          "graphics": "更新显卡驱动。",
+          "logs": "查看游戏日志：崩溃日志位于实例文件夹内的 logs/crash。"
+        }
+      },
+      "write_access": {
+        "cause": {
+          "in_use": "文件正被运行中的游戏或其他程序占用。",
+          "protected": "文件夹受保护：位于 Program Files、系统目录，或受“受控文件夹访问”保护。",
+          "antivirus": "杀毒软件正在扫描或拦截这些文件。",
+          "disk": "磁盘已满。",
+          "path": "路径包含中文等非英文字符，或路径过长。"
+        },
+        "step": {
+          "close_game": "关闭游戏和占用实例文件夹的程序；可在“设置 > 其他设置”中结束残留的游戏进程。",
+          "data_folder": "使用不在 Program Files 中、只含英文字符的数据目录（设置 > 基础设置）。",
+          "antivirus": "在杀毒软件和“Windows 安全中心 > 勒索软件防护”（受控文件夹访问）中放行启动器。",
+          "disk": "清理一些磁盘空间。",
+          "diagnose": "运行诊断，检查数据目录、磁盘空间和路径。"
+        }
+      },
+      "license_not_entitled": {
+        "cause": {
+          "not_owned": "当前登录的微软账户未拥有 Minecraft for Windows（{{channel}}）。",
+          "other_account": "游戏是在另一个微软账户上购买的，而不是启动器当前登录的账户。",
+          "xbox_only": "在游戏内登录 Xbox 不等于拥有 PC 版：需要为此账户购买 Minecraft for Windows。",
+          "preview_separate": "预览版需要单独的授权：请用此账户在 Microsoft Store 或 Xbox 应用中获取一次“Minecraft Preview”。",
+          "region": "当 Windows 区域设为中国大陆时，商店不提供预览版，只会显示教育版。",
+          "device_limit": "一个微软账户最多在 10 台设备上使用商店游戏，启动器也算一台。超出上限时授权会被拒绝。",
+          "refund": "购买已退款，或授权来自已到期的 Game Pass 订阅。"
+        },
+        "step": {
+          "check_account": "打开右上角的账户菜单，查看此账户拥有哪些渠道，并切换到购买了游戏的账户。",
+          "diagnose": "运行账户诊断，在线重新检查两个渠道的授权。",
+          "buy": "如果此账户未拥有游戏，请购买 Minecraft for Windows。",
+          "preview": "预览版：在 Microsoft Store 中获取一次 Minecraft Preview。",
+          "region": "在中国大陆使用预览版：把 Windows 的“国家或地区”改为其他地区（设置 > 时间和语言 > 语言和区域），账户本身不会改变。",
+          "devices": "在微软账户中移除不再使用的设备，然后重试。"
+        }
+      },
+      "license_trial": {
+        "cause": {
+          "not_owned": "此账户只拥有游戏的试用版。",
+          "other_account": "完整版是在另一个微软账户上购买的。",
+          "device_limit": "账户使用商店游戏的设备已达 10 台上限，因此只发放了试用授权。",
+          "game_pass": "包含此游戏的 Game Pass 订阅已到期。"
+        },
+        "step": {
+          "check_account": "打开账户菜单，登录拥有完整版的账户。",
+          "devices": "在微软账户中移除不再使用的设备。",
+          "official_once": "通过 Microsoft Store 或 Xbox 应用启动一次游戏以刷新授权。",
+          "diagnose": "运行账户诊断，重新检查授权。"
+        }
+      },
+      "license_network": {
+        "cause": {
+          "network": "从当前网络无法连接微软的登录或授权服务器。",
+          "proxy": "代理、VPN 或“网络加速器”拦截或篡改了与微软的连接。",
+          "clock": "系统时间不正确，导致微软拒绝请求。",
+          "service": "微软服务暂时不可用。"
+        },
+        "step": {
+          "diagnose": "运行诊断，测试与微软的连接和系统时间。",
+          "proxy": "关闭代理或加速器，或将 microsoft.com、live.com、xboxlive.com 设为直连。",
+          "clock": "在 Windows“设置 > 时间和语言”中开启“自动设置时间”。",
+          "retry": "等几分钟后重试。"
+        }
+      },
+      "license_package": {
+        "cause": {
+          "mismatch": "安装包与微软发放的授权不匹配（例如渠道不同，或是特殊构建）。",
+          "catalog": "Microsoft Store 目录返回了意外的产品。"
+        },
+        "step": {
+          "refresh": "刷新版本列表，下载标准的正式版或预览版。",
+          "check_account": "确认当前登录的账户拥有此渠道。"
+        }
+      },
+      "account": {
+        "cause": {
+          "changed": "自启动器上次检查后，微软账户发生了变化。",
+          "elevated": "启动器以管理员身份运行，Windows 会跳过账户选择器并沿用之前的账户。",
+          "cache": "无法读取启动器保存的账户数据。"
+        },
+        "step": {
+          "sign_in": "打开账户菜单重新登录，或切换账户。",
+          "not_admin": "如果启动器以管理员身份运行，请以普通方式重新启动它。",
+          "retry": "然后重试。"
+        }
+      },
+      "download_network": {
+        "cause": {
+          "blocked": "从当前网络无法稳定连接下载服务器。",
+          "proxy": "代理软件在运行，但没有设置为 Windows 系统代理，因此启动器不会使用它。",
+          "stale_proxy": "代理软件退出时没有恢复 Windows 代理设置，连接都被发往一个已不存在的代理。",
+          "mirror": "“使用镜像源”已关闭，而当前网络访问 GitHub 很慢或被阻断（中国大陆常见）。",
+          "disk": "下载过程中磁盘空间不足。"
+        },
+        "step": {
+          "diagnose": "运行诊断，逐个测试服务器、代理和磁盘空间。",
+          "mirror": "在“设置 > 包管理”中开启“使用镜像源”。",
+          "source": "在下载页运行测速，并切换到其他下载源。",
+          "proxy": "如果使用代理，请开启其系统代理（或 TUN）模式；如果不使用，请确认 Windows 代理已关闭。",
+          "local": "也可以在其他地方下载安装包，再作为本地安装包导入。"
+        }
+      },
+      "version_list": {
+        "cause": {
+          "github": "版本列表托管在 GitHub 上，当前网络访问很慢或被阻断。",
+          "mirror": "“使用镜像源”已关闭。",
+          "proxy": "Windows 代理指向一个无响应的代理。"
+        },
+        "step": {
+          "diagnose": "运行诊断，测试 GitHub、镜像和代理。",
+          "mirror": "在“设置 > 包管理”中开启“使用镜像源”。",
+          "retry": "重试；列表加载成功一次后会被缓存。"
+        }
+      },
+      "lip_install": {
+        "cause": {
+          "github": "无法稳定连接 GitHub，而 LeviLamina 和模组都从那里下载。",
+          "proxy_down": "“设置 > 包管理”中的 GitHub 代理不可用或填写有误。",
+          "stale_proxy": "Windows 代理指向一个已不在运行的代理软件（日志中会出现 127.0.0.1）。",
+          "cache": "下载缓存中有损坏的文件。",
+          "timeout": "连接太慢导致下载超时（“context deadline exceeded”）。"
+        },
+        "step": {
+          "diagnose": "运行诊断，测试 GitHub、GitHub 代理和 Windows 代理。",
+          "mirror": "在“设置 > 包管理”中开启“使用镜像源”，并换一个 GitHub 代理预设。",
+          "clear_cache": "在同一页面点击“清理缓存”后重试。安装 LeviLamina 大约需要一分钟。",
+          "system_proxy": "如果诊断报告代理无响应，请在 Windows“设置 > 网络和 Internet > 代理”中关闭代理。",
+          "dns": "多试几次，或更换 DNS 服务器。",
+          "later": "想先玩的话，可以先不勾选 LeviLamina 安装游戏，之后再在实例设置中添加。"
+        }
+      },
+      "lip_package": {
+        "cause": {
+          "unsupported": "该模组不支持此游戏版本或平台。",
+          "conflict": "它的依赖与已安装的模组冲突。",
+          "network": "下载失败。"
+        },
+        "step": {
+          "version": "选择适配你游戏版本的模组版本，或使用游戏版本受支持的实例。",
+          "conflict": "更新或移除冲突的模组。",
+          "diagnose": "如果是下载本身失败，请运行诊断。"
+        }
+      },
+      "ll_unsupported": {
+        "cause": {
+          "new_version": "此游戏版本比 LeviLamina 的版本列表更新；LeviLamina 为它发布后才会加入支持。",
+          "preview": "LeviLamina 通常只支持正式版。",
+          "uwp": "LeviLamina 只会自动安装到 GDK 实例。"
+        },
+        "step": {
+          "wait": "等待版本列表更新（无需更新启动器），然后刷新。",
+          "supported_version": "或安装 LeviLamina 支持的游戏版本。",
+          "manual": "进阶：使用 lip 手动安装对应的 LeviLamina。"
+        }
+      },
+      "vcruntime": {
+        "cause": {
+          "missing": "未安装 Microsoft Visual C++ 2015–2022 运行库（x64）。",
+          "damaged": "已安装但已损坏，或注册表中只剩残留。",
+          "system": "Windows 本身缺少系统库（部分精简版系统）。"
+        },
+        "step": {
+          "install": "安装 Visual C++ 运行库（需要管理员确认）。",
+          "official_once": "如果仍不行，请从 Microsoft Store 安装一次 Minecraft，商店会安装游戏所需的系统库。",
+          "repair": "如果连商店版也无法运行，请修复 Windows（sfc /scannow）或重装系统。"
+        }
+      },
+      "developer_mode": {
+        "cause": {
+          "off": "Windows 开发者模式未开启。只有开启后，Windows 才允许注册 UWP 实例（以及“注册到系统”）。",
+          "policy": "在单位或学校的电脑上，管理员策略可能禁止开启开发者模式。"
+        },
+        "step": {
+          "enable": "开启开发者模式（需要管理员确认）。",
+          "settings": "或在“设置 > 系统 > 开发者选项”中手动开启。",
+          "policy": "如果开关是灰色的，请联系电脑的管理员。"
+        }
+      },
+      "uwp_conflict": {
+        "cause": {
+          "store": "已安装 Microsoft Store 版 Minecraft，它占用了应用注册。",
+          "other_launcher": "其他启动器注册了自己的 Minecraft。"
+        },
+        "step": {
+          "backup": "先备份存档（com.mojang 文件夹）。",
+          "uninstall": "在“设置 > 应用”中卸载另一个副本，或在注册它的启动器中取消注册。",
+          "retry": "然后重新注册或启动此实例。"
+        }
+      },
+      "uwp_register": {
+        "cause": {
+          "developer_mode": "开发者模式未开启。",
+          "conflict": "另一个 Minecraft 注册与此实例冲突。",
+          "dependency": "缺少游戏需要的框架包（例如 Microsoft.VCLibs）。",
+          "folder": "实例文件夹不可写，或路径中有中文等非英文字符。",
+          "deployment": "Windows 应用部署服务出错，重启电脑通常可以解决。"
+        },
+        "step": {
+          "diagnose": "运行诊断，检查开发者模式、当前注册情况和实例。",
+          "developer_mode": "确认开发者模式已开启。",
+          "conflict": "在“设置 > 应用”中移除冲突的 Minecraft（请先备份存档）。",
+          "restart": "重启 Windows 后重试。",
+          "logs": "如果仍然失败，请发送启动器日志和错误详情。"
+        }
+      },
+      "uwp_dependency": {
+        "cause": {
+          "framework": "缺少此游戏版本需要的 Windows 框架包（例如 Microsoft.VCLibs 或 Microsoft.NET.Native）。",
+          "old_windows": "Windows 版本过旧，无法安装该框架版本。"
+        },
+        "step": {
+          "store": "从 Microsoft Store 安装一次 Minecraft，商店会安装这些框架。",
+          "windows_update": "安装 Windows 更新。",
+          "other_version": "或选择其他游戏版本。"
+        }
+      },
+      "uwp_system_version": {
+        "cause": {
+          "old_windows": "此游戏版本需要比本机更新的 Windows 版本。",
+          "locked": "这里无法更新 Windows（例如租用的云电脑）。"
+        },
+        "step": {
+          "other_version": "选择兼容当前 Windows 版本的游戏版本。",
+          "windows_update": "或更新 Windows。"
+        }
+      },
+      "package_corrupt": {
+        "cause": {
+          "incomplete": "下载被中断或不完整。",
+          "disk": "写入时磁盘出错或空间不足。",
+          "antivirus": "杀毒软件修改或锁定了文件。",
+          "format": "该文件不是完整的 Windows x64 Minecraft 安装包。"
+        },
+        "step": {
+          "redownload": "在下载页删除已下载的安装包，然后重新下载。",
+          "disk": "清理一些磁盘空间。",
+          "antivirus": "安装期间暂停杀毒软件对启动器数据目录的扫描。"
+        }
+      },
+      "install_failed": {
+        "cause": {
+          "vcruntime": "Visual C++ 运行库缺失或损坏（安装时会闪退，或只留下空文件夹）。",
+          "disk": "磁盘空间不足。",
+          "path": "数据目录路径包含中文等非英文字符，或位于受保护的位置。",
+          "antivirus": "杀毒软件拦截了解压。",
+          "license": "账户未拥有此版本。"
+        },
+        "step": {
+          "diagnose": "运行诊断，检查账户授权、运行库、磁盘空间和网络。",
+          "vcruntime": "安装 Visual C++ 运行库。",
+          "path": "使用不在 Program Files 中、只含英文字符的数据目录。",
+          "antivirus": "在杀毒软件中放行启动器。",
+          "report": "如果仍然失败，请附上启动器日志到 GitHub 反馈。"
+        }
+      },
+      "gaming_services": {
+        "cause": {
+          "missing": "未安装 Gaming Services，而 GDK 版 Minecraft 需要它。",
+          "ltsc": "LTSC 和精简版 Windows 没有 Microsoft Store，无法按常规方式安装，且 Xbox 相关服务常被禁用。",
+          "broken": "已安装但已损坏，或其 Windows 服务被禁用。",
+          "proxy": "开启代理时，Microsoft Store 安装它可能会卡住。"
+        },
+        "step": {
+          "store": "从 Microsoft Store 安装（下方按钮），装好后回来重新检测。",
+          "official_once": "从商店或 Xbox 应用安装并启动一次 Minecraft，也会顺带安装它。",
+          "ltsc": "LTSC 系统：请参阅常见问题中不经商店安装 Gaming Services 的方法，并在 services.msc 中把 Xbox 相关服务设为“自动”。",
+          "diagnose": "运行诊断，查看它是否已安装、服务是否已启用。",
+          "repair": "如果已安装但仍提示缺失，请卸载它、重启 Windows，再从商店重新安装。",
+          "ignore": "如果只使用 UWP 实例，可以忽略此提示。"
+        }
+      },
+      "update_failed": {
+        "cause": {
+          "network": "无法下载更新（GitHub 或镜像无法访问）。",
+          "permission": "启动器所在文件夹不可写（例如位于 Program Files 且没有管理员权限）。",
+          "asset": "该版本没有适用于此启动器的更新包（旧版本需要手动更新）。",
+          "antivirus": "杀毒软件阻止了替换启动器。"
+        },
+        "step": {
+          "retry": "关闭并重新打开启动器以重试。",
+          "mirror": "在“设置 > 包管理”中开启“使用镜像源”。",
+          "manual": "从 GitHub Releases（或官方镜像）下载最新版，覆盖安装。",
+          "admin": "如果启动器安装在 Program Files 下，更新时请允许管理员权限请求。"
+        }
+      },
+      "migration": {
+        "cause": {
+          "running": "Minecraft 正在运行，占用着游戏文件。",
+          "locked": "杀毒软件或其他程序锁定了游戏主程序。",
+          "permission": "某个实例文件夹不可写。"
+        },
+        "step": {
+          "close": "关闭 Minecraft（可在“设置 > 其他设置”中结束残留进程）。",
+          "retry": "重新启动启动器；在仍需要迁移时它会再次尝试。",
+          "logs": "如果再次失败，请发送启动器日志。"
+        }
+      }
+    }
+  },
+  "diagnostics": {
+    "title_running": "正在运行诊断…",
+    "title_failed": "诊断无法运行",
+    "title_problems_other": "发现 {{count}} 个问题",
+    "title_ok": "未发现问题",
+    "scope_instance": "{{topic}} · {{instance}}",
+    "running_label": "正在检查",
+    "running_body": "正在检查运行库、Windows 设置、网络和账户。最多需要一分钟，不会更改电脑上的任何设置。",
+    "running_body_mac": "正在检查 Wine、游戏运行库、网络和账户授权。最多需要一分钟。",
+    "elapsed": "已用时 {{seconds}} 秒",
+    "failed_body": "诊断无法运行。请重新启动启动器后再试。",
+    "no_problems_body": "检查的项目均正常。如果问题仍然存在，常见问题中还有更多情况；反馈问题时附上启动器日志会很有帮助。",
+    "no_problems_body_mac": "诊断已完成。如果问题仍然存在，可以打开启动器日志查看。",
+    "problems_heading": "问题",
+    "notes_heading": "值得注意",
+    "passed_heading_other": "{{count}} 项检查通过",
+    "other_checks": "其他检查（{{count}} 项）",
+    "caused_by_one": "受此影响，另有 {{count}} 项检查未通过：",
+    "caused_by_other": "受此影响，另有 {{count}} 项检查未通过：",
+    "duration": "用时 {{seconds}} 秒。",
+    "copy_report": "复制报告",
+    "copied": "报告已复制",
+    "run_again": "重新诊断",
+    "clock_ahead": "快了",
+    "clock_behind": "慢了",
+    "status": {
+      "ok": "通过",
+      "info": "提示",
+      "skip": "已跳过",
+      "warn": "警告",
+      "fail": "问题"
+    },
+    "channel": {
+      "release": "正式版",
+      "preview": "预览版",
+      "this": "此版本"
+    },
+    "topic": {
+      "launch": "启动游戏",
+      "install": "安装游戏版本",
+      "download": "下载",
+      "lip": "LeviLamina 与模组",
+      "license": "账户与授权",
+      "uwp": "UWP 注册",
+      "full": "全面检查"
+    },
+    "reason": {
+      "timeout": "检查未能按时完成。"
+    },
+    "endpoint": {
+      "ok": "可以访问（{{latency}} 秒）。",
+      "slow": "可以访问但很慢（{{latency}} 秒），从这里下载可能会超时。",
+      "dns": "无法解析服务器域名（DNS）。请检查网络或 DNS 设置，或换一个 DNS 服务器。",
+      "tls": "无法建立安全连接。请检查系统时间，并关闭会拦截 HTTPS 的代理、“网络加速器”或安全软件。",
+      "timeout": "8 秒内没有响应，网络或防火墙可能阻止了连接。",
+      "proxy": "代理导致连接失败。请检查代理软件，或关闭系统代理。",
+      "refused": "连接被拒绝。",
+      "reset": "连接被中断。防火墙、代理或网络不稳定可能是原因。",
+      "other": "无法连接。",
+      "rate_limited": "服务器正在限制请求（HTTP 429），请等几分钟。",
+      "server_error": "服务器报告了错误（HTTP {{http}}），这是服务器端的问题，请稍后再试。",
+      "http_error": "服务器返回 HTTP {{http}}，文件可能已移动。"
+    },
+    "check": {
+      "wine_rosetta": {
+        "title": "Rosetta 2",
+        "ok": "Rosetta 2 可用。",
+        "fail": "Rosetta 2 不可用。可在 Wine 设置中运行自动安装。"
+      },
+      "wine_runtime": {
+        "title": "Wine 运行环境",
+        "ok": "已检测到 {{version}}，所选容器已初始化。",
+        "missing": "在配置的路径上找不到可执行的 Wine 引擎。",
+        "prefix": "所选 Wine 容器尚未初始化。请在 Wine 设置中创建或选择已初始化的容器。",
+        "unsupported_arch": "MetalSharp Wine 需要搭载 Apple 芯片的 Mac。",
+        "unsupported_os": "MetalSharp Wine 需要 macOS 15 或更高版本。",
+        "graphics": "所选图形后端不可用。",
+        "invalid": "当前 Wine 配置无效。请在 Wine 设置中检查所选引擎和容器。",
+        "unavailable": "所选 Wine 引擎未能报告版本。请检查路径或重新选择引擎。",
+        "skip_rosetta": "检测 Wine 引擎需要 Rosetta 2。",
+        "fail": "Wine 检查未能完成。"
+      },
+      "wine_graphics": {
+        "title": "Wine 图形后端",
+        "info": "当前配置为 {{backend}}。",
+        "skip": "Wine 配置可用后可检查图形后端。"
+      },
+      "wine_vcruntime": {
+        "title": "Wine 内的 Visual C++ 运行库",
+        "ok": "所选容器中已找到 Visual C++ 运行库。",
+        "info": "所选容器缺少 Visual C++ 运行库，启动 Minecraft 时会自动安装。",
+        "skip": "Wine 配置可用后可检查此依赖。"
+      },
+      "wine_gameinput": {
+        "title": "Wine 内的 GameInput",
+        "ok": "所选容器中已找到 GameInput。",
+        "info": "所选容器缺少 GameInput，启动 Minecraft 时会自动安装。",
+        "skip": "Wine 配置可用后可检查此依赖。"
+      },
+      "vcruntime": {
+        "title": "Visual C++ 运行库",
+        "ok": "已安装。",
+        "missing": "未安装 Microsoft Visual C++ 2015–2022 运行库（x64）。游戏、LeviLamina 和原生模组都需要它，缺少时安装游戏版本也可能闪退。"
+      },
+      "gameinput": {
+        "title": "GameInput",
+        "ok": "已安装。",
+        "missing": "未安装 Microsoft GameInput。GDK 版 Minecraft 需要它来处理输入设备。",
+        "uwp": "UWP 实例不需要。"
+      },
+      "gaming_services": {
+        "title": "Microsoft Gaming Services",
+        "ok": "已安装并启用。",
+        "missing": "未安装 Gaming Services，GDK 版 Minecraft 没有它无法启动。请从 Microsoft Store 安装；LTSC 或精简版 Windows 请参阅常见问题中的手动安装方法。",
+        "disabled": "Gaming Services 已安装，但其 Windows 服务被禁用。请打开“服务”（services.msc），把“Gaming Services”设为“自动”，然后重启 Windows。",
+        "uwp": "UWP 实例不需要。"
+      },
+      "xbox_services": {
+        "title": "Xbox 服务",
+        "ok": "未被禁用。",
+        "disabled": "以下 Xbox 服务被禁用：{{services}}。LTSC 和“优化”过的 Windows 常会禁用它们，导致 Xbox 登录和 Gaming Services 无法工作。请在“服务”（services.msc）中把它们设为“手动”或“自动”。",
+        "uwp": "UWP 实例不需要。"
+      },
+      "developer_mode": {
+        "title": "Windows 开发者模式",
+        "ok": "已开启。",
+        "fail_off": "开发者模式未开启。只有开启后 Windows 才会注册 UWP 实例，因此此实例无法启动或注册。",
+        "info_off": "未开启。只有 UWP 实例和“注册到系统”需要它。",
+        "gdk": "启动 GDK 实例不需要。"
+      },
+      "webview2": {
+        "title": "WebView2 运行时",
+        "ok": "已安装。",
+        "missing": "缺失；启动器窗口启动时会自动安装。"
+      },
+      "data_root": {
+        "title": "数据目录",
+        "ok": "{{path}} 可写入。",
+        "not_writable": "启动器无法写入 {{path}}。请在“设置 > 基础设置”中选择不在受保护位置（如 Program Files）的数据目录，或检查其权限和“受控文件夹访问”。",
+        "non_ascii": "数据目录 {{path}} 包含中文等非英文字符。部分游戏组件和模组在这类路径下会出错；只含英文字母和数字的路径最稳妥。",
+        "unknown": "未设置数据目录。"
+      },
+      "disk_space": {
+        "title": "可用磁盘空间",
+        "ok": "{{path}} 所在磁盘还有 {{free}} GB 可用空间。",
+        "low": "{{path}} 所在磁盘只剩 {{free}} GB 可用空间。安装一个游戏版本约需 10 GB（安装包加解压后的游戏）。",
+        "unknown": "无法读取可用空间。"
+      },
+      "appdata_link": {
+        "title": "Minecraft 数据文件夹",
+        "ok": "未发现其他工具创建的链接。",
+        "link": "{{path}} 是符号链接或目录联接，通常由 BedrockBoot 等工具创建。它与版本隔离冲突，可能导致存档和模组“丢失”或提示存储空间不足。请关闭该工具的版本隔离，或删除该链接（请先备份存档）。"
+      },
+      "elevation": {
+        "title": "管理员权限",
+        "ok": "启动器未以管理员身份运行。",
+        "warn_elevated": "启动器正以管理员身份运行。此时 Windows 登录时不会显示账户选择器，切换账户看起来总是回到原来的账户。请以非管理员身份重新启动启动器。",
+        "info_elevated": "启动器正以管理员身份运行。"
+      },
+      "account": {
+        "title": "微软账户",
+        "ok": "已登录。",
+        "signed_out": "未登录微软账户。下载和安装游戏版本需要登录拥有 Minecraft 的账户。",
+        "unreachable": "已选择账户，但无法连接 Xbox Live 确认登录状态。这是网络问题，并不是退出了登录：网络恢复之前，重新登录也没有用。"
+      },
+      "license": {
+        "title": "游戏授权",
+        "summary": "正式版：{{release_state}}；预览版：{{preview_state}}。",
+        "ok": "两个渠道都已授权。",
+        "channel_authorized": "此账户拥有{{channel}}。",
+        "channel_not_entitled": "此账户未拥有{{channel}}。",
+        "channel_trial": "微软只为{{channel}}发放了试用授权。",
+        "channel_error": "无法检查{{channel}}的授权。",
+        "signed_out": "请先登录。",
+        "unreachable": "无法连接 Xbox Live，因此没有检查授权。"
+      },
+      "proxy": {
+        "title": "代理",
+        "ok_none": "未设置代理，启动器直接连接。",
+        "info_manual": "连接经过 Windows 系统代理 {{address}}，该代理有响应。如果下载仍然失败，请确认代理软件放行了启动器，或使用其 TUN 模式。",
+        "info_env": "连接经过环境变量中设置的代理（{{address}}），该代理有响应。",
+        "info_pac": "Windows 使用代理脚本（{{pac}}），连接按脚本进行。",
+        "info_auto": "Windows 会自动检测代理设置，连接按其结果进行。",
+        "unreachable": "Windows 中设置的代理 {{address}} 没有响应。这通常是代理软件退出时没有恢复设置，导致所有连接都失败（日志中出现“connection to 127.0.0.1 failed”）。请在 Windows“设置 > 网络和 Internet > 代理”中关闭代理，或启动代理软件。",
+        "unreachable_env": "环境变量 HTTP_PROXY / HTTPS_PROXY 中设置的代理 {{address}} 没有响应，导致所有连接都失败。请启动代理软件，或删除这些环境变量（在 Windows 中搜索“编辑账户的环境变量”）后重启启动器。",
+        "unknown": "无法读取代理设置。"
+      },
+      "mirror": {
+        "title": "镜像源",
+        "info_on": "“使用镜像源”已开启：GitHub 下载经由镜像。",
+        "info_off": "“使用镜像源”已关闭：直接访问 GitHub，当前网络可以正常访问。",
+        "github_unreachable": "“使用镜像源”已关闭，而当前网络无法快速访问 GitHub。请在“设置 > 包管理”中开启，之后版本列表、LeviLamina 和更新都会经由镜像。"
+      },
+      "clock": {
+        "title": "系统时间",
+        "ok": "系统时间正确。",
+        "skew": "系统时间{{direction}} {{skew}} 分钟。时间不正确会导致安全连接、微软登录和授权检查失败。请在 Windows“设置 > 时间和语言”中开启“自动设置时间”。",
+        "no_server": "没有服务器响应，无法比对时间。"
+      },
+      "ep_microsoft_auth": {
+        "title": "微软登录（login.live.com）"
+      },
+      "ep_xbox_store": {
+        "title": "Microsoft Store 目录（授权）"
+      },
+      "ep_xbox_packages": {
+        "title": "Xbox 下载服务（游戏安装包）"
+      },
+      "ep_version_db": {
+        "title": "游戏版本列表（GitHub）"
+      },
+      "ep_github": {
+        "title": "GitHub（LeviLamina 与模组）"
+      },
+      "ep_levimc": {
+        "title": "levimc.org（模组目录）"
+      },
+      "ep_github_proxy": {
+        "title": "GitHub 代理（{{proxy}}）",
+        "inactive_ok": "未使用（镜像源已关闭），但可以访问：在当前网络开启“使用镜像源”是可行的。",
+        "inactive_fail": "未使用，且在当前网络也无法访问。"
+      },
+      "ep_ll_db": {
+        "title": "LeviLamina 版本列表",
+        "ok": "已加载（列出 {{count}} 个游戏版本）。"
+      },
+      "ll_support": {
+        "title": "此版本的 LeviLamina 支持",
+        "ok": "游戏版本 {{version}} 受支持（最新 LeviLamina {{latest}}）。",
+        "unsupported": "游戏版本 {{version}} 还不在 LeviLamina 的版本列表中。新游戏版本要等 LeviLamina 为其发布后才会加入；请等待，或使用受支持的版本。",
+        "uwp": "LeviLamina 只会自动安装到 GDK 实例。",
+        "db_unavailable": "无法加载 LeviLamina 版本列表。",
+        "unknown_version": "此实例的游戏版本未知。"
+      },
+      "instance_files": {
+        "title": "实例文件",
+        "ok": "已找到（{{type}} {{version}}）。",
+        "dir_missing": "实例文件夹 {{path}} 不存在，可能已被移动或删除，或数据目录发生了变化。",
+        "manifest_missing": "{{path}} 中缺少 AppxManifest.xml，实例不完整，请重新安装。",
+        "exe_missing": "游戏主程序缺失（{{path}}）。可能被杀毒软件隔离，或安装没有完成。请从隔离区恢复，或重新安装实例。"
+      },
+      "instance_path": {
+        "title": "实例路径",
+        "ok": "路径正常。",
+        "non_ascii": "实例路径 {{path}} 包含中文等非英文字符。部分组件和模组在这类路径下会出错；请重命名实例，或把数据目录移到只含英文的路径。",
+        "long": "实例路径过长（{{path}}）。请缩短实例名称，或把数据目录移到更靠近盘符根目录的位置。"
+      },
+      "instance_running": {
+        "title": "运行中的游戏",
+        "ok": "此实例未在运行。",
+        "running": "此实例正在运行。再次启动或修改其文件前，请先关闭游戏（或在“设置 > 其他设置 > 进程管理”中结束它）。"
+      },
+      "registration": {
+        "title": "系统注册",
+        "ok_this": "此实例就是在 Windows 中注册的{{channel}} Minecraft 应用。",
+        "info_none": "Windows 中没有注册{{channel}} Minecraft 应用。UWP 实例会在启动时自动注册。",
+        "warn_other": "Windows 中注册了另一个{{channel}} Minecraft（{{path}}），例如 Microsoft Store 版或其他启动器注册的版本。它可能阻止此实例：请先备份存档，再在“设置 > 应用”中卸载它。",
+        "info_other": "Windows 中注册了另一个{{channel}} Minecraft（{{path}}）。只有使用“注册到系统”时才需要注意。"
+      }
+    }
+  },
+  "gameaccount": {
+    "title": "Minecraft 登录",
+    "success": "已登录 Minecraft",
+    "failed": "游戏登录未完成",
+    "expired": "登录代码已过期",
+    "closed": "本次登录已结束",
+    "waiting": "已打开微软验证页，请在浏览器中确认账户。",
+    "browser_error": "未能打开浏览器，请点击下方按钮重试。",
+    "copy_error": "未能复制代码，请手动选择代码复制。",
+    "code": "微软登录代码",
+    "collapse": "收起登录提示",
+    "open": "打开验证页",
+    "copy": "复制代码",
+    "copied": "已复制",
+    "keep_game_open": "验证期间请保持游戏开启",
+    "expires": "代码剩余有效时间",
+    "return_to_game": "验证完成，可以回到游戏了。",
+    "retry_in_game": "请回到游戏重新点击登录。"
+  },
+  "deeplink": {
+    "dialog_notice": "来自网站或其他应用的 levilauncher:// 链接请求安装此模组。在你选择实例并确认之前，不会安装任何内容。",
+    "mod_label": "模组",
+    "compatible_only": "仅列出游戏版本受此模组支持的实例。",
+    "no_compatible_instance": "你的实例都不是此模组支持的游戏版本，因此列出全部实例。",
+    "not_in_catalog": "链接请求的 {{id}} 不在 LeviMC 模组目录中，或无法查询。未安装任何内容。",
+    "load_failed": "链接请求的是 {{id}}。未安装任何内容。",
+    "version_unavailable": "链接请求 {{name}} 的 {{version}} 版本，但该版本没有适用于 {{platform}} 的构建。未安装任何内容，请在下方选择其他版本。",
+    "variant_unavailable": "链接请求 {{name}} 的 {{variant}} 变体，但该变体没有适用于 {{platform}} 的构建。未安装任何内容。",
+    "no_installable_version": "{{name}} 没有可在 {{platform}} 上安装的版本。未安装任何内容。",
+    "no_instances": "链接请求安装模组，但还没有任何实例。请先创建实例，然后重新打开链接。"
+  }
+}
